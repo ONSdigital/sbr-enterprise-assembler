@@ -1,9 +1,6 @@
 package main
 
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
-import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -15,7 +12,7 @@ object AssemblerMain extends App{
     val spark: SparkSession = SparkSession
       .builder()
       .master("local[4]")
-      .appName("Spark SQL basic example")
+      .appName("enterprise assembler")
       .config("spark.ui.port", "18080")
       .getOrCreate()
   //import spark.implicits._
