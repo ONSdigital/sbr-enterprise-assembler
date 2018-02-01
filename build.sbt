@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
     .exclude("aopalliance","aopalliance")
     .exclude("commons-beanutils","commons-beanutils"),
   "org.apache.spark"             %% "spark-sql"            % Versions.spark
+
 )
 
 
@@ -35,4 +36,4 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-mainClass in Compile := Some("scala.Assembler")
+mainClass in Compile := Some("scala.AssemblerMain")
