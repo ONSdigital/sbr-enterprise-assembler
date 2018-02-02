@@ -1,6 +1,7 @@
 package main
 
 
+import connector.HBaseConnector
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
@@ -31,13 +32,14 @@ object AssemblerMain extends App{
     val period = "201706"
     val tableName = "enterprise"
     val colFamily = "d"
-    val id = "ID"
+    val idKey = "id"
+    val hfilePath = "src/main/resources/hfile"
 
   /*parquetFileDF.createOrReplaceTempView("businessIndexRec")
     val namesDF: DataFrame = spark.sql("SELECT VatRefs,PayeRefs FROM businessIndexRec WHERE BusinessName = 'NICHOLAS ROSS PLC'")
     namesDF.show()
   */
-    def strB(s:String) = try{
+    def strToBytes(s:String) = try{
       s.getBytes()
     }catch{
       case e:Exception => {
@@ -45,7 +47,7 @@ object AssemblerMain extends App{
       }
       case _ => throw new Exception(s"cannot do bytes from string: $s")
     }
-    def longB(l:Long) = try{
+    def longToBytes(l:Long) = try{
       Bytes.toBytes(l)
     }catch{
       case e:Exception => {
@@ -55,17 +57,17 @@ object AssemblerMain extends App{
     }
 
     val data: RDD[(ImmutableBytesWritable, KeyValue)] = parquetFileDF.rdd.sortBy(_.getAs[Long]("id")).map(r => {
-      val id: Long = r.getAs[Long]("id")
+      val id: Long = r.getAs[Long](idKey)
       val keyStr = s"${id}~$period~ENT"
       //println(s"XXXXXXXXXXXXX ID=$id")
-      val row = new KeyValue(strB(keyStr), strB(colFamily), longB(id), strB("ENT") )
-      val key =  strB(keyStr)
+      val row = new KeyValue(strToBytes(keyStr), strToBytes(colFamily), longToBytes(id), strToBytes("ENT") )
+      val key =  strToBytes(keyStr)
       (new ImmutableBytesWritable(key), row)
     })
 
-    val config = HBaseConfiguration.create()
-    config.set(TableOutputFormat.OUTPUT_TABLE, tableName)
+    //data.saveAsNewAPIHadoopFile(hfilePath,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],config)
+    //HBaseConnector.loadHFile(hfilePath)
+    spark.stop()
 
-    data.saveAsNewAPIHadoopFile("src/main/resources/hfile",classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],config)
   }
 }
