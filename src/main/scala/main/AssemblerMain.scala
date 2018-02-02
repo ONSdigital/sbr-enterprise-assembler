@@ -65,7 +65,7 @@ object AssemblerMain extends App{
       (new ImmutableBytesWritable(key), row)
     })
 
-    data.saveAsNewAPIHadoopFile(hfilePath,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],config)
+    data.saveAsNewAPIHadoopFile(hfilePath,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],HBaseConnector.conf)
     HBaseConnector.loadHFile(hfilePath)
     spark.stop()
 
