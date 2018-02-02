@@ -1,25 +1,31 @@
 package connector
 
+import config.Config
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, HTable, Table}
-import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue}
+import org.apache.hadoop.hbase.client._
+import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue, TableName}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles}
 import org.apache.hadoop.mapreduce.Job
+import org.slf4j.LoggerFactory
+
+import scala.annotation.tailrec
 
 /**
   *
   */
 object HBaseConnector {
 
-  val tableName = "enterprise"
-  val columnFamily = "d"
+  import config.Config._
+
+  val logger = LoggerFactory.getLogger(getClass)
+
   val conf: Configuration = HBaseConfiguration.create()
       conf.set(TableOutputFormat.OUTPUT_TABLE, tableName)
-      conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 500)
-  conf.set("hbase.zookeeper.quorum", "localhost:2181")
+      conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", filesPerRegion)
+  conf.set("hbase.zookeeper.quorum", zookeeperUrl)
 
   val connection: Connection = ConnectionFactory.createConnection(conf)
 
@@ -32,11 +38,46 @@ object HBaseConnector {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def loadHFile(path:String) = {
-    val table = new HTable(conf, tableName)
+  def loadHFile(pathToHFile:String = Config.hfilePath) = {
+    val table: Table = connection.getTable(TableName.valueOf(tableName))
     setJob(table)
     val bulkLoader = new LoadIncrementalHFiles(conf)
-    bulkLoader.doBulkLoad(new Path(path), table)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    val admin = connection.getAdmin
+    bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
+    table.close
+  }
+
+
+
+  def closeConnection = if(closedConnection) Unit else System.exit(1)
+
+
+  private def closedConnection: Boolean = {
+
+    def isClosed(waitingMillis: Long): Boolean = if (!connection.isClosed) {
+      wait(waitingMillis)
+      connection.isClosed
+    } else true
+
+    @tailrec
+    def tryClosing(checkIntervalSec: Long, totalNoOfAttempts: Int, noOfAttemptsLeft: Int): Boolean = {
+      if (connection.isClosed) true
+      else if (noOfAttemptsLeft == 0) {
+        logger.warn(s"Could not close HBase connection. Attempted $totalNoOfAttempts times with intervals of $checkIntervalSec millis")
+        false
+      } else {
+        connection.close
+        if (isClosed(checkIntervalSec)) true
+        else {
+          logger.info(s"trying closing hbase connection. Attempt ${totalNoOfAttempts - noOfAttemptsLeft} of $totalNoOfAttempts")
+          tryClosing(checkIntervalSec, totalNoOfAttempts, noOfAttemptsLeft - 1)
+        }
+      }
+    }
+
+
+    tryClosing(1000L, 5, 5)
   }
 
 }
