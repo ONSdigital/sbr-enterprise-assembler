@@ -35,10 +35,10 @@ object AssemblerMain extends App{
     val idKey = "id"
     val hfilePath = "src/main/resources/hfile"
 
-  /*parquetFileDF.createOrReplaceTempView("businessIndexRec")
+   parquetFileDF.createOrReplaceTempView("businessIndexRec")
     val namesDF: DataFrame = spark.sql("SELECT VatRefs,PayeRefs FROM businessIndexRec WHERE BusinessName = 'NICHOLAS ROSS PLC'")
     namesDF.show()
-  */
+
     def strToBytes(s:String) = try{
       s.getBytes()
     }catch{
@@ -65,8 +65,8 @@ object AssemblerMain extends App{
       (new ImmutableBytesWritable(key), row)
     })
 
-    //data.saveAsNewAPIHadoopFile(hfilePath,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],config)
-    //HBaseConnector.loadHFile(hfilePath)
+    data.saveAsNewAPIHadoopFile(hfilePath,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],config)
+    HBaseConnector.loadHFile(hfilePath)
     spark.stop()
 
   }
