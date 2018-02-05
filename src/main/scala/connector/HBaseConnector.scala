@@ -1,6 +1,6 @@
 package connector
 
-import config.Config
+import global.ApplicationContext
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
@@ -18,14 +18,14 @@ import scala.annotation.tailrec
   */
 object HBaseConnector {
 
-  import config.Config._
+  import global.ApplicationContext._
 
   val logger = LoggerFactory.getLogger(getClass)
 
   val conf: Configuration = HBaseConfiguration.create()
-      conf.set(TableOutputFormat.OUTPUT_TABLE, tableName)
-      conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", filesPerRegion)
-  conf.set("hbase.zookeeper.quorum", zookeeperUrl)
+      conf.set(TableOutputFormat.OUTPUT_TABLE, config.getString("hbase.table.name"))
+      conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.files.per.region"))
+  conf.set("hbase.zookeeper.quorum", config.getString("hbase.zookeper.url"))
 
   val connection: Connection = ConnectionFactory.createConnection(conf)
 
@@ -38,8 +38,8 @@ object HBaseConnector {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def loadHFile(pathToHFile:String = Config.hfilePath) = {
-    val table: Table = connection.getTable(TableName.valueOf(tableName))
+  def loadHFile(pathToHFile:String = config.getString("files.hfile")) = {
+    val table: Table = connection.getTable(TableName.valueOf(config.getString("hbase.table.name")))
     setJob(table)
     val bulkLoader = new LoadIncrementalHFiles(conf)
     val regionLocator = connection.getRegionLocator(table.getName)

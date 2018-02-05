@@ -5,12 +5,13 @@ version := "1.0"
 scalaVersion := "2.11.8"
 
 lazy val Versions = new {
-  val hbase = "1.3.1"
+  val hbase = "1.2.6"
   val spark = "2.1.0"
 }
 
 libraryDependencies ++= Seq(
   "org.apache.hbase"             %  "hbase-hadoop-compat"  % "1.2.1",
+  "com.typesafe" % "config" % "1.3.2",
   ("org.apache.hbase"             %  "hbase-server"         % Versions.hbase)
     .exclude("com.sun.jersey","jersey-server"),
   "org.apache.hbase"             %  "hbase-common"         % Versions.hbase,
@@ -36,4 +37,4 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-mainClass in Compile := Some("scala.AssemblerMain")
+mainClass in (Compile,run) := Some("main.AssemblerMain")

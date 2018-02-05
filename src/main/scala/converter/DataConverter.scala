@@ -13,21 +13,21 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
   */
 object DataConverter {
 
-import config.Config._
+import global.ApplicationContext._
 
   def jsonToParquet(jsonFilePath:String, parquetFilePath:String)(implicit spark:SparkSession):Unit = {
     val data: DataFrame = spark.read.json(jsonFilePath)
     data.write.parquet(parquetFilePath)
   }
 
-def parquetToHFile()(implicit spark:SparkSession):Unit = parquetToHFile(pathToParquet)
+def parquetToHFile()(implicit spark:SparkSession):Unit = parquetToHFile(config.getString("files.parquet"))
 
-def parquetToHFile(parquetFilePath:String, pathToHFile:String = hfilePath)(implicit spark:SparkSession):Unit = {
+def parquetToHFile(parquetFilePath:String, pathToHFile:String = config.getString("files.hfile"))(implicit spark:SparkSession):Unit = {
 
       def strToBytes(s:String) = try{
         s.getBytes()
       }catch{
-        case e:Exception => {
+        case e:Throwable => {
           throw new Exception(e)
         }
         case _ => throw new Exception(s"cannot do bytes from string: $s")
@@ -35,7 +35,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = hfilePath)(impli
       def longToBytes(l:Long) = try{
         Bytes.toBytes(l)
       }catch{
-        case e:Exception => {
+        case e:Throwable => {
           throw new Exception(e)
         }
         case _ => throw new Exception(s"cannot do bytes from long: $l")
