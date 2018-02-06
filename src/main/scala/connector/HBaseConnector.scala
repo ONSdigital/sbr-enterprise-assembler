@@ -27,7 +27,7 @@ object HBaseConnector {
 
   val conf: Configuration = HBaseConfiguration.create()
   Try{config.getString("hbase.kerberos.config")}.map(conf.addResource).getOrElse(logger.info("no config resource for kerberos specified"))
-  Try{config.getString("hbase.config")}.map(conf.addResource).getOrElse {
+  Try{config.getString("hbase.local.path.config")}.map(conf.addResource).getOrElse {
                 logger.info("no config resource for hbase specified. Default configs will be used")
                 conf.set("hbase.zookeeper.quorum", config.getString("hbase.local.zookeper.url"))
                 conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.local.files.per.region"))

@@ -2,9 +2,8 @@ package global
 
 
 import com.typesafe.config._
-import connector.HBaseConnector.{conf, logger}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 
 object ApplicationContext {
