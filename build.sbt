@@ -37,4 +37,4 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-mainClass in (Compile,run) := Some("main.AssemblerMain")
+mainClass in (Compile,run) := Some("assembler.AssemblerMain")

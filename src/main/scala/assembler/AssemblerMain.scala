@@ -1,13 +1,13 @@
-package main
+package assembler
 
 
 import org.apache.spark.sql.SparkSession
 /**
   *
   */
-object AssemblerMain extends App{
+object AssemblerMain{
 
-  override def main(args: Array[String]) {
+  def main(args: Array[String]) {
     import service.EnterpriseAssemblerService._
 
     implicit val spark: SparkSession = SparkSession
@@ -17,6 +17,9 @@ object AssemblerMain extends App{
       .config("spark.ui.port", "18080")
       .getOrCreate()
 
-    loadFromHFile
+    loadFromJson
+    //loadFromHFile
+    //loadFromParquet
+    //converter.DataConverter.parquetToHFile
   }
 }
