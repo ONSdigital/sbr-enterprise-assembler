@@ -19,7 +19,7 @@ import global.ApplicationContext._
     parquetToHFile(pathToParquet,hfilePath)
   }
 
-  def hfileToHbase(pathTpHFile:String = config.getString("files.hfile"))(implicit spark: SparkSession) = {
+  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit spark: SparkSession) = {
 
     import connector.HBaseConnector._
 
@@ -29,26 +29,26 @@ import global.ApplicationContext._
 
   }
 
-    def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String = config.getString("files.hfile"))(implicit spark:SparkSession):Unit  = {
+    def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = {
       createHFile(pathToJsonFile, pathToParquetFile, pathToHFile)
       hfileToHbase(pathToHFile)
     }
 
-    def loadFromJson(pathToJsonFile:String)(implicit spark:SparkSession):Unit  = loadFromJson(pathToJsonFile,config.getString("files.parquet"),config.getString("files.hfile"))
+    def loadFromJson(pathToJsonFile:String)(implicit spark:SparkSession):Unit  = loadFromJson(pathToJsonFile,PATH_TO_PARQUET,PATH_TO_HFILE)
 
-    def loadFromJson(implicit spark:SparkSession):Unit  = loadFromJson(config.getString("files.json"),config.getString("files.parquet"),config.getString("files.hfile"))
+    def loadFromJson(implicit spark:SparkSession):Unit  = loadFromJson(PATH_TO_JSON,PATH_TO_PARQUET,PATH_TO_HFILE)
 
-    def loadFromParquet(pathToParquetFile:String,pathToHFile:String = config.getString("files.hfile"))(implicit spark:SparkSession):Unit  = {
+    def loadFromParquet(pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = {
       parquetToHFile(pathToParquetFile,pathToHFile)
       hfileToHbase(pathToHFile)
     }
 
     def loadFromParquet(implicit spark:SparkSession):Unit = {
-      loadFromParquet(config.getString("files.parquet"),config.getString("files.hfile"))
-      hfileToHbase(config.getString("files.hfile"))
+      loadFromParquet(PATH_TO_PARQUET,PATH_TO_HFILE)
+      hfileToHbase(PATH_TO_HFILE)
     }
 
-    def loadFromHFile(pathToHFile:String = config.getString("files.hfile"))(implicit spark:SparkSession):Unit  = hfileToHbase(pathToHFile)
-    def loadFromHFile(implicit spark:SparkSession):Unit = hfileToHbase(config.getString("files.hfile"))
+    def loadFromHFile(pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = hfileToHbase(pathToHFile)
+    def loadFromHFile(implicit spark:SparkSession):Unit = hfileToHbase(PATH_TO_HFILE)
 
 }

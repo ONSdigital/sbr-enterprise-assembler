@@ -22,9 +22,9 @@ import global.ApplicationContext._
     data.write.parquet(parquetFilePath)
   }
 
-def parquetToHFile()(implicit spark:SparkSession):Unit = parquetToHFile(config.getString("files.parquet"))
+def parquetToHFile()(implicit spark:SparkSession):Unit = parquetToHFile(PATH_TO_PARQUET)
 
-def parquetToHFile(parquetFilePath:String, pathToHFile:String = config.getString("files.hfile"))(implicit spark:SparkSession):Unit = {
+def parquetToHFile(parquetFilePath:String, pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit = {
 
       def strToBytes(s:String) = try{
         s.getBytes()
@@ -56,7 +56,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = config.getString
       val data: RDD[(ImmutableBytesWritable, KeyValue)] = parquetFileDF.rdd.sortBy(_.getAs[Long]("id")).map(r => {
         val id: Long = r.getAs[Long](idKey)
         val keyStr = s"$period~${id}~ENT"
-        val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.table.column.family")), longToBytes(id), strToBytes("ENT") )
+        val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.local.table.column.family")), longToBytes(id), strToBytes("ENT") )
         val key =  strToBytes(keyStr)
         (new ImmutableBytesWritable(key), row)
       })
@@ -65,7 +65,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = config.getString
         val ern = java.util.UUID.randomUUID().toString
         val ubnr: Long = r.getAs[Long](idKey)
         val keyStr = s"$period~${ern}~ENT"
-        val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.table.column.family")), longToBytes(ubnr), strToBytes("legalunit") )
+        val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.local.table.column.family")), longToBytes(ubnr), strToBytes("legalunit") )
         val key =  strToBytes(keyStr)
         (new ImmutableBytesWritable(key), row)
       }
@@ -77,7 +77,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = config.getString
      def rowToLegalUnit(r:Row, ern:String):(ImmutableBytesWritable, KeyValue) = {
        val ubnr: Long = r.getAs[Long](idKey)
        val keyStr = s"$period~${ubnr}~LEU"
-       val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.table.column.family")), strToBytes(ern), strToBytes("enterprise") )
+       val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.local.table.column.family")), strToBytes(ern), strToBytes("enterprise") )
        val key =  strToBytes(keyStr)
        (new ImmutableBytesWritable(key), row)
      }

@@ -1,17 +1,16 @@
 package connector
 
-import global.ApplicationContext
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
-import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue, TableName}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles}
+import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 /**
   *
@@ -22,10 +21,17 @@ object HBaseConnector {
 
   val logger = LoggerFactory.getLogger(getClass)
 
+  def getIntValue(resourceKey:String, defaultVal:Int) = Try{config.getInt(resourceKey)}.getOrElse(defaultVal)
+  def getStrValue(resourceKey:String, defaultVal:String): String = Try{config.getString(resourceKey)}.getOrElse(defaultVal)
+
+
   val conf: Configuration = HBaseConfiguration.create()
-      conf.set(TableOutputFormat.OUTPUT_TABLE, config.getString("hbase.table.name"))
-      conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.files.per.region"))
-  conf.set("hbase.zookeeper.quorum", config.getString("hbase.zookeper.url"))
+  Try{config.getString("hbase.kerberos.config")}.map(conf.addResource).getOrElse(logger.info("no config resource for kerberos specified"))
+  Try{config.getString("hbase.config")}.map(conf.addResource).getOrElse {
+                logger.info("no config resource for hbase specified. Default configs will be used")
+                conf.set("hbase.zookeeper.quorum", config.getString("hbase.local.zookeper.url"))
+                conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.local.files.per.region"))
+             }
 
   val connection: Connection = ConnectionFactory.createConnection(conf)
 
@@ -38,8 +44,8 @@ object HBaseConnector {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def loadHFile(pathToHFile:String = config.getString("files.hfile")) = {
-    val table: Table = connection.getTable(TableName.valueOf(config.getString("hbase.table.name")))
+  def loadHFile(pathToHFile:String = PATH_TO_HFILE) = {
+    val table: Table = connection.getTable(TableName.valueOf(config.getString("hbase.local.table.name")))
     setJob(table)
     val bulkLoader = new LoadIncrementalHFiles(conf)
     val regionLocator = connection.getRegionLocator(table.getName)
