@@ -7,16 +7,16 @@ import scala.util.Try
 
 
 object ApplicationContext {
-  lazy val config: Config = ConfigFactory.load()
+
+ val config: Config = ConfigFactory.load()
 
 
+   val PATH_TO_JSON = config.getString("files.json")
+   val PATH_TO_PARQUET = config.getString("files.parquet")
+   val PATH_TO_HFILE = config.getString("files.hfile")
 
-   def getValue(key:String) = Try{config.getString("files.env.config")}
-                                 .map(ConfigFactory.load(_).getString(key)).getOrElse(config.getString(key))
-
-   val PATH_TO_JSON = getValue("files.json")
-   val PATH_TO_PARQUET = getValue("files.parquet")
-   val PATH_TO_HFILE = getValue("files.hfile")
+/*   val PERIOD = config.getString("files.hfile")
+   val ID_KEY = config.getString("files.hfile")*/
 
 
 

@@ -4,16 +4,24 @@ package converter
 
 import connector.HBaseConnector
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SparkSession,Row}
+import org.apache.spark.sql.{DataFrame, SparkSession}
+
+import scala.util.Random
 
 /**
   *
   */
-object DataConverter {
+case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
+  def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
+}
+
+
+object DataConverter extends WithConversionHelper{
 
 import global.ApplicationContext._
 
@@ -22,73 +30,48 @@ import global.ApplicationContext._
     data.write.parquet(parquetFilePath)
   }
 
+  def jsonToParquet(implicit spark:SparkSession):Unit = {
+    val data: DataFrame = spark.read.json(PATH_TO_JSON)
+    data.write.parquet(PATH_TO_PARQUET)
+  }
+
+
+
 def parquetToHFile()(implicit spark:SparkSession):Unit = parquetToHFile(PATH_TO_PARQUET)
 
 def parquetToHFile(parquetFilePath:String, pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit = {
 
-      def strToBytes(s:String) = try{
-        s.getBytes()
-      }catch{
-        case e:Throwable => {
-          throw new Exception(e)
-        }
-        case _ => throw new Exception(s"cannot do bytes from this string: $s")
-      }
-      def longToBytes(l:Long) = try{
-        Bytes.toBytes(l)
-      }catch{
-        case e:Throwable => {
-          throw new Exception(e)
-        }
-        case _ => throw new Exception(s"cannot do bytes from long: $l")
-      }
+
 
       val parquetFileDF: DataFrame = spark.read.parquet(parquetFilePath)
 
+      parquetFileDF.printSchema()
         /*//TEST:
             parquetFileDF.createOrReplaceTempView("businessIndexRec")
             val namesDF: DataFrame = spark.sql("SELECT VatRefs,PayeRefs FROM businessIndexRec WHERE BusinessName = 'NICHOLAS ROSS PLC'")
             namesDF.show()*/
 
-      val period = "201802"
-      val idKey = "id"
+  val parquetRdd = parquetFileDF.rdd//.sortBy(_.getAs[Long]("id"))
+  parquetFileDF.printSchema()
+/*  val data: RDD[(ImmutableBytesWritable, KeyValue)] = parquetRdd.flatMap(rowToEnt).sortBy(_._1).map(kv => {
+    val key = new ImmutableBytesWritable(toBytes(kv._1))
+    println(s"KEY: ${kv._1}")
+    (key,kv._2)
+  })  */
 
-      val data: RDD[(ImmutableBytesWritable, KeyValue)] = parquetFileDF.rdd.sortBy(_.getAs[Long]("id")).map(r => {
-        val id: Long = r.getAs[Long](idKey)
-        val keyStr = s"$period~${id}~ENT"
-        val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.local.table.column.family")), longToBytes(id), strToBytes("ENT") )
-        val key =  strToBytes(keyStr)
-        (new ImmutableBytesWritable(key), row)
-      })
+  val flatt: RDD[(String, RowObject)] = parquetFileDF.rdd.flatMap(rowToEnt)
+  val sorted = flatt.sortBy(_._1)
 
-      def rowToEnt(r:Row): (ImmutableBytesWritable, KeyValue) = {
-        val ern = java.util.UUID.randomUUID().toString
-        val ubnr: Long = r.getAs[Long](idKey)
-        val keyStr = s"$period~${ern}~ENT"
-        val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.local.table.column.family")), longToBytes(ubnr), strToBytes("legalunit") )
-        val key =  strToBytes(keyStr)
-        (new ImmutableBytesWritable(key), row)
-      }
+  //val data: RDD[(ImmutableBytesWritable, KeyValue)] =  sorted.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))//parquetRdd.sortBy(_.getAs[Long]("id")).map(rowToEnt)
 
-/*  def getVats(vats:Seq[String], ubrn:Long) = {
-    vats.map(vat => r.)
-  }*/
-
-     def rowToLegalUnit(r:Row, ern:String):(ImmutableBytesWritable, KeyValue) = {
-       val ubnr: Long = r.getAs[Long](idKey)
-       val keyStr = s"$period~${ubnr}~LEU"
-       val row = new KeyValue(strToBytes(keyStr), strToBytes(config.getString("hbase.local.table.column.family")), strToBytes(ern), strToBytes("enterprise") )
-       val key =  strToBytes(keyStr)
-       (new ImmutableBytesWritable(key), row)
-     }
+/*val collected: Array[(ImmutableBytesWritable, KeyValue)] = data.collect()
+  println(collected.toString)*/
 
       import HBaseConnector._
-
-      data.saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],conf)
-
+ Put
+  sorted.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],conf)
+  sorted.unpersist()
       }
-
-
 
 
 }
