@@ -17,10 +17,10 @@ trait WithConversionHelper {
   val colFamily = config.getString("hbase.local.table.column.family")
 
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
-    val ubnr = row.getAs[Long](idKey)
-    val ern = generateErn
+    val ubrn = row.getAs[Long](idKey)
+    val ern = generateErn(ubrn.toString)
     val keyStr = generateKey(ern,"ENT")
-    createRecord(keyStr,ubnr.toString,"legalunit")+:rowToLegalUnit(row,ern)
+    createRecord(keyStr,ubrn.toString,"legalunit")+:rowToLegalUnit(row,ern)
   }
 
   def rowToLegalUnit(r:Row, ern:String):Seq[(String, RowObject)] = {
@@ -48,7 +48,7 @@ trait WithConversionHelper {
     (key -> RowObject(key,colFamily,column,value) )
   }
 
-  def generateErn = Random.nextInt.toString
+  def generateErn(ubrn:String) = s"ENT$ubrn"
   def generateKey(id:String, suffix:String) = s"$period~$id~$suffix"
 
 

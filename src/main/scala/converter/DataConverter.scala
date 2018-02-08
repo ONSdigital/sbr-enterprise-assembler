@@ -10,7 +10,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 
 
-
 case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
   def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
 }
@@ -40,7 +39,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = PATH_TO_HFILE)(i
 
       val parquetFileDF: DataFrame = spark.read.parquet(parquetFilePath)
 
-      val data = parquetFileDF.rdd.flatMap(rowToEnt).sortByKey()
+      val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
 
       import HBaseConnector._
 

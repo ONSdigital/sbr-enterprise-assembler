@@ -19,7 +19,7 @@ object AssemblerMain{
 
     //loadFromJson
     //loadFromHFile
-    loadFromParquet
+    //loadFromParquet
     //converter.DataConverter.parquetToHFile
     spark.stop()
     //converter.DataConverter.jsonToParquet
