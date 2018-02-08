@@ -68,7 +68,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = PATH_TO_HFILE)(i
   println(collected.toString)*/
 
       import HBaseConnector._
- Put
+
   sorted.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],conf)
   sorted.unpersist()
       }
