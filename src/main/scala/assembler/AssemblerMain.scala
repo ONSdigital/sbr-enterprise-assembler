@@ -17,7 +17,7 @@ object AssemblerMain{
       .config("spark.ui.port", "18080")
       .getOrCreate()
 
-    //loadFromJson
+    loadFromJson
     //loadFromHFile
     //loadFromParquet
     //converter.DataConverter.parquetToHFile
