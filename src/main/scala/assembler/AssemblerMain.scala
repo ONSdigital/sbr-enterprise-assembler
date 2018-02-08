@@ -18,9 +18,10 @@ object AssemblerMain{
       .getOrCreate()
 
     //loadFromJson
-    //loadFromHFile
+    loadFromHFile
     //loadFromParquet
-    converter.DataConverter.parquetToHFile
+    //converter.DataConverter.parquetToHFile
+    spark.stop()
     //converter.DataConverter.jsonToParquet
   }
 }

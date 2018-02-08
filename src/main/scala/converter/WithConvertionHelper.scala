@@ -20,52 +20,23 @@ trait WithConversionHelper {
   val idKey = "id"
   val colFamily = config.getString("hbase.local.table.column.family")
 
-/*  def rowToEnt(r:Row): Seq[(ImmutableBytesWritable, KeyValue)] = {
-    val ern = Random.nextInt.toString
-    val ubnr = r.getAs[Long](idKey)
-    val keyStr = s"$period~${ern}~ENT"
-    val luKeyValue = new KeyValue(toBytes(keyStr), toBytes(config.getString("hbase.local.table.column.family")), toBytes(ubnr), toBytes("legalunit") )
-    val key =  new ImmutableBytesWritable(toBytes(keyStr))
-    (key, luKeyValue)+:rowToLegalUnit(r,ern)
-  }*/
-def generateErn = s"$period~${Random.nextInt.toString}~ENT"
+  def generateErn = Random.nextInt.toString
+  def generateKey(id:String, suffix:String) = s"$period~$id~$suffix"
 
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
     val ubnr = row.getAs[Long](idKey)
     val ern = generateErn
-    val keyStr = s"$period~${ern}~ENT"
+    val keyStr = generateKey(ern,"ENT")
     val luKeyValue = RowObject(keyStr, colFamily, ubnr.toString, "legalunit" )
-    //val key =  new ImmutableBytesWritable(toBytes(keyStr))
     (keyStr -> luKeyValue)+:rowToLegalUnit(row,ern)
   }
 
 
-/*  def rowToLegalUnit(r:Row, ern:String):Seq[(ImmutableBytesWritable, KeyValue)] = {
-    import scala.collection.JavaConversions._
-    val ubnr: Long = r.getAs[Long](idKey)
-    val keyStr = s"$period~${ubnr}~LEU"
-    val key =  new ImmutableBytesWritable(toBytes(keyStr))
-    val luEntEntry = (key,keyValue(keyStr,ern,"enterprise"))
-    val chRefsEntEntry = r.getAs[String]("CompanyNo")//(key, keyValue(ern,"enterprise"))
-    val vatRefs = r.getList[Long](10)
-    val u:Unit = if(!vatRefs.isEmpty && vatRefs.size>1) {
-      println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-      val s = vatRefs//.asScala.toList
-      s.foreach(println)
-      println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    }
-    if(chRefsEntEntry.trim.isEmpty) Seq(luEntEntry) else {
-
-      Seq(luEntEntry, (key, keyValue(keyStr,chRefsEntEntry,"ch"))):+createCh(chRefsEntEntry,ubnr)//(new ImmutableBytesWritable(strToBytes(s"$period~${chRefsEntEntry}~CH")),keyValue(ubnr,"legalunit") )
-    }
-  }*/
-
 
   def rowToLegalUnit(r:Row, ern:String):Seq[(String, RowObject)] = {
-    import scala.collection.JavaConversions._
 
-    val ubnr: String = r.getAs[Long](idKey).toString
-    val keyStr = s"$period~${ubnr}~LEU"
+    val ubrn: String = r.getAs[Long](idKey).toString
+    val keyStr = generateKey(ubrn,"LEU")
     val luEntEntry = (keyStr -> RowObject(keyStr,colFamily,ern,"enterprise"))
     val companyNo = r.getAs[String]("CompanyNo")//(key, keyValue(ern,"enterprise"))
 /*    val vatRefs = r.getList[Long](10)
@@ -77,20 +48,14 @@ def generateErn = s"$period~${Random.nextInt.toString}~ENT"
     }*/
    if(companyNo.trim.isEmpty) Seq(luEntEntry) else {
 
-      Seq(luEntEntry/*, (keyStr -> RowObject(keyStr,colFamily,companyNo,"ch"))*/):+createCh(companyNo,ubnr)//(new ImmutableBytesWritable(strToBytes(s"$period~${chRefsEntEntry}~CH")),keyValue(ubnr,"legalunit") )
+      Seq((keyStr -> RowObject(keyStr,colFamily,ern,"enterprise")),
+          (keyStr -> RowObject(keyStr,colFamily,companyNo,"ch"))):+createCh(companyNo,ubrn)
 
   }}
 
-
-
-/*  def createCh(coNo:String,ubnr:Long) = {
-    val key = s"$period~${coNo}~CH"
-    (new ImmutableBytesWritable(toBytes(key)),keyValue(key,ubnr,"legalunit") )
-  }*/
-
-  def createCh(coNo:String,ubnr:String) = {
-    val key = s"$period~${coNo}~CH"
-    (key -> RowObject(key,colFamily,ubnr,"legalunit") )
+  def createCh(coNo:String,ubrn:String) = {
+    val key = generateKey(coNo,"CH")
+    (key -> RowObject(key,colFamily,ubrn,"legalunit") )
   }
 
   def toBytes(s:String) = try{
