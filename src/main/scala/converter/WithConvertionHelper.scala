@@ -35,14 +35,20 @@ trait WithConversionHelper {
       s.foreach(println)
       println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     }*/
-   if(companyNo.trim.isEmpty) Seq( createRecord(luKey,ern,"enterprise") ) else {
+    createRecord(luKey,ern,"enterprise") +: getCh(r,luKey)
+  }
 
-      Seq( createRecord(luKey,ern,"enterprise"),
-           createRecord(luKey,companyNo,"ch"),
-           createRecord(generateKey(companyNo,"CH"),ubrn,"legalunit")
-         )
+  def getCh(r:Row, luKey:String):Seq[(String, RowObject)] = {
 
-  }}
+    val ubrn: String = r.getAs[Long](idKey).toString
+    val companyNo = r.getAs[String]("CompanyNo")
+
+    if(companyNo.trim.isEmpty) Seq[(String, RowObject)]() else {
+
+      Seq(
+        createRecord(luKey,companyNo,"ch"),
+        createRecord(generateKey(companyNo,"CH"),ubrn,"legalunit")
+      )}}
 
   private def createRecord(key:String,column:String, value:String) = {
     (key -> RowObject(key,colFamily,column,value) )
