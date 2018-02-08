@@ -5,7 +5,7 @@ package converter
 import global.ApplicationContext.config
 import org.apache.spark.sql.Row
 
-import scala.util.{Random, Try}
+import scala.util.Try
 
 /**
 * Schema:
