@@ -45,6 +45,9 @@ object HBaseConnector {
   }
 
   def loadHFile(pathToHFile:String = PATH_TO_HFILE) = {
+    if (connection.isClosed) {
+      println("hbase connection is closed, exiting")
+    }else{
     val table: Table = connection.getTable(TableName.valueOf(config.getString("hbase.local.table.name")))
     setJob(table)
     val bulkLoader = new LoadIncrementalHFiles(conf)
@@ -52,7 +55,8 @@ object HBaseConnector {
     val admin = connection.getAdmin
     bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
     table.close
-  }
+    //closeConnection
+  }}
 
 
 

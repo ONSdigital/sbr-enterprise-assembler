@@ -28,15 +28,9 @@ import global.ApplicationContext._
 
 
 
-  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit spark: SparkSession) = {
+  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit spark: SparkSession) = HBaseConnector.loadHFile(pathTpHFile)
 
-    import connector.HBaseConnector._
 
-    HBaseConnector.loadHFile(pathTpHFile)
-    closeConnection
-    spark.stop
-
-  }
 
     def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = {
       createHFile(pathToJsonFile, pathToParquetFile, pathToHFile)
