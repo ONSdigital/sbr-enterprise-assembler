@@ -1,4 +1,4 @@
-name := "enterprise_assembler"
+name := "sbr-enterprise_assembler"
 
 version := "1.0"
 
