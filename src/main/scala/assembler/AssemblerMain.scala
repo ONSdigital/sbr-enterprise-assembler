@@ -1,6 +1,7 @@
 package assembler
 
 
+import connector.HBaseConnector
 import org.apache.spark.sql.SparkSession
 /**
   *
@@ -12,12 +13,15 @@ object AssemblerMain{
 
     implicit val spark: SparkSession = SparkSession
       .builder()
+      .master("local[4]")
       .appName("enterprise assembler")
       .getOrCreate()
 
-    //loadFromJson
+    loadFromJson
     //loadFromHFile
-    loadFromParquet
+    //loadFromParquet
+    //converter.DataConverter.parquetToHFile
+    //loadFromParquet
     //converter.DataConverter.parquetToHFile
     spark.stop()
     //converter.DataConverter.jsonToParquet

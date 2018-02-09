@@ -33,7 +33,7 @@ object HBaseConnector {
                 conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.local.files.per.region"))
              }
 
-  val connection: Connection = ConnectionFactory.createConnection(conf)
+
 
 
 
@@ -44,7 +44,8 @@ object HBaseConnector {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def loadHFile(pathToHFile:String = PATH_TO_HFILE) = {
+  def loadHFile(pathToHFile:String = PATH_TO_HFILE)() = {
+    val connection: Connection = ConnectionFactory.createConnection(conf)
     val table: Table = connection.getTable(TableName.valueOf(config.getString("hbase.local.table.name")))
     setJob(table)
     val bulkLoader = new LoadIncrementalHFiles(conf)
@@ -52,14 +53,16 @@ object HBaseConnector {
     val admin = connection.getAdmin
     bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
     table.close
+    admin.close
+    closeConnection(connection)
   }
 
 
 
-  def closeConnection = if(closedConnection) Unit else System.exit(1)
+  private def closeConnection(connection:Connection) = if(connectionClosed(connection)) Unit else System.exit(1)
 
 
-  private def closedConnection: Boolean = {
+  private def connectionClosed(connection:Connection): Boolean = {
 
     def isClosed(waitingMillis: Long): Boolean = if (!connection.isClosed) {
       wait(waitingMillis)

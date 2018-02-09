@@ -5,7 +5,7 @@ package converter
 import global.ApplicationContext.config
 import org.apache.spark.sql.Row
 
-import scala.util.Try
+import scala.util.{Random, Try}
 
 /**
 * Schema:
@@ -34,7 +34,7 @@ trait WithConversionHelper {
 
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
     val ubrn = row.getAs[Long](idKey)
-    val ern = generateErn(ubrn.toString)
+    val ern = generateErn//(ubrn.toString)
     val keyStr = generateKey(ern,"ENT")
     createRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnit(row,ern)
   }
@@ -82,6 +82,7 @@ trait WithConversionHelper {
   }
 
   def generateErn(ubrn:String) = s"ENT$ubrn"
+  def generateErn = Random.nextInt(9999999).toString //to keep with same format as ubrn
   def generateKey(id:String, suffix:String) = s"$period~$id~$suffix"
 
 

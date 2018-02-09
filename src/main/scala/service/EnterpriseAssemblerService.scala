@@ -28,15 +28,9 @@ import global.ApplicationContext._
 
 
 
-  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit spark: SparkSession) = {
+  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE) = HBaseConnector.loadHFile(pathTpHFile)
 
-    import connector.HBaseConnector._
 
-    HBaseConnector.loadHFile(pathTpHFile)
-    closeConnection
-    spark.stop
-
-  }
 
     def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = {
       createHFile(pathToJsonFile, pathToParquetFile, pathToHFile)
@@ -57,7 +51,7 @@ import global.ApplicationContext._
       hfileToHbase(PATH_TO_HFILE)
     }
 
-    def loadFromHFile(pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = hfileToHbase(pathToHFile)
+    def loadFromHFile(pathToHFile:String = PATH_TO_HFILE) = hfileToHbase(pathToHFile)
     def loadFromHFile(implicit spark:SparkSession):Unit = hfileToHbase(PATH_TO_HFILE)
 
 }
