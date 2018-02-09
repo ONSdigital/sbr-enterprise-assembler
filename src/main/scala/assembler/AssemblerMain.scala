@@ -13,17 +13,17 @@ object AssemblerMain{
 
     implicit val spark: SparkSession = SparkSession
       .builder()
+      .master("local[4]")
       .appName("enterprise assembler")
       .getOrCreate()
 
-    //loadFromJson
+    loadFromJson
     //loadFromHFile
     //loadFromParquet
     //converter.DataConverter.parquetToHFile
-    loadFromParquet
+    //loadFromParquet
     //converter.DataConverter.parquetToHFile
     spark.stop()
-    HBaseConnector.closeConnection
     //converter.DataConverter.jsonToParquet
   }
 }

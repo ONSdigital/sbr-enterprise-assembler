@@ -28,7 +28,7 @@ import global.ApplicationContext._
 
 
 
-  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit spark: SparkSession) = HBaseConnector.loadHFile(pathTpHFile)
+  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE) = HBaseConnector.loadHFile(pathTpHFile)
 
 
 
@@ -51,7 +51,7 @@ import global.ApplicationContext._
       hfileToHbase(PATH_TO_HFILE)
     }
 
-    def loadFromHFile(pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession):Unit  = hfileToHbase(pathToHFile)
+    def loadFromHFile(pathToHFile:String = PATH_TO_HFILE) = hfileToHbase(pathToHFile)
     def loadFromHFile(implicit spark:SparkSession):Unit = hfileToHbase(PATH_TO_HFILE)
 
 }
