@@ -17,10 +17,10 @@ object AssemblerMain{
       .config("spark.ui.port", "18080")
       .getOrCreate()
 
-    loadFromJson
+    //loadFromJson
     //loadFromHFile
     //loadFromParquet
-    //converter.DataConverter.parquetToHFile
+    converter.DataConverter.parquetToHFile
     spark.stop()
     //converter.DataConverter.jsonToParquet
   }
