@@ -12,12 +12,21 @@ object EnterpriseAssemblerService {
 
 import global.ApplicationContext._
 
+  def createHFile(implicit spark: SparkSession) = {
+    import converter.DataConverter._
+
+    jsonToParquet(PATH_TO_JSON, PATH_TO_PARQUET)
+    parquetToHFile(PATH_TO_PARQUET,PATH_TO_HFILE)
+  }
+
   def createHFile(pathToJson:String,pathToParquet:String,hfilePath:String)(implicit spark: SparkSession) = {
     import converter.DataConverter._
 
     jsonToParquet(pathToJson, pathToParquet)
     parquetToHFile(pathToParquet,hfilePath)
   }
+
+
 
   def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit spark: SparkSession) = {
 
