@@ -17,12 +17,13 @@ object AssemblerMain{
       .appName("enterprise assembler")
       .getOrCreate()
 
-    loadFromJson
-    //loadFromHFile
+    //loadFromJson
+    loadFromHFile
     //loadFromParquet
     //converter.DataConverter.parquetToHFile
     //loadFromParquet
     //converter.DataConverter.parquetToHFile
+    HBaseConnector.closeConnection
     spark.stop()
     //converter.DataConverter.jsonToParquet
   }
