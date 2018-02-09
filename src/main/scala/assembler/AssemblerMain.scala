@@ -1,6 +1,7 @@
 package assembler
 
 
+import connector.HBaseConnector
 import org.apache.spark.sql.SparkSession
 /**
   *
@@ -20,8 +21,10 @@ object AssemblerMain{
     //loadFromJson
     //loadFromHFile
     //loadFromParquet
-    converter.DataConverter.parquetToHFile
+    //converter.DataConverter.parquetToHFile
+    hfileToHbase()
     spark.stop()
+    HBaseConnector.closeConnection
     //converter.DataConverter.jsonToParquet
   }
 }
