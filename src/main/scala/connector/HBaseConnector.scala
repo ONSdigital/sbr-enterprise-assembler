@@ -21,7 +21,7 @@ object HBaseConnector {
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  def getIntValue(resourceKey:String, defaultVal:Int) = Try{config.getInt(resourceKey)}.getOrElse(defaultVal)
+/*  def getIntValue(resourceKey:String, defaultVal:Int) = Try{config.getInt(resourceKey)}.getOrElse(defaultVal)
   def getStrValue(resourceKey:String, defaultVal:String): String = Try{config.getString(resourceKey)}.getOrElse(defaultVal)
 
 
@@ -31,24 +31,23 @@ object HBaseConnector {
                 logger.info("no config resource for hbase specified. Default configs will be used")
                 conf.set("hbase.zookeeper.quorum", config.getString("hbase.local.zookeper.url"))
                 conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.local.files.per.region"))
-             }
+             }*/
 
 
-  val connection: Connection = ConnectionFactory.createConnection(conf)
+  //val connection: Connection = ConnectionFactory.createConnection(conf)
 
 
-  private def setJob(table:Table) = {
-    val job = Job.getInstance(conf)
+  private def setJob(table:Table)(implicit connection:Connection) = {
+    val job = Job.getInstance(connection.getConfiguration)
     job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
     job.setMapOutputValueClass(classOf[KeyValue])
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def loadHFile(pathToHFile:String = PATH_TO_HFILE)() = {
-
+  def loadHFile(pathToHFile:String = PATH_TO_HFILE)(implicit connection:Connection) = {
     val table: Table = connection.getTable(TableName.valueOf(config.getString("hbase.local.table.name")))
     setJob(table)
-    val bulkLoader = new LoadIncrementalHFiles(conf)
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     val admin = connection.getAdmin
     bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
@@ -58,7 +57,7 @@ object HBaseConnector {
 
 
 
-  def closeConnection = if(connectionClosed) Unit else System.exit(1)
+  /*def closeConnection = if(connectionClosed) Unit else System.exit(1)
 
 
   private def connectionClosed: Boolean = {
@@ -87,5 +86,5 @@ object HBaseConnector {
 
     tryClosing(1000L, 5, 5)
   }
-
+*/
 }

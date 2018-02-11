@@ -41,7 +41,7 @@ def parquetToHFile(parquetFilePath:String, pathToHFile:String = PATH_TO_HFILE)(i
 
       val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
 
-      import HBaseConnector._
+     import global.ApplicationContext._
 
       data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],conf)
       data.unpersist()
