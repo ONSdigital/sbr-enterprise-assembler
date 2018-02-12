@@ -22,8 +22,8 @@ object AssemblerMain extends Configured with ConnectionManagement with Enterpris
         .appName("enterprise assembler")
         .getOrCreate()
 
-      //loadFromJson
-      loadFromParquet
+      loadFromJson
+      //loadFromParquet
       //loadFromHFile
 
       spark.stop()

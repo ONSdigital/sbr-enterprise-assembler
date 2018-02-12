@@ -3,7 +3,7 @@ package service
 
 
 import connector.HBaseConnector
-import converter.DataConverter
+import converter.ParquetDAO
 import global.Configured
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
@@ -11,7 +11,9 @@ import org.apache.spark.sql.SparkSession
 /**
  *
  */
-trait EnterpriseAssemblerService extends DataConverter{ this:Configured =>
+trait EnterpriseAssemblerService extends Configured{ this:Configured =>
+
+  import ParquetDAO._
 
   def createHFile(implicit spark: SparkSession, connection:Connection) = {
 
