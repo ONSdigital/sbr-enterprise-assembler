@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import scala.util.Try
 
 
-trait ApplicationConfig {
+trait Configured {
 
   val logger = LoggerFactory.getLogger(getClass)
 

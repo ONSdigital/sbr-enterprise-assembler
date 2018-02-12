@@ -1,6 +1,6 @@
 package hbase
 
-import global.ApplicationConfig
+import global.Configured
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 
 import scala.annotation.tailrec
@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 /**
   *
   */
-trait ConnectionManager  {this:ApplicationConfig =>
+trait ConnectionManagement  {this:Configured =>
 
 
   def connectionManaged(action:(Connection) => Unit) = {

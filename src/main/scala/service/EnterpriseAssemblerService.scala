@@ -4,14 +4,14 @@ package service
 
 import connector.HBaseConnector
 import converter.DataConverter
-import global.ApplicationConfig
+import global.Configured
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 
 /**
  *
  */
-trait EnterpriseAssemblerService extends DataConverter{ this:ApplicationConfig =>
+trait EnterpriseAssemblerService extends DataConverter{ this:Configured =>
 
   def createHFile(implicit spark: SparkSession, connection:Connection) = {
 

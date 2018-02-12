@@ -2,7 +2,7 @@ package converter
 
 
 
-import global.ApplicationConfig
+import global.Configured
 import org.apache.spark.sql.Row
 
 import scala.util.{Random, Try}
@@ -26,7 +26,7 @@ import scala.util.{Random, Try}
 *  12 -   element: long (containsNull = true)
 *  13 -   id: long (nullable = true)
   */
-trait WithConversionHelper {this: ApplicationConfig =>
+trait WithConversionHelper {this: Configured =>
 
 
   val period = "201802"

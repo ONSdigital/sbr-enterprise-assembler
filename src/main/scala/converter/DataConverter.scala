@@ -2,7 +2,7 @@ package converter
 
 
 
-import global.ApplicationConfig
+import global.Configured
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -16,7 +16,7 @@ case class RowObject(key:String, colFamily:String, qualifier:String, value:Strin
 }
 
 
-trait DataConverter extends WithConversionHelper{ this:ApplicationConfig =>
+trait DataConverter extends WithConversionHelper{ this:Configured =>
 
 
   def jsonToParquet(jsonFilePath:String, parquetFilePath:String)(implicit spark:SparkSession):Unit = {

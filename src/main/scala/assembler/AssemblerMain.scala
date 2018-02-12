@@ -1,20 +1,20 @@
 package assembler
 
 
-import global.ApplicationConfig
-import hbase.ConnectionManager
+import global.Configured
+import hbase.ConnectionManagement
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import service.EnterpriseAssemblerService
 /**
   *
   */
-object AssemblerMain extends ApplicationConfig with ConnectionManager with EnterpriseAssemblerService{
+object AssemblerMain extends Configured with ConnectionManagement with EnterpriseAssemblerService{
 
   def main(args: Array[String]) {
 
 
-    connectionManaged{ implicit connection:Connection => {
+    connectionManaged{ implicit connection:Connection =>
 
       implicit val spark: SparkSession = SparkSession
         .builder()
@@ -27,6 +27,6 @@ object AssemblerMain extends ApplicationConfig with ConnectionManager with Enter
       loadFromHFile
 
       spark.stop()
-  }}
+  }
  }
 }
