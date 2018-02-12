@@ -79,7 +79,7 @@ trait WithConversionHelper {this: Configured =>
 
 
   private def createRecord(key:String,column:String, value:String) = {
-    (key -> RowObject(key,HBASE_ENTERPRISE_TABLE_NAME,column,value) )
+    (key -> RowObject(key,HBASE_ENTERPRISE_COLUMN_FAMILY,column,value) )
   }
 
   def generateErn(ubrn:String) = s"ENT$ubrn"

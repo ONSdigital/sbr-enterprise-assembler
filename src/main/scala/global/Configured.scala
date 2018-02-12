@@ -28,6 +28,7 @@ trait Configured {
    val PATH_TO_PARQUET = Try{config.getString("files.parquet")}.getOrElse("src/main/resources/data/sample.parquet")
    val PATH_TO_HFILE =  Try(config.getString("files.hfile")).getOrElse("src/main/resources/data/hfile")
    val HBASE_ENTERPRISE_TABLE_NAME = Try(config.getString("hbase.local.table.name")).getOrElse("enterprise")
+   val HBASE_ENTERPRISE_COLUMN_FAMILY = Try(config.getString("table.column.family")).getOrElse("l")
 
 
 
