@@ -1,27 +1,18 @@
 package hbase
 
-import connector.HBaseConnector
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.HBaseConfiguration
+import global.ApplicationConfig
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
-import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
-import scala.util.Try
 
 /**
   *
   */
-trait ConnectionManager {
+trait ConnectionManager  {this:ApplicationConfig =>
 
-  import global.ApplicationContext._
-
-  val logger = LoggerFactory.getLogger(getClass)
-
-   import global.ApplicationContext._
 
   def connectionManaged(action:(Connection) => Unit) = {
-    implicit val hbConnection: Connection = ConnectionFactory.createConnection(conf)
+    val hbConnection: Connection = ConnectionFactory.createConnection(conf)
     action(hbConnection)
     closeConnection(hbConnection)
   }

@@ -2,7 +2,6 @@ package global
 
 
 import com.typesafe.config._
-import connector.HBaseConnector.getClass
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.slf4j.LoggerFactory
@@ -10,7 +9,7 @@ import org.slf4j.LoggerFactory
 import scala.util.Try
 
 
-object ApplicationContext {
+trait ApplicationConfig {
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -25,9 +24,10 @@ object ApplicationContext {
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.local.files.per.region"))
   }
 
-   val PATH_TO_JSON = config.getString("files.json")
-   val PATH_TO_PARQUET = config.getString("files.parquet")
-   val PATH_TO_HFILE = config.getString("files.hfile")
+   val PATH_TO_JSON = Try{config.getString("files.json")}.getOrElse("src/main/resources/data/sample.json")
+   val PATH_TO_PARQUET = Try{config.getString("files.parquet")}.getOrElse("src/main/resources/data/sample.parquet")
+   val PATH_TO_HFILE =  Try(config.getString("files.hfile")).getOrElse("src/main/resources/data/hfile")
+   val HBASE_ENTERPRISE_TABLE_NAME = Try(config.getString("hbase.local.table.name")).getOrElse("enterprise")
 
 
 

@@ -2,7 +2,7 @@ package converter
 
 
 
-import global.ApplicationContext.config
+import global.ApplicationConfig
 import org.apache.spark.sql.Row
 
 import scala.util.{Random, Try}
@@ -26,11 +26,12 @@ import scala.util.{Random, Try}
 *  12 -   element: long (containsNull = true)
 *  13 -   id: long (nullable = true)
   */
-trait WithConversionHelper {
+trait WithConversionHelper {this: ApplicationConfig =>
+
 
   val period = "201802"
   val idKey = "id"
-  val colFamily = config.getString("hbase.local.table.column.family")
+  //val colFamily = config.getString("hbase.local.table.column.family")
 
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
     val ubrn = row.getAs[Long](idKey)
@@ -78,7 +79,7 @@ trait WithConversionHelper {
 
 
   private def createRecord(key:String,column:String, value:String) = {
-    (key -> RowObject(key,colFamily,column,value) )
+    (key -> RowObject(key,HBASE_ENTERPRISE_TABLE_NAME,column,value) )
   }
 
   def generateErn(ubrn:String) = s"ENT$ubrn"

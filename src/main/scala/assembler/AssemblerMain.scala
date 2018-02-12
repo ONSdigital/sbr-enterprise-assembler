@@ -1,19 +1,17 @@
 package assembler
 
 
-import connector.HBaseConnector
+import global.ApplicationConfig
 import hbase.ConnectionManager
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
-import service.EnterpriseAssemblerService.loadFromHFile
+import service.EnterpriseAssemblerService
 /**
   *
   */
-object AssemblerMain extends ConnectionManager
-{
+object AssemblerMain extends ApplicationConfig with ConnectionManager with EnterpriseAssemblerService{
 
   def main(args: Array[String]) {
-    import service.EnterpriseAssemblerService._
 
 
     connectionManaged{ implicit connection:Connection => {

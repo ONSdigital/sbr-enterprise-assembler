@@ -1,49 +1,45 @@
 package service
 
+
+
 import connector.HBaseConnector
-import converter.DataConverter.parquetToHFile
+import converter.DataConverter
+import global.ApplicationConfig
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
-;
 
 /**
  *
  */
-object EnterpriseAssemblerService {
-
-import global.ApplicationContext._
+trait EnterpriseAssemblerService extends DataConverter{ this:ApplicationConfig =>
 
   def createHFile(implicit spark: SparkSession, connection:Connection) = {
-    import converter.DataConverter._
 
     jsonToParquet(PATH_TO_JSON, PATH_TO_PARQUET)
-    parquetToHFile(PATH_TO_PARQUET,PATH_TO_HFILE)
+    parquetToHFile(PATH_TO_PARQUET,PATH_TO_HFILE,conf)
   }
 
   def createHFile(pathToJson:String,pathToParquet:String,hfilePath:String)(implicit spark: SparkSession, connection:Connection) = {
-    import converter.DataConverter._
 
     jsonToParquet(pathToJson, pathToParquet)
-    parquetToHFile(pathToParquet,hfilePath)
+    parquetToHFile(pathToParquet,hfilePath,conf)
   }
 
 
 
-  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit connection:Connection) = HBaseConnector.loadHFile(pathTpHFile)
+  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit connection:Connection) = HBaseConnector.loadHFile(pathTpHFile,HBASE_ENTERPRISE_TABLE_NAME)
 
 
 
-    def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession, connection:Connection):Unit  = {
+    def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
       createHFile(pathToJsonFile, pathToParquetFile, pathToHFile)
       hfileToHbase(pathToHFile)
     }
 
-    def loadFromJson(pathToJsonFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = loadFromJson(pathToJsonFile,PATH_TO_PARQUET,PATH_TO_HFILE)
-
     def loadFromJson(implicit spark:SparkSession, connection:Connection):Unit  = loadFromJson(PATH_TO_JSON,PATH_TO_PARQUET,PATH_TO_HFILE)
 
-    def loadFromParquet(pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession, connection:Connection):Unit  = {
-      parquetToHFile(pathToParquetFile,pathToHFile)
+    def loadFromParquet(pathToParquetFile:String,pathToHFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
+      parquetToHFile(pathToParquetFile,pathToHFile,conf)
       hfileToHbase(pathToHFile)
     }
 
@@ -52,7 +48,8 @@ import global.ApplicationContext._
       hfileToHbase(PATH_TO_HFILE)
     }
 
-    def loadFromHFile(pathToHFile:String = PATH_TO_HFILE)(implicit connection:Connection) = hfileToHbase(pathToHFile)
+    def loadFromHFile(pathToHFile:String)(implicit connection:Connection) = hfileToHbase(pathToHFile)
+
     def loadFromHFile(implicit spark:SparkSession, connection:Connection) = hfileToHbase(PATH_TO_HFILE)
 
 }
