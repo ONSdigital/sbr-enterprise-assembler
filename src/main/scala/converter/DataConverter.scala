@@ -15,8 +15,20 @@ case class RowObject(key:String, colFamily:String, qualifier:String, value:Strin
   def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
 }
 
+object ParquetDAO extends Configured with WithConversionHelper{
 
-trait DataConverter extends WithConversionHelper{ this:Configured =>
+  def parquetToHFile(parquetFilePath:String, pathToHFile:String)(implicit spark:SparkSession):Unit = {
+    val parquetFileDF: DataFrame = spark.read.parquet(parquetFilePath)
+
+    val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+
+    data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],conf)
+    data.unpersist()
+  }
+}
+
+
+trait DataConverter{
 
 
   def jsonToParquet(jsonFilePath:String, parquetFilePath:String)(implicit spark:SparkSession):Unit = {
@@ -24,16 +36,8 @@ trait DataConverter extends WithConversionHelper{ this:Configured =>
     data.write.parquet(parquetFilePath)
   }
 
-def parquetToHFile(parquetFilePath:String, pathToHFile:String, hbaseConfig:Configuration)(implicit spark:SparkSession):Unit = {
-
-
-
-      val parquetFileDF: DataFrame = spark.read.parquet(parquetFilePath)
-
-      val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-
-      data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],hbaseConfig)
-      data.unpersist()
+def parquetToHFile(parquetFilePath:String, pathToHFile:String)(implicit spark:SparkSession):Unit = {
+       ParquetDAO.parquetToHFile(parquetFilePath, pathToHFile)
   }
 
 

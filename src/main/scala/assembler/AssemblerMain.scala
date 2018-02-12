@@ -23,8 +23,8 @@ object AssemblerMain extends Configured with ConnectionManagement with Enterpris
         .getOrCreate()
 
       //loadFromJson
-      //loadFromParquet
-      loadFromHFile
+      loadFromParquet
+      //loadFromHFile
 
       spark.stop()
   }
