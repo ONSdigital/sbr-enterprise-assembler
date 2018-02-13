@@ -20,7 +20,7 @@ object AssemblerMain extends Configured with ConnectionManagement with Enterpris
 
       implicit val spark: SparkSession = SparkSession
         .builder()
-        .master("local[4]")
+       // .master("local[4]")
         .appName("enterprise assembler")
         .getOrCreate()
 
