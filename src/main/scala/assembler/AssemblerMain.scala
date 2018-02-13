@@ -22,8 +22,8 @@ object AssemblerMain extends Configured with ConnectionManagement with Enterpris
         .appName("enterprise assembler")
         .getOrCreate()
 
-      loadFromJson
-      //loadFromParquet
+      if (args.nonEmpty) loadFromJson(args(0)) else loadFromJson
+      //if (args.nonEmpty) loadFromParquet(args(0)) else loadFromParquet
       //loadFromHFile
 
       spark.stop()

@@ -13,45 +13,32 @@ import org.apache.spark.sql.SparkSession
  */
 trait EnterpriseAssemblerService extends Configured{ this:Configured =>
 
-  import ParquetDAO._
-
-  def createHFile(implicit spark: SparkSession, connection:Connection) = {
-
-    jsonToParquet(PATH_TO_JSON, PATH_TO_PARQUET)
-    parquetToHFile(PATH_TO_PARQUET,PATH_TO_HFILE)
-  }
-
-  def createHFile(pathToJson:String,pathToParquet:String,hfilePath:String)(implicit spark: SparkSession, connection:Connection) = {
-
-    jsonToParquet(pathToJson, pathToParquet)
-    parquetToHFile(pathToParquet,hfilePath)
-  }
+  val parquetDao = ParquetDAO
+  val hbaseDao = HBaseConnector
 
 
 
-  def hfileToHbase(pathTpHFile:String = PATH_TO_HFILE)(implicit connection:Connection) = HBaseConnector.loadHFile(pathTpHFile,HBASE_ENTERPRISE_TABLE_NAME)
-
-
-
-    def loadFromJson(pathToJsonFile:String,pathToParquetFile:String,pathToHFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
-      createHFile(pathToJsonFile, pathToParquetFile, pathToHFile)
-      hfileToHbase(pathToHFile)
+    def loadFromJson(pathToJson:String,pathToParquet:String,pathToHFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
+      parquetDao.jsonToParquet(pathToJson, pathToParquet)
+      parquetDao.parquetToHFile(pathToParquet,pathToHFile)
+      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
     }
+
+    def loadFromJson(pathToParquetFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = loadFromJson(PATH_TO_JSON,pathToParquetFile,PATH_TO_HFILE)
+
 
     def loadFromJson(implicit spark:SparkSession, connection:Connection):Unit  = loadFromJson(PATH_TO_JSON,PATH_TO_PARQUET,PATH_TO_HFILE)
 
-    def loadFromParquet(pathToParquetFile:String,pathToHFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
-      parquetToHFile(pathToParquetFile,pathToHFile)
-      hfileToHbase(pathToHFile)
+
+    def loadFromParquet(pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession, connection:Connection):Unit  = {
+      parquetDao.parquetToHFile(pathToParquetFile,pathToHFile)
+      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
     }
 
-    def loadFromParquet(implicit spark:SparkSession, connection:Connection):Unit = {
-      loadFromParquet(PATH_TO_PARQUET,PATH_TO_HFILE)
-      hfileToHbase(PATH_TO_HFILE)
-    }
+    def loadFromParquet(implicit spark:SparkSession, connection:Connection):Unit = loadFromParquet(PATH_TO_PARQUET,PATH_TO_HFILE)
 
-    def loadFromHFile(pathToHFile:String)(implicit connection:Connection) = hfileToHbase(pathToHFile)
 
-    def loadFromHFile(implicit spark:SparkSession, connection:Connection) = hfileToHbase(PATH_TO_HFILE)
+    def loadFromHFile(pathToHFile:String)(implicit connection:Connection) = hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
 
+    def loadFromHFile(implicit spark:SparkSession, connection:Connection) = hbaseDao.loadHFile(PATH_TO_HFILE,HBASE_ENTERPRISE_TABLE_NAME)
 }
