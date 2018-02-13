@@ -31,7 +31,6 @@ trait WithConversionHelper {this: Configured =>
 
   val period = "201802"
   val idKey = "id"
-  //val colFamily = config.getString("hbase.local.table.column.family")
 
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
     val ubrn = row.getAs[Long](idKey)
@@ -39,6 +38,8 @@ trait WithConversionHelper {this: Configured =>
     val keyStr = generateKey(ern,"ENT")
     createRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnit(row,ern)
   }
+
+
 
   def rowToLegalUnit(r:Row, ern:String):Seq[(String, RowObject)] = {
 

@@ -23,14 +23,30 @@ object HBaseConnector {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def loadHFile(pathToHFile:String, hbaseTableName:String)(implicit connection:Connection) = {
-    val table: Table = connection.getTable(TableName.valueOf(hbaseTableName))
-    setJob(table)
+
+  def loadHFile(pathToHFile:String, tableName:String)(implicit connection:Connection) = wrapTransaction(tableName,None){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    val admin = connection.getAdmin
     bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
+  }
+
+
+  def loadHFile(pathToHFile:String, tableName:String,nameSpace:String)(implicit connection:Connection) = wrapTransaction(tableName, if(nameSpace.trim.isEmpty) None else Some(nameSpace)  ){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
+  }
+
+
+  private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection): Unit = {
+    val tn = nameSpace.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
+    val table: Table = connection.getTable(tn)
+    val admin = connection.getAdmin
+    setJob(table)
+    action(table,admin)
     admin.close
     table.close
   }
+
+
 }

@@ -35,6 +35,14 @@ trait EnterpriseAssemblerService extends Configured{ this:Configured =>
       hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
     }
 
+
+    def loadFromParquet(tableName:String,nameSpace:String,pathToParquetFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
+      parquetDao.parquetToHFile(pathToParquetFile,PATH_TO_HFILE)
+      hbaseDao.loadHFile(PATH_TO_HFILE, tableName, nameSpace)
+    }
+
+
+
     def loadFromParquet(implicit spark:SparkSession, connection:Connection):Unit = loadFromParquet(PATH_TO_PARQUET,PATH_TO_HFILE)
 
 

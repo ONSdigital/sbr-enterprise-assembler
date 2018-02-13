@@ -6,6 +6,8 @@ import hbase.ConnectionManagement
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import service.EnterpriseAssemblerService
+
+import scala.util.Try
 /**
   *
   */
@@ -22,9 +24,13 @@ object AssemblerMain extends Configured with ConnectionManagement with Enterpris
         .appName("enterprise assembler")
         .getOrCreate()
 
-      if (args.nonEmpty) loadFromJson(args(0)) else loadFromJson
-      //if (args.nonEmpty) loadFromParquet(args(0)) else loadFromParquet
-      //loadFromHFile
+      //loadFromJson
+
+      Try{(args(0),args(1),args(2))}.map{args =>
+
+        val (tableName, nameSpace, pathToParquet) = args
+        loadFromParquet(tableName, nameSpace, pathToParquet)
+      }.getOrElse (loadFromJson)
 
       spark.stop()
   }
