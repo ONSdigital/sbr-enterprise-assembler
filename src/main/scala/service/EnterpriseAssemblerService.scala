@@ -46,7 +46,7 @@ trait EnterpriseAssemblerService extends Configured{ this:Configured =>
     def loadFromParquet(implicit spark:SparkSession, connection:Connection):Unit = loadFromParquet(PATH_TO_PARQUET,PATH_TO_HFILE)
 
 
-    def loadFromHFile(pathToHFile:String)(implicit connection:Connection) = hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
+    def loadFromHFile(pathToHFile:String)(implicit spark:SparkSession, connection:Connection) = hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
 
     def loadFromHFile(implicit spark:SparkSession, connection:Connection) = hbaseDao.loadHFile(PATH_TO_HFILE,HBASE_ENTERPRISE_TABLE_NAME)
 }
