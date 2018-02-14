@@ -30,8 +30,8 @@ object AssemblerMain extends ConnectionManagement with EnterpriseAssemblerServic
 
       implicit val spark: SparkSession = init(args)
 
-          loadFromJson
-        //loadFromParquet
+      //loadFromJson
+        loadFromParquet
 
 
       spark.stop()
