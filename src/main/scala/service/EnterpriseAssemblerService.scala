@@ -11,18 +11,29 @@ import org.apache.spark.sql.SparkSession
 /**
  *
  */
-trait EnterpriseAssemblerService extends Configured{ this:Configured =>
+trait EnterpriseAssemblerService {
+
+  import Configured._
 
   val parquetDao = ParquetDAO
   val hbaseDao = HBaseConnector
 
 
 
+    def loadFromJson(pathToJson:String,pathToParquet:String,pathToHFile:String,namespace:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
+      parquetDao.jsonToParquet(pathToJson, pathToParquet)
+      parquetDao.parquetToHFile(pathToParquet,pathToHFile)
+      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME, namespace)
+    }
+
+
     def loadFromJson(pathToJson:String,pathToParquet:String,pathToHFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = {
       parquetDao.jsonToParquet(pathToJson, pathToParquet)
       parquetDao.parquetToHFile(pathToParquet,pathToHFile)
-      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
+      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME,HBASE_ENTERPRISE_TABLE_NAMESPACE)
     }
+
+
 
     def loadFromJson(pathToParquetFile:String)(implicit spark:SparkSession, connection:Connection):Unit  = loadFromJson(PATH_TO_JSON,pathToParquetFile,PATH_TO_HFILE)
 
@@ -32,7 +43,7 @@ trait EnterpriseAssemblerService extends Configured{ this:Configured =>
 
     def loadFromParquet(pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession, connection:Connection):Unit  = {
       parquetDao.parquetToHFile(pathToParquetFile,pathToHFile)
-      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME)
+      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME,HBASE_ENTERPRISE_TABLE_NAMESPACE)
     }
 
 

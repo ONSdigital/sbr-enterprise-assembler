@@ -11,28 +11,48 @@ import scala.util.Try
 /**
   *
   */
-object AssemblerMain extends Configured with ConnectionManagement with EnterpriseAssemblerService{
+object AssemblerMain extends ConnectionManagement with EnterpriseAssemblerService{
 
   def main(args: Array[String]) {
 
+    import Configured._
+
+    {
+      Try(args(0)).map(conf.set("hbase.table.name", _))
+      Try(args(1)).map(conf.set("hbase.table.namespace", _))
+      Try(args(2)).map(conf.set("files.parquet", _))
+      Try(args(3)).map(conf.set("hbase.zookeeper.quorum", _))
+      Try(args(4)).map(conf.set("hbase.zookeeper.property.clientPort", _))
+      Try(args(5)).map(conf.set("files.hfile", _))
+    }
 
     connectionManaged{ implicit connection:Connection =>
 
-      implicit val spark: SparkSession = SparkSession
-        .builder()
-       // .master("local[4]")
-        .appName("enterprise assembler")
-        .getOrCreate()
+      implicit val spark: SparkSession = init(args)
 
-      //loadFromJson
+          loadFromJson
+        //loadFromParquet
 
-      Try{(args(0),args(1),args(2))}.map{args =>
-
-        val (tableName, nameSpace, pathToParquet) = args
-        loadFromParquet(tableName, nameSpace, pathToParquet)
-      }.getOrElse (loadFromJson)
 
       spark.stop()
   }
  }
+
+  def init(args: Array[String]) = {
+    import Configured._
+
+      Try(args(0)).map(conf.set("hbase.table.name", _))
+      Try(args(1)).map(conf.set("hbase.table.namespace", _))
+      Try(args(2)).map(conf.set("files.parquet", _))
+      Try(args(3)).map(conf.set("hbase.zookeeper.quorum", _))
+      Try(args(4)).map(conf.set("hbase.zookeeper.property.clientPort", _))
+      Try(args(5)).map(conf.set("files.hfile", _))
+
+    SparkSession
+      .builder()
+      .master("local[4]")
+      .appName("enterprise assembler")
+      .getOrCreate()
+
+  }
 }

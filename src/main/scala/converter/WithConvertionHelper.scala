@@ -26,8 +26,9 @@ import scala.util.{Random, Try}
 *  12 -   element: long (containsNull = true)
 *  13 -   id: long (nullable = true)
   */
-trait WithConversionHelper {this: Configured =>
+trait WithConversionHelper {
 
+  import Configured._
 
   val period = "201802"
   val idKey = "id"
