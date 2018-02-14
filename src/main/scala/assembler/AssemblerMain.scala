@@ -50,7 +50,7 @@ object AssemblerMain extends ConnectionManagement with EnterpriseAssemblerServic
 
     SparkSession
       .builder()
-      .master("local[4]")
+      //.master("local[4]")
       .appName("enterprise assembler")
       .getOrCreate()
 
