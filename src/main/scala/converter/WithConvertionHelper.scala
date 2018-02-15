@@ -54,10 +54,11 @@ trait WithConversionHelper {
 
   def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
 
+  def index(r:Row, fieldName:String) = r.schema.fieldIndex(fieldName)
 
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
     printRow(row)
-    val ubrn = row.getAs[Long](ID)
+    val ubrn = row.getAs[Long](index(row,"id"))
     val ern = generateErn//(ubrn.toString)
     val keyStr = generateKey(ern,"ENT")
     createRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnit(row,ern)
@@ -65,14 +66,14 @@ trait WithConversionHelper {
 
 
 
-  def rowToLegalUnit(r:Row, ern:String):Seq[(String, RowObject)] = {
+  def rowToLegalUnit(row:Row, ern:String):Seq[(String, RowObject)] = {
 
-    val ubrn: String = r.getAs[Long](ID).toString
+    val ubrn: String = row.getAs[Long](index(row,"id")).toString
     val luKey = generateKey(ubrn,"LEU")
-    createRecord(luKey,s"P:$ern","enterprise") +: (getCh(r,luKey,ubrn) ++ getVats(r,luKey,ubrn) ++ getPayes(r,luKey,ubrn))
+    createRecord(luKey,s"P:$ern","enterprise") +: (getCh(row,luKey,ubrn) ++ getVats(row,luKey,ubrn) ++ getPayes(row,luKey,ubrn))
   }
 
-  def getCh(r:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = Try{r.getAs[String](CompanyNo)}.map(companyNo =>
+  def getCh(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = Try{row.getAs[String](index(row,"CompanyNo"))}.map(companyNo =>
                       if(companyNo.trim.isEmpty) Seq[(String, RowObject)]() else {
                                                           Seq(
                                                             createRecord(luKey,s"C:$companyNo","ch"),
@@ -80,20 +81,20 @@ trait WithConversionHelper {
                                                           )}).getOrElse(Seq[(String, RowObject)]())
 
 
-  def getVats(r:Row,luKey:String, ubrn:String):Seq[(String, RowObject)] = {
+  def getVats(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
     import scala.collection.JavaConversions._
 
-    Try{r.getList[Long](10)}.map(_.toSeq.flatMap(vat => Seq(
+    Try{row.getList[Long](index(row,"VatRefs"))}.map(_.toSeq.flatMap(vat => Seq(
                             createRecord(luKey,s"C:$vat","vat"),
                             createRecord(generateKey(vat.toString,"VAT"),s"P:${ubrn.toString}","legalunit")
                          ))).getOrElse {Seq[(String, RowObject)]()}}
 
 
 
-  def getPayes(r:Row,luKey:String, ubrn:String):Seq[(String, RowObject)] = {
+  def getPayes(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
     import scala.collection.JavaConversions._
 
-    Try{r.getList[String](5)}.map(_.toSeq.flatMap(paye => Seq(
+    Try{row.getList[String](index(row,"VatRefs"))}.map(_.toSeq.flatMap(paye => Seq(
                             createRecord(luKey,s"C:${paye}","paye"),
                             createRecord(generateKey(paye,"PAYE"),s"P:$ubrn","legalunit")
                          ))).getOrElse {Seq[(String, RowObject)]()}}
