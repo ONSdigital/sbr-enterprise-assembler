@@ -15,30 +15,14 @@ object AssemblerMain extends ConnectionManagement with EnterpriseAssemblerServic
 
   def main(args: Array[String]) {
 
-    import Configured._
+    implicit val spark: SparkSession = init(args)
 
-    {
-      Try(args(0)).map(conf.set("hbase.table.name", _))
-      Try(args(1)).map(conf.set("hbase.table.namespace", _))
-      Try(args(2)).map(conf.set("files.parquet", _))
-      Try(args(3)).map(conf.set("hbase.zookeeper.quorum", _))
-      Try(args(4)).map(conf.set("hbase.zookeeper.property.clientPort", _))
-      Try(args(5)).map(conf.set("files.hfile", _))
-    }
+    connectionManaged{ implicit connection:Connection => loadFromParquet } //loadFromJson
 
-    connectionManaged{ implicit connection:Connection =>
-
-      implicit val spark: SparkSession = init(args)
-
-          loadFromJson
-        //loadFromParquet
-
-
-      spark.stop()
-  }
+    spark.stop()
  }
 
-  def init(args: Array[String]) = {
+  private def init(args: Array[String]) = {
     import Configured._
 
       Try(args(0)).map(conf.set("hbase.table.name", _))
