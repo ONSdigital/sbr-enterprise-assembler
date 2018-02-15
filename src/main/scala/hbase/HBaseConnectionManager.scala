@@ -13,7 +13,7 @@ trait ConnectionManagement  {
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  def connectionManaged(action:(Connection) => Unit) = {
+  def withHbaseConnection(action:(Connection) => Unit) = {
     val hbConnection: Connection = ConnectionFactory.createConnection(Configured.conf)
     action(hbConnection)
     closeConnection(hbConnection)
