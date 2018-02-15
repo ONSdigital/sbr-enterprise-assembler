@@ -52,12 +52,14 @@ trait WithConversionHelper {
 
   val period = "201802"
 
-  def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
+  //def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
 
   def index(r:Row, fieldName:String) = r.schema.fieldIndex(fieldName)
 
+  def getValue[T](row:Row, fieldName:String) = Try{row.getAs[T](index(row,fieldName))}
+
   def rowToEnt(row:Row): Seq[(String, RowObject)] = {
-    printRow(row)
+    //printRow(row)
     val ubrn = row.getAs[Long](index(row,"id"))
     val ern = generateErn//(ubrn.toString)
     val keyStr = generateKey(ern,"ENT")
@@ -73,7 +75,7 @@ trait WithConversionHelper {
     createRecord(luKey,s"P:$ern","enterprise") +: (getCh(row,luKey,ubrn) ++ getVats(row,luKey,ubrn) ++ getPayes(row,luKey,ubrn))
   }
 
-  def getCh(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = Try{row.getAs[String](index(row,"CompanyNo"))}.map(companyNo =>
+  def getCh(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = getValue[String](row,"CompanyNo").map(companyNo =>
                       if(companyNo.trim.isEmpty) Seq[(String, RowObject)]() else {
                                                           Seq(
                                                             createRecord(luKey,s"C:$companyNo","ch"),
@@ -84,7 +86,7 @@ trait WithConversionHelper {
   def getVats(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
     import scala.collection.JavaConversions._
 
-    Try{row.getList[Long](index(row,"VatRefs"))}.map(_.toSeq.flatMap(vat => Seq(
+    getValue[java.util.List[Long]](row,"VatRefs").map(_.toSeq.flatMap(vat => Seq(
                             createRecord(luKey,s"C:$vat","vat"),
                             createRecord(generateKey(vat.toString,"VAT"),s"P:${ubrn.toString}","legalunit")
                          ))).getOrElse {Seq[(String, RowObject)]()}}
@@ -94,7 +96,7 @@ trait WithConversionHelper {
   def getPayes(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
     import scala.collection.JavaConversions._
 
-    Try{row.getList[String](index(row,"VatRefs"))}.map(_.toSeq.flatMap(paye => Seq(
+    getValue[java.util.List[String]](row,"PayeRefs").map(_.toSeq.flatMap(paye => Seq(
                             createRecord(luKey,s"C:${paye}","paye"),
                             createRecord(generateKey(paye,"PAYE"),s"P:$ubrn","legalunit")
                          ))).getOrElse {Seq[(String, RowObject)]()}}

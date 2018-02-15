@@ -17,7 +17,7 @@ object AssemblerMain extends ConnectionManagement with SparkSessionManager with 
 
       updateConf(args)
 
-      withSpark{ implicit SparkSession => withHbaseConnection { implicit connection: Connection => loadFromParquet /*loadFromJson*/}}
+      withSpark{ implicit SparkSession => withHbaseConnection { implicit connection: Connection => /*loadFromParquet*/ loadFromJson}}
 
    }
 
