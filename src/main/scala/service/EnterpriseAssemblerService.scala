@@ -43,7 +43,7 @@ trait EnterpriseAssemblerService {
 
     def loadFromParquet(pathToParquetFile:String,pathToHFile:String = PATH_TO_HFILE)(implicit spark:SparkSession, connection:Connection):Unit  = {
       parquetDao.parquetToHFile(pathToParquetFile,pathToHFile)
-      hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME,HBASE_ENTERPRISE_TABLE_NAMESPACE)
+      //hbaseDao.loadHFile(pathToHFile,HBASE_ENTERPRISE_TABLE_NAME,HBASE_ENTERPRISE_TABLE_NAMESPACE)
     }
 
 
