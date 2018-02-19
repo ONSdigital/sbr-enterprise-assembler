@@ -2,8 +2,6 @@ package converter
 
 
 
-import connector.HBaseConnector.getClass
-import converter.ParquetDAO.logger
 import global.Configured
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -27,13 +25,12 @@ object ParquetDAO extends WithConversionHelper{
   }
 
   def parquetToHFile(parquetFilePath:String, pathToHFile:String)(implicit spark:SparkSession):Unit = {
+
     val parquetFileDF: DataFrame = spark.read.parquet(parquetFilePath)
 
     val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
 
-    logger.debug("Start saving HFILE to HDFS...")
     data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configured.conf)
-    logger.debug("Finished saving HFILE to HDFS...")
-    data.unpersist()
+
   }
 }
