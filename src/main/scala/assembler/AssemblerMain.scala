@@ -4,29 +4,33 @@ package assembler
 import global.Configured
 import hbase.ConnectionManagement
 import org.apache.hadoop.hbase.client.Connection
-import org.apache.spark.sql.SparkSession
 import service.EnterpriseAssemblerService
+import spark.SparkSessionManager
+
+import scala.util.Try
 /**
   *
   */
-object AssemblerMain extends Configured with ConnectionManagement with EnterpriseAssemblerService{
+object AssemblerMain extends ConnectionManagement with SparkSessionManager with EnterpriseAssemblerService {
 
   def main(args: Array[String]) {
 
+      updateConf(args)
 
-    connectionManaged{ implicit connection:Connection =>
+      withSpark{ implicit SparkSession => withHbaseConnection { implicit connection: Connection => loadFromParquet /*loadFromJson*/}}
 
-      implicit val spark: SparkSession = SparkSession
-        .builder()
-        .master("local[4]")
-        .appName("enterprise assembler")
-        .getOrCreate()
+   }
 
-      loadFromJson
-      //loadFromParquet
-      //loadFromHFile
+  private def updateConf(args: Array[String]) = {
+    import Configured._
 
-      spark.stop()
+    Try(args(0)).map(conf.set("hbase.table.name", _))
+    Try(args(1)).map(conf.set("hbase.table.namespace", _))
+    Try(args(2)).map(conf.set("files.parquet", _))
+    Try(args(3)).map(conf.set("hbase.zookeeper.quorum", _))
+    Try(args(4)).map(conf.set("hbase.zookeeper.property.clientPort", _))
+    Try(args(5)).map(conf.set("files.hfile", _))
+
   }
- }
+
 }

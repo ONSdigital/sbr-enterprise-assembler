@@ -3,7 +3,6 @@ package converter
 
 
 import global.Configured
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
@@ -15,7 +14,7 @@ case class RowObject(key:String, colFamily:String, qualifier:String, value:Strin
   def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
 }
 
-object ParquetDAO extends Configured with WithConversionHelper{
+object ParquetDAO extends WithConversionHelper{
 
   def jsonToParquet(jsonFilePath:String, parquetFilePath:String)(implicit spark:SparkSession):Unit = {
     val data: DataFrame = spark.read.json(jsonFilePath)
@@ -27,7 +26,7 @@ object ParquetDAO extends Configured with WithConversionHelper{
 
     val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
 
-    data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],conf)
+    data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configured.conf)
     data.unpersist()
   }
 }
