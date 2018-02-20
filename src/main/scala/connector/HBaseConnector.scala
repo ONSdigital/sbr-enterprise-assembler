@@ -45,7 +45,7 @@ object HBaseConnector {
   }*/
 
 
-  private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection): Unit = {
+  private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection){
     val tn = nameSpace.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
     val table: Table = connection.getTable(tn)
     val admin = connection.getAdmin
@@ -56,7 +56,7 @@ object HBaseConnector {
   }
 
 
-  private def setJob(table:Table)(implicit connection:Connection) = {
+  private def setJob(table:Table)(implicit connection:Connection){
     val job = Job.getInstance(connection.getConfiguration)
     job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
     job.setMapOutputValueClass(classOf[KeyValue])

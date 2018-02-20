@@ -20,7 +20,7 @@ trait EnterpriseAssemblerService extends ConnectionManagement with SparkSessionM
 
 
 
-  def loadFromJson:Unit  = {
+  def loadFromJson{
     withSpark{ implicit SparkSession =>
                 parquetDao.jsonToParquet(PATH_TO_JSON)
                 parquetDao.parquetToHFile
@@ -29,7 +29,7 @@ trait EnterpriseAssemblerService extends ConnectionManagement with SparkSessionM
   }
 
 
-  def loadFromParquet:Unit  = {
+  def loadFromParquet{
     withSpark{ implicit SparkSession => parquetDao.parquetToHFile}
     withHbaseConnection { implicit connection: Connection => hbaseDao.loadHFiles}
   }
