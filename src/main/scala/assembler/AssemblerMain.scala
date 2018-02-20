@@ -3,7 +3,6 @@ package assembler
 
 import global.Configured
 import hbase.ConnectionManagement
-import org.apache.hadoop.hbase.client.Connection
 import service.EnterpriseAssemblerService
 import spark.SparkSessionManager
 import scala.util.Try
@@ -15,8 +14,7 @@ object AssemblerMain extends ConnectionManagement with SparkSessionManager with 
   def main(args: Array[String]) {
 
       updateConf(args)
-
-      withSpark{ implicit SparkSession => withHbaseConnection { implicit connection: Connection => loadFromParquet /*loadFromJson*/}}
+     loadFromParquet /*loadFromJson*/
 
    }
 
