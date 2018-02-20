@@ -1,7 +1,7 @@
 package assembler
 
 
-import global.Configured._
+import global.Configs._
 import hbase.ConnectionManagement
 import service.EnterpriseAssemblerService
 import spark.SparkSessionManager

@@ -2,7 +2,7 @@ package converter
 
 
 
-import global.Configured
+import global.Configs
 import org.apache.spark.sql.Row
 
 import scala.util.{Random, Success, Try}
@@ -48,7 +48,7 @@ trait WithConversionHelper {
 * 4. CompanyNo - NULLABLE
 * */
 
-  import Configured._
+  import Configs._
 
   val period = "201802"
 

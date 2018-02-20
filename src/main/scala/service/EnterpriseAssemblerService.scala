@@ -12,7 +12,7 @@ import spark.SparkSessionManager
   *
   */
 trait EnterpriseAssemblerService extends ConnectionManagement with SparkSessionManager{
-  import global.Configured._
+  import global.Configs._
 
 
   val parquetDao = ParquetDAO

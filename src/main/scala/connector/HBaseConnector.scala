@@ -14,7 +14,7 @@ import scala.util.Try
   *
   */
 object HBaseConnector {
-  import global.Configured._
+  import global.Configs._
 
   val logger = LoggerFactory.getLogger(getClass)
 
