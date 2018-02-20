@@ -15,22 +15,34 @@ case class RowObject(key:String, colFamily:String, qualifier:String, value:Strin
   def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
 }
 
+case class Tables(enterprises: Seq[(String, RowObject)],links:Seq[(String, RowObject)])
+
 object ParquetDAO extends WithConversionHelper{
+
+  import Configured._
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  def jsonToParquet(jsonFilePath:String, parquetFilePath:String)(implicit spark:SparkSession):Unit = {
+  def jsonToParquet(jsonFilePath:String)(implicit spark:SparkSession):Unit = {
     val data: DataFrame = spark.read.json(jsonFilePath)
-    data.write.parquet(parquetFilePath)
+    data.write.parquet(PATH_TO_PARQUET)
   }
 
-  def parquetToHFile(parquetFilePath:String, pathToHFile:String)(implicit spark:SparkSession):Unit = {
+  def parquetToHFile(implicit spark:SparkSession):Unit = {
 
-    val parquetFileDF: DataFrame = spark.read.parquet(parquetFilePath)
+    val parquetFileDF: DataFrame = spark.read.parquet(PATH_TO_PARQUET)
 
-    val data = parquetFileDF.rdd.flatMap(rowToEnt).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+    val parquetRDD = parquetFileDF.rdd.cache().map(toRecords).cache()
 
-    data.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue)).saveAsNewAPIHadoopFile(pathToHFile,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configured.conf)
+    parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+          .saveAsNewAPIHadoopFile(PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configured.conf)
+
+    parquetRDD.flatMap(_.enterprises).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+          .saveAsNewAPIHadoopFile(PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configured.conf)
+
+    parquetRDD.unpersist()
 
   }
 }

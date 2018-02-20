@@ -24,19 +24,32 @@ object Configured {
     conf.set("hbase.zookeeper.quorum", config.getString("hbase.zookeper.url"))
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.files.per.region"))
   }
-  Try{config.getString("hbase.table.name")}.map(conf.set("hbase.table.name",_)).getOrElse(conf.set("hbase.table.name","enterprise"))
-  Try{config.getString("table.column.family")}.map(conf.set("table.column.family",_)).getOrElse(conf.set("table.column.family","l"))
+  Try{config.getString("hbase.table.links.name")}.map(conf.set("hbase.table.links.name",_)).getOrElse(conf.set("hbase.table.links.name","SBR_Unit_Links"))
+  Try{config.getString("hbase.table.links.column.family")}.map(conf.set("hbase.table.links.column.family",_)).getOrElse(conf.set("hbase.table.links.column.family","l"))
+  Try{config.getString("hbase.table.links.namespace")}.map(conf.set("hbase.table.links.namespace",_)).getOrElse(conf.set("hbase.table.links.namespace","ons"))
+
+  Try{config.getString("hbase.table.enterprise.name")}.map(conf.set("hbase.table.enterprise.name",_)).getOrElse(conf.set("hbase.table.enterprise.name","Enterprise"))
+  Try{config.getString("hbase.table.enterprise.column.family")}.map(conf.set("hbase.table.enterprise.column.family",_)).getOrElse(conf.set("hbase.table.enterprise.column.family","d"))
+  Try{config.getString("hbase.table.enterprise.namespace")}.map(conf.set("hbase.table.enterprise.namespace",_)).getOrElse(conf.set("hbase.table.enterprise.namespace","ons"))
 
   Try{config.getString("files.json")}.map(conf.set("files.json",_)).getOrElse(conf.set("files.json","src/main/resources/data/sample.json"))
   Try{config.getString("files.parquet")}.map(conf.set("files.parquet",_)).getOrElse(conf.set("files.parquet","src/main/resources/data/sample.parquet"))
-  Try{config.getString("files.hfile")}.map(conf.set("files.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/hfile"))
+  Try{config.getString("files.links.hfile")}.map(conf.set("files.links.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/links/hfile"))
+  Try{config.getString("files.enterprise.hfile")}.map(conf.set("files.enterprise.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/enterprise/hfile"))
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
-   lazy val PATH_TO_HFILE =  conf.getStrings("files.hfile").head
-   lazy val HBASE_ENTERPRISE_TABLE_NAME = conf.getStrings("hbase.table.name").head
-   lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.namespace").head
-   lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("table.column.family").head
+
+   lazy val PATH_TO_LINKS_HFILE =  conf.getStrings("files.links.hfile").head
+   lazy val PATH_TO_ENTERPRISE_HFILE =  conf.getStrings("files.enterprise.hfile").head
+
+   lazy val HBASE_LINKS_TABLE_NAME = conf.getStrings("hbase.table.links.name").head
+   lazy val HBASE_LINKS_TABLE_NAMESPACE = conf.getStrings("hbase.table.links.namespace").head
+   lazy val HBASE_LINKS_COLUMN_FAMILY = conf.getStrings("hbase.table.links.column.family").head
+
+   lazy val HBASE_ENTERPRISE_TABLE_NAME = conf.getStrings("hbase.table.enterprise.name").head
+   lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.enterprise.namespace").head
+   lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("hbase.table.enterprise.column.family").head
 
 
 

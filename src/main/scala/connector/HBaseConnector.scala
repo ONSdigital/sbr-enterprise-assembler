@@ -8,34 +8,41 @@ import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.slf4j.LoggerFactory
 
+import scala.util.Try
+
 /**
   *
   */
 object HBaseConnector {
+  import global.Configured._
 
   val logger = LoggerFactory.getLogger(getClass)
 
 
-  private def setJob(table:Table)(implicit connection:Connection) = {
-    val job = Job.getInstance(connection.getConfiguration)
-    job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
-    job.setMapOutputValueClass(classOf[KeyValue])
-    HFileOutputFormat2.configureIncrementalLoadMap(job, table)
+  def loadHFiles(implicit connection:Connection) ={
+    loadLinksHFile
+    loadEnterprisesHFile
   }
 
 
-  def loadHFile(pathToHFile:String, tableName:String)(implicit connection:Connection) = wrapTransaction(tableName,None){ (table, admin) =>
+  def loadLinksHFile(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(PATH_TO_LINKS_HFILE), admin,table,regionLocator)
   }
 
+  def loadEnterprisesHFile(implicit connection:Connection) = wrapTransaction(HBASE_ENTERPRISE_TABLE_NAME,Try(conf.getStrings("hbase.table.enterprise.namespace").head).toOption){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(PATH_TO_ENTERPRISE_HFILE), admin,table,regionLocator)
+  }
 
+/*
   def loadHFile(pathToHFile:String, tableName:String,nameSpace:String)(implicit connection:Connection) = wrapTransaction(tableName, if(nameSpace.trim.isEmpty) None else Some(nameSpace)  ){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
-  }
+  }*/
 
 
   private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection): Unit = {
@@ -46,6 +53,14 @@ object HBaseConnector {
     action(table,admin)
     admin.close
     table.close
+  }
+
+
+  private def setJob(table:Table)(implicit connection:Connection) = {
+    val job = Job.getInstance(connection.getConfiguration)
+    job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
+    job.setMapOutputValueClass(classOf[KeyValue])
+    HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
 
