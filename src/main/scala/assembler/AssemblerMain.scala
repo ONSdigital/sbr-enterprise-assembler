@@ -14,7 +14,7 @@ object AssemblerMain extends ConnectionManagement with SparkSessionManager with 
   def main(args: Array[String]) {
 
       updateConf(args)
-     /*loadFromParquet*/ loadFromJson
+     loadFromParquet /*loadFromJson*/
 
    }
 
