@@ -12,7 +12,18 @@ import org.slf4j.LoggerFactory
 
 
 case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
-  def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
+  val logger = LoggerFactory.getLogger(getClass)
+  def toKeyValue = try{new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)} catch {
+
+    case npe:NullPointerException => {
+      logger.error(s"NullPointerException for RowObject: ${this.toString}")
+      throw npe
+    }
+    case e:Throwable => {
+      logger.error(s"Exception for RowObject: ${this.toString}")
+      throw e
+    }
+  }
 }
 
 case class Tables(enterprises: Seq[(String, RowObject)],links:Seq[(String, RowObject)])
