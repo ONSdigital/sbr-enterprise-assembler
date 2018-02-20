@@ -53,10 +53,7 @@ trait WithConversionHelper {
   val period = "201802"
 
   //def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
-
-  def index(r:Row, fieldName:String) = r.schema.fieldIndex(fieldName)
-
-  def getValue[T](row:Row, fieldName:String) = Try{row.getAs[T](index(row,fieldName))}
+  def getValue[T](row:Row, fieldName:String) = Try{row.getAs[T](fieldName)}
 
   def toRecords(row:Row): Tables = {
     val ern = generateErn
@@ -77,7 +74,7 @@ trait WithConversionHelper {
 
   def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
     //printRow(row)
-    val ubrn = row.getAs[Long](index(row,"id"))
+    val ubrn = row.getAs[Long]("id")
     val keyStr = generateKey(ern,"ENT")
     createLinksRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnitLinks(row,ern)
   }
@@ -86,7 +83,7 @@ trait WithConversionHelper {
 
   def rowToLegalUnitLinks(row:Row, ern:String):Seq[(String, RowObject)] = {
 
-    val ubrn: String = row.getAs[Long](index(row,"id")).toString
+    val ubrn: String = row.getAs[Long](("id")).toString
     val luKey = generateKey(ubrn,"LEU")
     createLinksRecord(luKey,s"P:$ern","enterprise") +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
   }
