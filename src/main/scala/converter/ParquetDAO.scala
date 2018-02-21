@@ -43,7 +43,7 @@ object ParquetDAO extends WithConversionHelper{
 
     val parquetFileDF: DataFrame = spark.read.parquet(PATH_TO_PARQUET)
 
-    val parquetRDD = parquetFileDF.rdd.cache().map(toRecords).cache()
+    val parquetRDD = parquetFileDF.rdd.map(toRecords).cache()
 
     parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
