@@ -45,7 +45,7 @@ object ParquetDAO extends WithConversionHelper{
 
     val parquetFileDF: DataFrame = spark.read.parquet(PATH_TO_PARQUET)
 
-    val parquetRDD = parquetFileDF.rdd.map(toRecords)//.cache()
+    val parquetRDD = parquetFileDF.rdd.map(toRecords).cache()
 
     parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -55,7 +55,7 @@ object ParquetDAO extends WithConversionHelper{
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
           .saveAsNewAPIHadoopFile(PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
-    parquetRDD//.unpersist()
+    parquetRDD.unpersist()
 
   }
 }

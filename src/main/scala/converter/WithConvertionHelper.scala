@@ -25,19 +25,6 @@ import scala.util.{Random, Success, Try}
 *  11 -  id: long (nullable = true)
   */
 trait WithConversionHelper {
-
-  val BusinessName = 0
-  val CompanyNo = 1
-  val EmploymentBands = 2
-  val IndustryCode = 3
-  val LegalStatus = 4
-  val PayeRefs = 5
-  val PostCode = 6
-  val TradingStatus = 7
-  val Turnover = 8
-  val UPRN = 9
-  val VatRefs = 10
-  val ID = 11
 /*
 * Rules:
 * fields needed for crating ENTERPRISE UNIT:
@@ -53,82 +40,88 @@ trait WithConversionHelper {
   val period = "201802"
 
   //def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
-  def getValue[T](row:Row, fieldName:String) = Try{row.getAs[T](fieldName)}
+  def isNull(row:Row, field:String) = row.isNullAt(row.fieldIndex(field))
+  def getValue[T](row:Row, fieldName:String)( eval:(Row,String) => Boolean = isNull) = if(eval(row, fieldName)) None else Some(row.getAs[T](fieldName))
 
-  def toRecords(row:Row): Tables = {
-    val ern = generateErn
-    Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
-  }
+  def getStringValue(row:Row, fieldName:String) = getValue[String](row,fieldName){(row,fieldName) => isNull(row,fieldName) || row.getAs[String](fieldName).trim.isEmpty}
 
-  def rowToEnterprise(row:Row,ern:String): Seq[(String, RowObject)] = {
+  def getSeq[T](row:Row, fieldName:String, eval:T => Boolean): Option[Seq[T]] = if(isNull(row,fieldName)) None else Some(row.getSeq[T](row.fieldIndex(fieldName)).collect{ case v if(v!=null && eval(v)) => v})
+  def getSeq[T](row:Row, fieldName:String): Option[Seq[T]] = if(isNull(row,fieldName)) None else Some(row.getSeq[T](row.fieldIndex(fieldName)))
 
-    val idbr = "9999999999"
-    Seq(createEnterpriseRecord(ern,"ern",ern), createEnterpriseRecord(ern,"idbrref","9999999999"))++
-                         Seq(
-                              getValue[String](row, "BusinessName").map(bn => createEnterpriseRecord(ern,"name",bn)),
-                              getValue[String](row, "PostCode").map(pc => createEnterpriseRecord(ern,"postcode",pc)),
-                              getValue[String](row, "LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls))
-                            ).collect{case Success(v) => v}
-  }
+    def toRecords(row:Row): Tables = {
+      val ern = generateErn
+      Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
+    }
 
+    def rowToEnterprise(row:Row,ern:String): Seq[(String, RowObject)] = {
 
-  def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
-    //printRow(row)
-    val ubrn = row.getAs[Long]("id")
-    val keyStr = generateKey(ern,"ENT")
-    createLinksRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnitLinks(row,ern)
-  }
+      val idbr = "9999999999"
+      Seq(createEnterpriseRecord(ern,"ern",ern), createEnterpriseRecord(ern,"idbrref","9999999999"))++
+        Seq(
+          getStringValue(row, "BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
+          getStringValue(row, "PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
+          getStringValue(row, "LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls))
+        ).collect{case Some(v) => v}
+    }
 
 
-
-  def rowToLegalUnitLinks(row:Row, ern:String):Seq[(String, RowObject)] = {
-
-    val ubrn: String = row.getAs[Long](("id")).toString
-    val luKey = generateKey(ubrn,"LEU")
-    createLinksRecord(luKey,s"P:$ern","enterprise") +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
-  }
-
-  def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = getValue[String](row,"CompanyNo").map(companyNo =>
-                      if(companyNo.trim.isEmpty) Seq[(String, RowObject)]() else {
-                                                          Seq(
-                                                            createLinksRecord(luKey,s"C:$companyNo","ch"),
-                                                            createLinksRecord(generateKey(companyNo,"CH"),s"P:$ubrn","legalunit")
-                                                          )}).getOrElse(Seq[(String, RowObject)]())
-
-
-  def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
-    import scala.collection.JavaConversions._
-
-    getValue[java.util.List[Long]](row,"VatRefs").map(_.toSeq.flatMap(vat => Seq(
-                            createLinksRecord(luKey,s"C:$vat","vat"),
-                            createLinksRecord(generateKey(vat.toString,"VAT"),s"P:${ubrn.toString}","legalunit")
-                         ))).getOrElse {Seq[(String, RowObject)]()}}
+    def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
+      //printRow(row)
+      val ubrn = row.getAs[Long]("id")
+      val keyStr = generateKey(ern,"ENT")
+      createLinksRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnitLinks(row,ern)
+    }
 
 
 
-  def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
-    import scala.collection.JavaConversions._
+    def rowToLegalUnitLinks(row:Row, ern:String):Seq[(String, RowObject)] = {
 
-    getValue[java.util.List[String]](row,"PayeRefs").map(_.toSeq.flatMap(paye => Seq(
-                            createLinksRecord(luKey,s"C:${paye}","paye"),
-                            createLinksRecord(generateKey(paye,"PAYE"),s"P:$ubrn","legalunit")
-                         ))).getOrElse {Seq[(String, RowObject)]()}}
+      val ubrn: String = row.getAs[Long](("id")).toString
+      val luKey = generateKey(ubrn,"LEU")
+      createLinksRecord(luKey,s"P:$ern","enterprise") +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
+    }
+
+    def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = getStringValue(row,"CompanyNo").map(companyNo => Seq(
+      createLinksRecord(luKey,s"C:$companyNo","ch"),
+      createLinksRecord(generateKey(companyNo,"CH"),s"P:$ubrn","legalunit")
+    )).getOrElse(Seq[(String, RowObject)]())
+
+
+    def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
+
+      getSeq[Long](row,"VatRefs").map(vat => Seq(
+        createLinksRecord(luKey,s"C:$vat","vat"),
+        createLinksRecord(generateKey(vat.toString,"VAT"),s"P:${ubrn.toString}","legalunit")
+      )).getOrElse (Seq[(String, RowObject)]())
+
+    }
 
 
 
-  private def createLinksRecord(key:String,column:String, value:String) = {
-    createRecord(key,HBASE_LINKS_COLUMN_FAMILY,column,value)
-  }
-  private def createEnterpriseRecord(ern:String,column:String, value:String) = {
-    val key= s"${ern.reverse}~$period"
-    createRecord(key,HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
-  }
+    def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = {
+      import scala.collection.JavaConversions._
 
-  private def createRecord(key:String,columnFamily:String, column:String, value:String) = (key -> RowObject(key,columnFamily,column,value) )
+      getSeq[String](row,"PayeRefs", (pr:String) => {pr.nonEmpty}).map(paye => Seq(
+        createLinksRecord(luKey,s"C:paye","paye"),
+        createLinksRecord(generateKey(paye.toString,"PAYE"),s"P:${ubrn.toString}","legalunit")
+      )).getOrElse (Seq[(String, RowObject)]())}
 
-  def generateErn(ubrn:String) = s"ENT$ubrn"
-  def generateErn = Random.nextInt(9999999).toString //to keep with same format as ubrn
-  def generateKey(id:String, suffix:String) = s"$period~$id~$suffix"
+
+
+    private def createLinksRecord(key:String,column:String, value:String) = {
+      createRecord(key,HBASE_LINKS_COLUMN_FAMILY,column,value)
+    }
+    private def createEnterpriseRecord(ern:String,column:String, value:String) = {
+      val key= s"${ern.reverse}~$period"
+      createRecord(key,HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+    }
+
+    private def createRecord(key:String,columnFamily:String, column:String, value:String) = (key -> RowObject(key,columnFamily,column,value) )
+
+    def generateErn(ubrn:String) = s"ENT$ubrn"
+    def generateErn = Random.nextInt(9999999).toString //to keep with same format as ubrn
+    def generateKey(id:String, suffix:String) = s"$period~$id~$suffix"
+
 
 
 }
