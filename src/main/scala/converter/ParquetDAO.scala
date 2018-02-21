@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 
 
 case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
-  val logger = LoggerFactory.getLogger(getClass)
+  //val logger = LoggerFactory.getLogger(getClass)
   def toKeyValue = try{new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)} catch {
 
     case npe:NullPointerException => {
@@ -22,7 +22,7 @@ case class RowObject(key:String, colFamily:String, qualifier:String, value:Strin
       throw npe
     }
     case e:Throwable => {
-      logger.error(s"Exception for RowObject: ${this.toString}")
+      System.out.println(s"Exception for RowObject: ${this.toString}")
       throw e
     }
   }
