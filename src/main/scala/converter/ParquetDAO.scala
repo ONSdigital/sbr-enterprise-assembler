@@ -16,7 +16,9 @@ case class RowObject(key:String, colFamily:String, qualifier:String, value:Strin
   def toKeyValue = try{new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)} catch {
 
     case npe:NullPointerException => {
-      logger.error(s"NullPointerException for RowObject: ${this.toString}")
+      logger.error(s"NullPointerException for RowObject")
+      if (this==null) logger.error(s"RowObject is null")
+      else logger.error(s"NullPointerException for RowObject: ${this.toString}")
       throw npe
     }
     case e:Throwable => {
@@ -43,7 +45,7 @@ object ParquetDAO extends WithConversionHelper{
 
     val parquetFileDF: DataFrame = spark.read.parquet(PATH_TO_PARQUET)
 
-    val parquetRDD = parquetFileDF.rdd.map(toRecords).cache()
+    val parquetRDD = parquetFileDF.rdd.map(toRecords)//.cache()
 
     parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
