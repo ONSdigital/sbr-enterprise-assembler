@@ -2,9 +2,8 @@ package spark
 
 import org.apache.spark.sql.SparkSession
 
-/**
-  *
-  */
+
+
 trait SparkSessionManager {
 
   def withSpark(doWithinSparkSession: SparkSession => Unit) = {
