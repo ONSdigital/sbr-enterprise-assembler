@@ -1,13 +1,13 @@
 package assembler
 
 
+import dao.hbase.HBaseConnectionManager
 import global.Configs._
-import hbase.ConnectionManagement
 import service.EnterpriseAssemblerService
 import spark.SparkSessionManager
 
 
-object AssemblerMain extends ConnectionManagement with SparkSessionManager with EnterpriseAssemblerService {
+object AssemblerMain extends HBaseConnectionManager with SparkSessionManager with EnterpriseAssemblerService {
 
   def main(args: Array[String]) {
 

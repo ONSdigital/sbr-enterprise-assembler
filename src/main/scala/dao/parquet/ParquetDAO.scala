@@ -1,7 +1,6 @@
-package converter
+package dao.parquet
 
-
-
+import dao.hbase.converter.WithConvertionHelper
 import global.Configs
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -11,13 +10,7 @@ import org.slf4j.LoggerFactory
 
 
 
-case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
-  def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
-}
-
-case class Tables(enterprises: Seq[(String, RowObject)],links:Seq[(String, RowObject)])
-
-object ParquetDAO extends WithConversionHelper{
+object ParquetDAO extends WithConvertionHelper{
 
   import Configs._
 

@@ -1,4 +1,4 @@
-package hbase
+package dao.hbase
 
 import global.Configs
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 /**
   *
   */
-trait ConnectionManagement  {
+trait HBaseConnectionManager {
 
   val logger = LoggerFactory.getLogger(getClass)
 

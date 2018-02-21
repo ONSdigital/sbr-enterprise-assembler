@@ -1,4 +1,4 @@
-package connector
+package dao.hbase
 
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
@@ -13,7 +13,7 @@ import scala.util.Try
 /**
   *
   */
-object HBaseConnector {
+object HBaseDao {
   import global.Configs._
 
   val logger = LoggerFactory.getLogger(getClass)

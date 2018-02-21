@@ -1,8 +1,9 @@
-package converter
+package dao.hbase.converter
 
 
 
 import global.Configs
+import model._
 import org.apache.spark.sql.Row
 
 import scala.util.{Random, Success, Try}
@@ -24,7 +25,7 @@ import scala.util.{Random, Success, Try}
 *  10 -  VatRefs: array (nullable = true)
 *  11 -  id: long (nullable = true)
   */
-trait WithConversionHelper {
+trait WithConvertionHelper {
 /*
 * Rules:
 * fields needed for crating ENTERPRISE UNIT:
