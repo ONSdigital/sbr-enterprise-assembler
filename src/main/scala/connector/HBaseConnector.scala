@@ -37,14 +37,6 @@ object HBaseConnector {
     bulkLoader.doBulkLoad(new Path(PATH_TO_ENTERPRISE_HFILE), admin,table,regionLocator)
   }
 
-/*
-  def loadHFile(pathToHFile:String, tableName:String,nameSpace:String)(implicit connection:Connection) = wrapTransaction(tableName, if(nameSpace.trim.isEmpty) None else Some(nameSpace)  ){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(pathToHFile), admin,table,regionLocator)
-  }*/
-
-
   private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection){
     val tn = nameSpace.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
     val table: Table = connection.getTable(tn)

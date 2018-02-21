@@ -30,8 +30,8 @@ trait EnterpriseAssemblerService extends ConnectionManagement with SparkSessionM
 
 
   def loadFromParquet{
-    withSpark{ implicit SparkSession => parquetDao.parquetToHFile}
-    withHbaseConnection { implicit connection: Connection => hbaseDao.loadHFiles}
+    withSpark{ implicit SparkSession => parquetDao.parquetToHFile }
+    withHbaseConnection { implicit connection: Connection => hbaseDao.loadHFiles }
   }
 
   def loadFromHFile = withHbaseConnection { implicit connection: Connection => hbaseDao.loadHFiles}

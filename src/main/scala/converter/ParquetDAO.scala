@@ -6,26 +6,13 @@ import global.Configs
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
 
 
 
 case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
-  //val logger = LoggerFactory.getLogger(getClass)
-  def toKeyValue = try{new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)} catch {
-
-    case npe:NullPointerException => {
-      System.out.println(s"NullPointerException for RowObject")
-      if (this==null) System.out.println(s"RowObject is null")
-      else System.out.println(s"NullPointerException for RowObject: ${this.toString}")
-      throw npe
-    }
-    case e:Throwable => {
-      System.out.println(s"Exception for RowObject: ${this.toString}")
-      throw e
-    }
-  }
+  def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
 }
 
 case class Tables(enterprises: Seq[(String, RowObject)],links:Seq[(String, RowObject)])
@@ -36,16 +23,12 @@ object ParquetDAO extends WithConversionHelper{
 
   val logger = LoggerFactory.getLogger(getClass)
 
-  def jsonToParquet(jsonFilePath:String)(implicit spark:SparkSession){
-    val data: DataFrame = spark.read.json(jsonFilePath)
-    data.write.parquet(PATH_TO_PARQUET)
-  }
+  def jsonToParquet(jsonFilePath:String)(implicit spark:SparkSession) = spark.read.json(jsonFilePath).write.parquet(PATH_TO_PARQUET)
 
   def parquetToHFile(implicit spark:SparkSession){
 
-    val parquetFileDF: DataFrame = spark.read.parquet(PATH_TO_PARQUET)
 
-    val parquetRDD = parquetFileDF.rdd.map(toRecords).cache()
+    val parquetRDD = spark.read.parquet(PATH_TO_PARQUET).rdd.map(toRecords).cache()
 
     parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
