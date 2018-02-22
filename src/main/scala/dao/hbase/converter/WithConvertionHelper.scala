@@ -46,6 +46,9 @@ trait WithConvertionHelper {
     val vatValue = "VAT"
     val payeValue = "PAYE"
 
+    val childPrefix = "c_"
+    val parentPrefix = "p_"
+
   //def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
 
   def toRecords(row:Row): Tables = {
@@ -66,7 +69,7 @@ trait WithConvertionHelper {
       //printRow(row)
       val ubrn = row.getLong("id")
       val keyStr = generateKey(ern,enterprise)
-      createLinksRecord(keyStr,s"C:$ubrn",legalUnit)+:rowToLegalUnitLinks(row,ern)
+      createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit)+:rowToLegalUnitLinks(row,ern)
     }
 
 
@@ -74,25 +77,25 @@ trait WithConvertionHelper {
 
       val ubrn = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
       val luKey = generateKey(ubrn,legalUnit)
-      createLinksRecord(luKey,s"P:$ern",enterprise) +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
+      createLinksRecord(luKey,s"$parentPrefix$enterprise",ern) +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
     }
 
   private def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
-      createLinksRecord(luKey,s"C:$companyNo",companiesHouse),
-      createLinksRecord(generateKey(companyNo,companiesHouse),s"P:$ubrn",legalUnit)
+      createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse),
+      createLinksRecord(generateKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn)
     )).getOrElse(Seq[(String, RowObject)]())
 
 
   private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
-        createLinksRecord(luKey,s"C:$vat",vatValue),
-        createLinksRecord(generateKey(vat.toString,vatValue),s"P:${ubrn.toString}",legalUnit)
+        createLinksRecord(luKey,s"$childPrefix$vat",vatValue),
+        createLinksRecord(generateKey(vat.toString,vatValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse (Seq[(String, RowObject)]())
 
 
 
   private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
-        createLinksRecord(luKey,s"C:$paye",payeValue),
-        createLinksRecord(generateKey(paye,payeValue),s"P:${ubrn.toString}",legalUnit)
+        createLinksRecord(luKey,s"$childPrefix$paye",payeValue),
+        createLinksRecord(generateKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse(Seq[(String, RowObject)]())
 
 
