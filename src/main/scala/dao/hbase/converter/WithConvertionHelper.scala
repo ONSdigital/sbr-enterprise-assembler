@@ -5,8 +5,8 @@ import global.Configs
 import model._
 import org.apache.spark.sql.Row
 
-import scala.util.{Random, Success, Try}
-
+import scala.util.Random
+import spark.extensions.sql.SqlRowExtensions
 /**
 * Schema:
 * index | fields
@@ -46,35 +46,18 @@ trait WithConvertionHelper {
     Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
   }
 
-  private def isNull(row:Row, field:String) = row.isNullAt(row.fieldIndex(field))
-
-  private def getValue[T](
-                          row:Row, fieldName:String,
-                          eval:Option[T => Boolean] = None
-                         ): Option[T] = if(isNull(row, fieldName)) None else {
-                                                        val v = row.getAs[T](fieldName)
-                                                        if (v.isInstanceOf[String] && v.asInstanceOf[String].trim.isEmpty) None
-                                                        else eval match{
-                                                          case Some(f) => if(f(v)) Some(v) else None
-                                                          case None  => Some(v)
-                                                        }
-                                                      }
-
-
-  private def getSeq[T](row:Row, fieldName:String, eval:Option[T => Boolean] = None): Option[Seq[T]] = if(isNull(row,fieldName)) None else Some(row.getSeq[T](row.fieldIndex(fieldName)).filter(v => v!=null && eval.map(_(v)).getOrElse(true)))
 
   private def rowToEnterprise(row:Row,ern:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern), createEnterpriseRecord(ern,"idbrref","9999999999"))++
         Seq(
-          getValue[String](row, "BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
-          getValue[String](row, "PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
-          getValue[String](row, "LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls))
+          row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
+          row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
+          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls))
         ).collect{case Some(v) => v}
-
 
 
   private def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
       //printRow(row)
-      val ubrn = getValue[Long](row,"id")
+      val ubrn = row.getLong("id")
       val keyStr = generateKey(ern,"ENT")
       createLinksRecord(keyStr,s"C:$ubrn","legalunit")+:rowToLegalUnitLinks(row,ern)
     }
@@ -82,26 +65,25 @@ trait WithConvertionHelper {
 
   private def rowToLegalUnitLinks(row:Row, ern:String):Seq[(String, RowObject)] = {
 
-      val ubrnOpt: Option[Long] = getValue[Long](row,"id")
-      val ubrn = ubrnOpt.map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
+      val ubrn = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
       val luKey = generateKey(ubrn,"LEU")
       createLinksRecord(luKey,s"P:$ern","enterprise") +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
     }
 
-  private def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = getValue[String](row,"CompanyNo").map(companyNo => Seq(
+  private def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
       createLinksRecord(luKey,s"C:$companyNo","ch"),
       createLinksRecord(generateKey(companyNo,"CH"),s"P:$ubrn","legalunit")
     )).getOrElse(Seq[(String, RowObject)]())
 
 
-  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = getSeq[Long](row,"VatRefs").map(_.flatMap(vat => Seq(
+  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
         createLinksRecord(luKey,s"C:$vat","vat"),
         createLinksRecord(generateKey(vat.toString,"VAT"),s"P:${ubrn.toString}","legalunit")
       ))).getOrElse (Seq[(String, RowObject)]())
 
 
 
-  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = getSeq[String](row,"PayeRefs",Some((s:String) => s.trim.nonEmpty)).map(_.flatMap(paye => Seq(
+  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
         createLinksRecord(luKey,s"C:$paye","paye"),
         createLinksRecord(generateKey(paye,"PAYE"),s"P:${ubrn.toString}","legalunit")
       ))).getOrElse(Seq[(String, RowObject)]())
