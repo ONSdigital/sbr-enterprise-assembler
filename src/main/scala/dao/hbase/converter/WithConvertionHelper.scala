@@ -49,8 +49,6 @@ trait WithConvertionHelper {
     val childPrefix = "c_"
     val parentPrefix = "p_"
 
-  //def printRow(r:Row) =  (0 to 11).foreach(v => println(s"index: $v, name: ${r.schema.fields(v).name}, value: ${Try {r.get(v).toString} getOrElse "NULL"}"))
-
   def toRecords(row:Row): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
@@ -66,8 +64,7 @@ trait WithConvertionHelper {
 
 
   private def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
-      //printRow(row)
-      val ubrn = row.getLong("id")
+      val ubrn = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
       val keyStr = generateKey(ern,enterprise)
       createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit)+:rowToLegalUnitLinks(row,ern)
     }
