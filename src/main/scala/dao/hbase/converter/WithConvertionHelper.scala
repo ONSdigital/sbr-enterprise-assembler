@@ -37,7 +37,7 @@ trait WithConvertionHelper {
 
   import Configs._
 
-    val period = "201802"
+  val period = "201802"
 
 
     val legalUnit = "LEU"
@@ -94,7 +94,7 @@ trait WithConvertionHelper {
         createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse(Seq[(String, RowObject)]())
 
-
+  private def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 
   private def createLinksRecord(key:String,column:String, value:String) = createRecord(key,HBASE_LINKS_COLUMN_FAMILY,column,value)
 
