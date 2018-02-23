@@ -37,7 +37,7 @@ trait WithConvertionHelper {
 
   import Configs._
 
-  val period = "201802"
+    val period = "201802"
 
 
     val legalUnit = "LEU"
@@ -65,47 +65,49 @@ trait WithConvertionHelper {
 
   private def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
       val ubrn = getId(row)
-      val keyStr = generateKey(ern,enterprise)
+      val keyStr = generateLinkKey(ern,enterprise)
       createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit)+:rowToLegalUnitLinks(row,ern)
     }
 
 
   private def rowToLegalUnitLinks(row:Row, ern:String):Seq[(String, RowObject)] = {
       val ubrn = getId(row)
-      val luKey = generateKey(ubrn,legalUnit)
+      val luKey = generateLinkKey(ubrn,legalUnit)
       createLinksRecord(luKey,s"$parentPrefix$enterprise",ern) +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
     }
 
   private def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
       createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse),
-      createLinksRecord(generateKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn)
+      createLinksRecord(generateLinkKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn)
     )).getOrElse(Seq[(String, RowObject)]())
 
 
   private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
         createLinksRecord(luKey,s"$childPrefix$vat",vatValue),
-        createLinksRecord(generateKey(vat.toString,vatValue),s"$parentPrefix$legalUnit",ubrn.toString)
+        createLinksRecord(generateLinkKey(vat.toString,vatValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse (Seq[(String, RowObject)]())
 
 
 
   private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
         createLinksRecord(luKey,s"$childPrefix$paye",payeValue),
-        createLinksRecord(generateKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
+        createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse(Seq[(String, RowObject)]())
 
   private def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 
   private def createLinksRecord(key:String,column:String, value:String) = createRecord(key,HBASE_LINKS_COLUMN_FAMILY,column,value)
 
-  private def createEnterpriseRecord(ern:String,column:String, value:String) = createRecord(s"${ern.reverse}~$period",HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+  private def createEnterpriseRecord(ern:String,column:String, value:String) = createRecord(generateEntKey(ern),HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> RowObject(key,columnFamily,column,value)
 
-  private def generateErn = Random.nextInt(9999999).toString // 7 digits number, to keep with same format as ubrn
+  private def generateErn = Random.alphanumeric.take(18).mkString
 
-  private def generateKey(id:String, suffix:String) = s"$period~$id~$suffix"
+  private def generateEntKey(ern:String) = s"${ern.reverse}~$period"
+
+  private def generateLinkKey(id:String, suffix:String) = s"$id~$suffix~$period"
 
 
 
