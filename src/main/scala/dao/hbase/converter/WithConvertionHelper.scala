@@ -37,7 +37,7 @@ trait WithConvertionHelper {
 
   import Configs._
 
-  val period = "201802"
+  val period = conf.getStrings("data.enterprise.timeperiod").head
 
 
     val legalUnit = "LEU"
