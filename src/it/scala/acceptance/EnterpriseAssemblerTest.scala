@@ -17,7 +17,7 @@ import service.EnterpriseAssemblerService
 /**
   *
   */
-class EnterpriseAssemblerTest extends WordSpecLike with Matchers with OptionValues with BeforeAndAfterAll{
+class EnterpriseAssemblerTest extends WordSpecLike with Matchers with BeforeAndAfterAll with TestData{
 
   override def beforeAll() = {
                                 global.Configs.updateConf(Array[String](
@@ -36,7 +36,7 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with OptionValu
      "create and populate hbase tables 'ENT' and 'LINKS' with expected data" in{
 
        val assembler = new EnterpriseAssemblerService{}
-       assembler.loadFromHFile
+       assembler.loadFromJson
 
        val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
        val tn: TableName = TableName.valueOf(conf.getStrings("hbase.table.enterprise.namespace").head, HBASE_ENTERPRISE_TABLE_NAME)//HBASE_ENTERPRISE_TABLE_NAME.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
@@ -51,17 +51,14 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with OptionValu
 
        val valuesBytes: RDD[(Result)] = spark.sparkContext.newAPIHadoopRDD(Configs.conf, classOf[TableInputFormat], classOf[ImmutableBytesWritable], classOf[Result]).map(_._2)
 
-       /*val str: RDD[(String, String)] = valuesBytes.map(result =>
-         (Bytes.toString(result.getRow()).split(" ")(0),
-           Bytes.toString(result.value)))*/
-
-
 
        val navMap: RDD[util.NavigableMap[Array[Byte], Array[Byte]]] = valuesBytes.map(_.getFamilyMap("d".getBytes()))
 
        val str = navMap.map(Ent(_))
 
-       val res = str.collect
+       val res: Array[Ent] = str.collect.sortBy(_.ern)
+       val expected = testEnterprises(res).sortBy(_.ern)
+       res shouldBe expected
 
 
        admin.close
