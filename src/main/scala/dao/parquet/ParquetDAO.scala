@@ -20,7 +20,7 @@ object ParquetDAO extends WithConvertionHelper with dataFrameHelper{
 
   def parquetToHFile(implicit spark:SparkSession){
 
-    val parquetRDD = finalCalculations(spark.read.parquet(PATH_TO_PARQUET), spark.read.option("header", "true").csv(PATH_TO_CSV))
+    val parquetRDD = finalCalculations(spark.read.parquet(PATH_TO_PARQUET), spark.read.option("header", "true").csv(PATH_TO_PAYE))
     .rdd.map(toRecords).cache()
 
     parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
