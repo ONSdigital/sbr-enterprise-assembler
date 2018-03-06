@@ -36,9 +36,12 @@ object Configs{
   Try{config.getString("files.parquet")}.map(conf.set("files.parquet",_)).getOrElse(conf.set("files.parquet","src/main/resources/data/sample.parquet"))
   Try{config.getString("files.links.hfile")}.map(conf.set("files.links.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/links/hfile"))
   Try{config.getString("files.enterprise.hfile")}.map(conf.set("files.enterprise.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/enterprise/hfile"))
+  Try{config.getString("files.csv")}.map(conf.set("files.csv",_)).getOrElse(conf.set("files.csv","src/main/resources/data/smallPaye.csv"))
+
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
+   lazy val PATH_TO_CSV = conf.getStrings("files.csv").head
 
    lazy val PATH_TO_LINKS_HFILE =  conf.getStrings("files.links.hfile").head
    lazy val PATH_TO_ENTERPRISE_HFILE =  conf.getStrings("files.enterprise.hfile").head
