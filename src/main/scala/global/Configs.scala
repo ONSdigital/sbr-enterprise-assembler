@@ -65,7 +65,7 @@ object Configs{
     Try(args(6)).map(conf.set("files.parquet", _)).getOrElse(Unit)
     Try(args(7)).map(conf.set("hbase.zookeeper.quorum", _)).getOrElse(Unit)
     Try(args(8)).map(conf.set("hbase.zookeeper.property.clientPort", _)).getOrElse(Unit)
-    Try(args(9)).map(conf.set("enterprise.data.timeperiod", _)).getOrElse(Unit)
+    //Try(args(9)).map(conf.set("enterprise.data.timeperiod", _)).getOrElse(Unit)
 
   }
 
