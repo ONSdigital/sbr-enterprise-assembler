@@ -80,15 +80,15 @@ trait WithConvertionHelper {
       createLinksRecord(generateLinkKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn)
     )).getOrElse(Seq[(String, RowObject)]())
 
-  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getString("PayeRefs").map(paye => Seq(
+  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
+    createLinksRecord(luKey,s"$childPrefix$vat",vatValue),
+    createLinksRecord(generateLinkKey(vat.toString,vatValue),s"$parentPrefix$legalUnit",ubrn.toString)
+  ))).getOrElse (Seq[(String, RowObject)]())
+
+  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
     createLinksRecord(luKey,s"$childPrefix$paye",payeValue),
     createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
-  )).getOrElse(Seq[(String, RowObject)]())
-
-  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getLong("VatRefs").map(vat => Seq(
-        createLinksRecord(luKey,s"$childPrefix$vat",vatValue),
-        createLinksRecord(generateLinkKey(vat.toString,vatValue),s"$parentPrefix$legalUnit",ubrn.toString)
-      )).getOrElse (Seq[(String, RowObject)]())
+  ))).getOrElse(Seq[(String, RowObject)]())
 
   private def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 

@@ -18,7 +18,7 @@ trait dataFrameHelper {
 
   def finalCalculations(parquetDF:DataFrame, payeDF: DataFrame) : DataFrame = {
     val latest = "dec_jobs"
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("PayeRefs"), joinType="outer")
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")
     val sumDf = df.groupBy("entRef").sum(latest)
     val avgDf = df.withColumn("avg", avg(array(cols.map(s => df.col(s)):_*))).select("*")
     avgDf.join(sumDf, "entRef")
@@ -26,8 +26,8 @@ trait dataFrameHelper {
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
     parquetDF.withColumn("entRef", parquetDF.col("id")+1)
-      .withColumn("VatRefs", explode_outer(parquetDF.col("VatRefs")))
-      .withColumn("PayeRefs", explode_outer(parquetDF.col("PayeRefs")))
+      .withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
+      .withColumn("payeref", explode_outer(parquetDF.col("PayeRefs")))
   }
 
   private def intConvert(payeFrame: DataFrame): DataFrame = {
