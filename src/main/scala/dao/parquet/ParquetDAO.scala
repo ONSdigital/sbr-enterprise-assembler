@@ -31,7 +31,6 @@ object ParquetDAO extends WithConvertionHelper with dataFrameHelper{
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
           .saveAsNewAPIHadoopFile(PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
-    parquetRDD.foreach(x => println(x))
     parquetRDD.unpersist()
   }
 }
