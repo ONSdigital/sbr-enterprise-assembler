@@ -28,7 +28,6 @@ trait dataFrameHelper {
     parquetDF.withColumn("entRef", parquetDF.col("id")+1)
       .withColumn("VatRefs", explode_outer(parquetDF.col("VatRefs")))
       .withColumn("PayeRefs", explode_outer(parquetDF.col("PayeRefs")))
-//      .select("entRef", "BusinessName", "PostCode", "LegalStatus", "VatRefs","PayeRefs", "CompanyNo")
   }
 
   private def intConvert(payeFrame: DataFrame): DataFrame = {

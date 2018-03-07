@@ -58,7 +58,9 @@ trait WithConvertionHelper {
         Seq(
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
-          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls))
+          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls)),
+          row.getInt("avg").map(avg => createEnterpriseRecord(ern,"avg",avg.toString)),
+          row.getLong(s"sum($latest)").map(sum => createEnterpriseRecord(ern,"latestSum",sum.toString))
         ).collect{case Some(v) => v}
 
   private def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
