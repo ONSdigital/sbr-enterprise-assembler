@@ -22,7 +22,7 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
 
   def loadFromParquet{
     withSpark{ implicit SparkSession => ParquetDAO.parquetToHFile }
-    withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
+    //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
   }
 
   def loadFromHFile = withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
