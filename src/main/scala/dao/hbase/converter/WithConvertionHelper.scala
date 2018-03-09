@@ -104,13 +104,11 @@ trait WithConvertionHelper {
   private def generateErn = Random.alphanumeric.take(18).mkString
 
   private def generateEntKey(ern:String) = {
-    println(s"generateEntKey: accessing TIME_PERIOD config variable... and the value is.......: $TIME_PERIOD")
     s"${ern.reverse}~$TIME_PERIOD"
   }
 
   private def generateLinkKey(id:String, suffix:String) = {
-    println(s"generateLinkKey: accessing TIME_PERIOD config variable... and the value is.......: $TIME_PERIOD")
-    s"$id~$suffix~$TIME_PERIOD"
+    s"$id~$suffix~${conf.getStrings("enterprise.data.timeperiod").head}"
   }
 
 
