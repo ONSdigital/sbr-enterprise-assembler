@@ -58,12 +58,17 @@ object Configs{
 
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
-    println("ARGS<<<<<<<<<<<<<<<<<<<<<<<<<")
+
     val indexedParams = args.zipWithIndex.toSeq
-    indexedParams.foreach(arg => println(s"${arg._1.toString}: ${arg._2.toString}") )
-    println("END OF ARGS>>>>>>>>>>>>>>>>>>")
 
     val params = indexedParams.map(p => (p._2,p._1)).toMap
+
+    println("ARGS<<<<<<<<<<<<<<<<<<<<<<<<<")
+    indexedParams.foreach(arg => println(s"${arg._2.toString}: ${arg._1.toString}") )
+    println("END OF ARGS>>>>>>>>>>>>>>>>>>")
+
+
+
     conf.set("hbase.table.links.name", params(0))
     conf.set("hbase.table.links.namespace", params(1))
     conf.set("files.links.hfile", params(2))
@@ -73,7 +78,10 @@ object Configs{
     conf.set("files.parquet", params(6))
     conf.set("hbase.zookeeper.quorum", params(7))
     conf.set("hbase.zookeeper.property.clientPort", params(8))
-    conf.set("enterprise.data.timeperiod",params(9)
-    )
+    conf.set("enterprise.data.timeperiod",params(9))
+
+    println(s"!!!!!!!!!!!!!! before adding to conf:::TIME_PERIOD = ${params(9)} !!!!!!!!!!!!!!!!!")
+    println(s"!!!!!!!!!!!!!! after adding to conf:::TIME_PERIOD = ${conf.getStrings("enterprise.data.timeperiod").head} !!!!!!!!!!!!!!!!!")
+    println(s"!!!!!!!!!!!!!! reading from variable TIME_PERIOD: $TIME_PERIOD !!!!!!!!!!!!!!!!!")
   }
 }
