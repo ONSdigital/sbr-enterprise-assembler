@@ -37,8 +37,6 @@ trait WithConvertionHelper {
 
   import Configs._
 
-  lazy val period = conf.getStrings("enterprise.data.timeperiod").head //"201802"
-
 
     val legalUnit = "LEU"
     val enterprise = "ENT"
@@ -105,9 +103,9 @@ trait WithConvertionHelper {
 
   private def generateErn = Random.alphanumeric.take(18).mkString
 
-  private def generateEntKey(ern:String) = s"${ern.reverse}~$period"
+  private def generateEntKey(ern:String) = s"${ern.reverse}~$TIME_PERIOD"
 
-  private def generateLinkKey(id:String, suffix:String) = s"$id~$suffix~$period"
+  private def generateLinkKey(id:String, suffix:String) = s"$id~$suffix~$TIME_PERIOD"
 
 
 
