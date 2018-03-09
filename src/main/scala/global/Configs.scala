@@ -56,7 +56,7 @@ object Configs{
 
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
-    println("ARGS<<<<<<<<<<<<<<<<<<<<<<<<<")_
+    println("ARGS<<<<<<<<<<<<<<<<<<<<<<<<<")
     args.zipWithIndex.foreach(arg => println(s"${arg._2.toString}: ${arg._1}") )
     println("END OF ARGS>>>>>>>>>>>>>>>>>>")
     Try(args(0)).map(conf.set("hbase.table.links.name", _)).getOrElse(Unit)
