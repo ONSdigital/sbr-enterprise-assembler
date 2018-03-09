@@ -38,7 +38,7 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with BeforeAndA
        val assembler = new EnterpriseAssemblerService{}
        assembler.loadFromJson
 
-       val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
+       //val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
        val tn: TableName = TableName.valueOf(conf.getStrings("hbase.table.enterprise.namespace").head, HBASE_ENTERPRISE_TABLE_NAME)//HBASE_ENTERPRISE_TABLE_NAME.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
        val table: Table = connection.getTable(tn)
        val admin = connection.getAdmin

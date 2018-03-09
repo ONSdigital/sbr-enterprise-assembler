@@ -7,7 +7,11 @@ import acceptance.model.Ent
   */
 trait TestData { 
 
-
+/**
+  * creates Array[Ent] for matching actual results returned by HBase.
+  * As ENT keys generated dynamically and cannot be matched, the keys are copied from actual results so that the rest of Ent object's attribute values
+  * can be checked for equality
+  * */
   def testEnterprises(ents:Seq[Ent]) = {
 
     def getKeyByName(name:String): String = ents.find(_.businessName.get==name).map(_.ern).getOrElse(throw new IllegalArgumentException("cannot find key"))
