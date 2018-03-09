@@ -59,28 +59,21 @@ object Configs{
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
     println("ARGS<<<<<<<<<<<<<<<<<<<<<<<<<")
-    args.zipWithIndex.foreach(arg => println(s"${arg._2.toString}: ${arg._1}") )
+    val indexedParams = args.zipWithIndex.toSeq
+    indexedParams.foreach(arg => println(s"${arg._1.toString}: ${arg._2.toString}") )
     println("END OF ARGS>>>>>>>>>>>>>>>>>>")
-    Try(args(0)).map(conf.set("hbase.table.links.name", _)).getOrElse(Unit)
-    Try(args(1)).map(conf.set("hbase.table.links.namespace", _)).getOrElse(Unit)
-    Try(args(2)).map(conf.set("files.links.hfile", _)).getOrElse(Unit)
 
-    Try(args(3)).map(conf.set("hbase.table.enterprise.name", _)).getOrElse(Unit)
-    Try(args(4)).map(conf.set("hbase.table.enterprise.namespace", _)).getOrElse(Unit)
-    Try(args(5)).map(conf.set("files.enterprise.hfile", _)).getOrElse(Unit)
-
-    Try(args(6)).map(conf.set("files.parquet", _)).getOrElse(Unit)
-    Try(args(7)).map(conf.set("hbase.zookeeper.quorum", _)).getOrElse(Unit)
-    Try(args(8)).map(conf.set("hbase.zookeeper.property.clientPort", _)).getOrElse(Unit)
-    conf.set("enterprise.data.timeperiod", {
-      println("START SETTING TIME_PERIOD<<<<<<<<<<<<<<<")
-            val res = Try(args(9)).map{
-            case tp if(tp.trim.isEmpty) => {println(s"empty string entered, setting default value: $defaultTimePeriod");defaultTimePeriod}
-          }.getOrElse({println(s"TIME_PERIOD arg not supplied, setting default value: $defaultTimePeriod");defaultTimePeriod})
-      println("FINISHED SETTING TIME_PERIOD>>>>>>>>>>>>>")
-      res
-
-    }
+    val params = indexedParams.map(p => (p._2,p._1)).toMap
+    conf.set("hbase.table.links.name", params(0))
+    conf.set("hbase.table.links.namespace", params(1))
+    conf.set("files.links.hfile", params(2))
+    conf.set("hbase.table.enterprise.name", params(3))
+    conf.set("hbase.table.enterprise.namespace", params(4))
+    conf.set("files.enterprise.hfile", params(5))
+    conf.set("files.parquet", params(6))
+    conf.set("hbase.zookeeper.quorum", params(7))
+    conf.set("hbase.zookeeper.property.clientPort", params(8))
+    conf.set("enterprise.data.timeperiod",params(9)
     )
   }
 }
