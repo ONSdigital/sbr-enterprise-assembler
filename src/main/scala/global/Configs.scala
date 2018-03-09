@@ -37,7 +37,7 @@ object Configs{
   Try{config.getString("files.links.hfile")}.map(conf.set("files.links.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/links/hfile"))
   Try{config.getString("files.enterprise.hfile")}.map(conf.set("files.enterprise.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/enterprise/hfile"))
 
-  val defaultTimePeriod = "timeperiod-not-specified"
+  val  defaultTimePeriod = "timeperiod-not-specified"
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
@@ -72,6 +72,15 @@ object Configs{
     Try(args(6)).map(conf.set("files.parquet", _)).getOrElse(Unit)
     Try(args(7)).map(conf.set("hbase.zookeeper.quorum", _)).getOrElse(Unit)
     Try(args(8)).map(conf.set("hbase.zookeeper.property.clientPort", _)).getOrElse(Unit)
-    conf.set("enterprise.data.timeperiod", Try(args(9)).map{case tp if(tp.trim.isEmpty) => defaultTimePeriod}.getOrElse(defaultTimePeriod))
+    conf.set("enterprise.data.timeperiod", {
+      println("START SETTING TIME_PERIOD<<<<<<<<<<<<<<<")
+            val res = Try(args(9)).map{
+            case tp if(tp.trim.isEmpty) => {println(s"empty string entered, setting default value: $defaultTimePeriod");defaultTimePeriod}
+          }.getOrElse({println(s"TIME_PERIOD arg not supplied, setting default value: $defaultTimePeriod");defaultTimePeriod})
+      println("FINISHED SETTING TIME_PERIOD>>>>>>>>>>>>>")
+      res
+
+    }
+    )
   }
 }
