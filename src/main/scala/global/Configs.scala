@@ -53,6 +53,8 @@ object Configs{
    lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.enterprise.namespace").head
    lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("hbase.table.enterprise.column.family").head
 
+   lazy val TIME_PERIOD = conf.getStrings("enterprise.data.timeperiod").head
+
 
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
