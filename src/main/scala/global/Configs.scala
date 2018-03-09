@@ -53,15 +53,7 @@ object Configs{
    lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.enterprise.namespace").head
    lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("hbase.table.enterprise.column.family").head
 
-   def TIME_PERIOD = {
-     println("!!!!!!!!!!!!! accessing TIME_PERIOD")
-     val v = conf.getStrings("enterprise.data.timeperiod").toSeq
-     if(v.isEmpty) {println("CANNOT GET TIME_PERIOD FROM ENV"); v.toString}
-     else {
-       print(s"!!!!!!!!!!!!!!!TIME_PERIOD toString:${v.toString}")
-       v
-     }
-   }
+   //val TIME_PERIOD = conf.getStrings("enterprise.data.timeperiod").head
 
 
   def updateConf(args: Array[String]) = {
@@ -90,6 +82,6 @@ object Configs{
 
     println(s"!!!!!!!!!!!!!! before adding to conf:::TIME_PERIOD = ${params(9)} !!!!!!!!!!!!!!!!!")
     println(s"!!!!!!!!!!!!!! after adding to conf:::TIME_PERIOD = ${conf.getStrings("enterprise.data.timeperiod").head} !!!!!!!!!!!!!!!!!")
-    println(s"!!!!!!!!!!!!!! reading from variable TIME_PERIOD: $TIME_PERIOD !!!!!!!!!!!!!!!!!")
+    //println(s"!!!!!!!!!!!!!! reading from variable TIME_PERIOD: $TIME_PERIOD !!!!!!!!!!!!!!!!!")
   }
 }
