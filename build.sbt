@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
   Constants.apacheHBase   % "hbase-hadoop2-compat"              % Versions.clouderaHBase   classifier "tests",
   Constants.apacheHBase   % "hbase-server"                      % Versions.clouderaHBase   classifier "tests",
 
-  "org.apache.crunch"     % "crunch-hbase"                      % "0.11.0-cdh5.13.1",
+  "org.apache.crunch"     % "crunch-hbase"                      % "0.11.0-cdh5.13.1" % Test,
 
   // Hadoop
   Constants.apacheHadoop  % "hadoop-common"                     % Versions.clouderaHadoop,

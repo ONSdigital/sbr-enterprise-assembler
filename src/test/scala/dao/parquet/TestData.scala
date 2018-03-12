@@ -1,6 +1,6 @@
 package dao.parquet
 
-import model.Ent
+import test.model.Ent
 
 /**
   *
