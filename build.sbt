@@ -68,3 +68,11 @@ assemblyMergeStrategy in assembly := {
 
 
 mainClass in (Compile, packageBin) := Some("assembler.AssemblerMain")
+
+lazy val myParameters = Array("LINKS", "ons",
+  "src/main/resources/data/links/hfile", "ENT",
+  "ons", "src/main/resources/data/enterprise/hfile",
+  "src/main/resources/data/sample.parquet",
+  "localhost", "2181", "201802")
+lazy val runWithArgs = taskKey[Unit]("run-args")
+fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
