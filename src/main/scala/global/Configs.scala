@@ -39,6 +39,8 @@ object Configs{
   Try{config.getString("files.paye.csv")}.map(conf.set("files.paye.csv",_)).getOrElse(conf.set("files.paye.csv","src/main/resources/data/smallPaye.csv"))
 
 
+  val  defaultTimePeriod = "timeperiod-not-specified"
+
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
    lazy val PATH_TO_PAYE = conf.getStrings("files.paye.csv").head
@@ -56,20 +58,23 @@ object Configs{
 
 
   def updateConf(args: Array[String]) = {
+//args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
 
-    Try(args(0)).map(conf.set("hbase.table.links.name", _)).getOrElse(Unit)
-    Try(args(1)).map(conf.set("hbase.table.links.namespace", _)).getOrElse(Unit)
-    Try(args(2)).map(conf.set("files.links.hfile", _)).getOrElse(Unit)
+    val indexedParams = args.zipWithIndex.toSeq
 
-    Try(args(3)).map(conf.set("hbase.table.enterprise.name", _)).getOrElse(Unit)
-    Try(args(4)).map(conf.set("hbase.table.enterprise.namespace", _)).getOrElse(Unit)
-    Try(args(5)).map(conf.set("files.enterprise.hfile", _)).getOrElse(Unit)
+    val params = indexedParams.map(p => (p._2,p._1)).toMap
 
-    Try(args(6)).map(conf.set("files.parquet", _)).getOrElse(Unit)
-    Try(args(7)).map(conf.set("hbase.zookeeper.quorum", _)).getOrElse(Unit)
-    Try(args(8)).map(conf.set("hbase.zookeeper.property.clientPort", _)).getOrElse(Unit)
-    Try(args(9)).map(conf.set("enterprise.data.timeperiod", _)).getOrElse(Unit)
-    Try(args(10)).map(conf.set("files.paye.csv", _)).getOrElse(Unit)
+    conf.set("hbase.table.links.name", params(0))
+    conf.set("hbase.table.links.namespace", params(1))
+    conf.set("files.links.hfile", params(2))
+    conf.set("hbase.table.enterprise.name", params(3))
+    conf.set("hbase.table.enterprise.namespace", params(4))
+    conf.set("files.enterprise.hfile", params(5))
+    conf.set("files.parquet", params(6))
+    conf.set("hbase.zookeeper.quorum", params(7))
+    conf.set("hbase.zookeeper.property.clientPort", params(8))
+    conf.set("enterprise.data.timeperiod",params(9))
+    conf.set("files.paye.csv"),params(10)
+
   }
-
 }

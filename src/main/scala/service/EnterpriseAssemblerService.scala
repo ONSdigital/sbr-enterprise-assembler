@@ -11,18 +11,18 @@ import spark.SparkSessionManager
 trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessionManager{
   import global.Configs._
 
-  def loadFromJson{
+  def loadFromJson(timePeriod:String){
     withSpark{ implicit SparkSession =>
       ParquetDAO.jsonToParquet(PATH_TO_JSON)
-      ParquetDAO.parquetToHFile
+      ParquetDAO.parquetToHFile(timePeriod)
     }
-    withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
+    //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
   }
 
 
-  def loadFromParquet{
-    withSpark{ implicit SparkSession => ParquetDAO.parquetToHFile }
-    //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
+  def loadFromParquet(timePeriod:String){
+    withSpark{ implicit SparkSession => ParquetDAO.parquetToHFile(timePeriod) }
+    withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
   }
 
   def loadFromHFile = withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}

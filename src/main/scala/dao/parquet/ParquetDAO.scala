@@ -18,9 +18,9 @@ object ParquetDAO extends WithConvertionHelper with dataFrameHelper{
 
   def jsonToParquet(jsonFilePath:String)(implicit spark:SparkSession) = spark.read.json(jsonFilePath).write.parquet(PATH_TO_PARQUET)
 
-  def parquetToHFile(implicit spark:SparkSession){
+  def parquetToHFile(timePeriod:String)(implicit spark:SparkSession){
 
-    val parquetRDD = finalCalculations(spark.read.parquet(PATH_TO_PARQUET), spark.read.option("header", "true").csv(PATH_TO_PAYE)).rdd.map(toRecords).cache()
+    val parquetRDD = finalCalculations(spark.read.parquet(PATH_TO_PARQUET), spark.read.option("header", "true").csv(PATH_TO_PAYE)).rdd.map(row => toRecords(row, timePeriod)).cache()
 
     parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
