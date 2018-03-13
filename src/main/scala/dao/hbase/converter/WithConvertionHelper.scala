@@ -36,8 +36,7 @@ trait WithConvertionHelper {
 * */
 
   import Configs._
-
-
+  
     val legalUnit = "LEU"
     val enterprise = "ENT"
     val companiesHouse = "CH"
@@ -46,12 +45,21 @@ trait WithConvertionHelper {
 
     val childPrefix = "c_"
     val parentPrefix = "p_"
+    val latest = "dec_jobs"
 
   def toRecords(row:Row,timePeriod:String): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern,timePeriod),rowToLinks(row,ern,timePeriod))
   }
 
+  private def rowToEnterprise(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern,timePeriod), createEnterpriseRecord(ern,"idbrref","9999999999",timePeriod))++
+        Seq(
+          row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
+          row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
+          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls)),
+          row.getInt("avg").map(avg => createEnterpriseRecord(ern,"avg",avg.toString)),
+          row.getLong(s"sum($latest)").map(sum => createEnterpriseRecord(ern,"latestSum",sum.toString))
+        ).collect{case Some(v) => v}
 
   private def rowToEnterprise(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern,timePeriod), createEnterpriseRecord(ern,"idbrref","9999999999",timePeriod))++
         Seq(
@@ -60,13 +68,11 @@ trait WithConvertionHelper {
           row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls,timePeriod))
         ).collect{case Some(v) => v}
 
-
   private def rowToLinks(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = {
       val ubrn = getId(row)
       val keyStr = generateLinkKey(ern,enterprise,timePeriod)
       createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit)+:rowToLegalUnitLinks(row,ern,timePeriod)
     }
-
 
   private def rowToLegalUnitLinks(row:Row, ern:String,timePeriod:String):Seq[(String, RowObject)] = {
       val ubrn = getId(row)
@@ -79,12 +85,10 @@ trait WithConvertionHelper {
       createLinksRecord(generateLinkKey(companyNo,companiesHouse,timePeriod),s"$parentPrefix$legalUnit",ubrn)
     )).getOrElse(Seq[(String, RowObject)]())
 
-
   private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,timePeriod:String):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
         createLinksRecord(luKey,s"$childPrefix$vat",vatValue),
         createLinksRecord(generateLinkKey(vat.toString,vatValue,timePeriod),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse (Seq[(String, RowObject)]())
-
 
 
   private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,timePeriod:String):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
@@ -98,7 +102,6 @@ trait WithConvertionHelper {
 
   private def createEnterpriseRecord(ern:String,column:String, value:String,timePeriod:String) = createRecord(generateEntKey(ern,timePeriod),HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
-
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> RowObject(key,columnFamily,column,value)
 
   private def generateErn = Random.alphanumeric.take(18).mkString
@@ -110,7 +113,4 @@ trait WithConvertionHelper {
   private def generateLinkKey(id:String, suffix:String,timePeriod:String) = {
     s"$id~$suffix~$timePeriod"
   }
-
-
-
 }

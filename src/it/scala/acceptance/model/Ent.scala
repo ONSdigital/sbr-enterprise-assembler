@@ -21,6 +21,8 @@ object Ent{
       getValue("idbrref"),
       getValue("name"),
       getValue("postcode"),
-      getValue("legalstatus"))
+      getValue("legalstatus"),
+      getValue("avg"),
+      getValue("sum(dec_jobs)"))
   }
 }
