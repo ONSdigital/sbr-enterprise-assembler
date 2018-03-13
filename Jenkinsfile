@@ -21,7 +21,7 @@ pipeline {
 
         ORGANIZATION = "ons"
         TEAM = "sbr"
-        MODULE_NAME = "enterprise-assemble"
+        MODULE_NAME = "sbr-enterprise-assembler"
 
         // hbase config
         CH_TABLE = "ch"
@@ -65,7 +65,7 @@ pipeline {
                     env.NODE_STAGE = "Package and Push Artifact"
                 }
                 sh """
-                    $SBT 'set test in assembly := {}' clean compile assembly
+                    $SBT clean compile assembly
                 """
                 copyToHBaseNode()
                 colourText("success", 'Package.')
@@ -96,9 +96,9 @@ def copyToHBaseNode() {
         withCredentials([string(credentialsId: "sbr-hbase-node", variable: 'HBASE_NODE')]) {
             sh '''
                 ssh sbr-$DEPLOY_DEV-ci@$HBASE_NODE mkdir -p $MODULE_NAME/lib
-                scp ${WORKSPACE}/target/enterprise_assembler-assembly*.jar sbr-$DEPLOY_DEV-ci@$HBASE_NODE:$MODULE_NAME/lib/
+                scp ${WORKSPACE}/target/scala-2.11/sbr-enterprise_assembler-assembly*.jar sbr-$DEPLOY_DEV-ci@$HBASE_NODE:$MODULE_NAME/lib/
                 echo "Successfully copied jar file to $MODULE_NAME/lib directory on $HBASE_NODE"
-                ssh sbr-$DEPLOY_DEV-ci@$HBASE_NODE hdfs dfs -put -f $MODULE_NAME/lib/enterprise_assembler-assembly*.jar hdfs://prod1/user/sbr-$DEPLOY_DEV-ci/lib/
+                ssh sbr-$DEPLOY_DEV-ci@$HBASE_NODE hdfs dfs -put -f $MODULE_NAME/lib/sbr-enterprise_assembler-assembly*.jar hdfs://prod1/user/sbr-$DEPLOY_DEV-ci/lib/
                 echo "Successfully copied jar file to HDFS"
 	        '''
         }
