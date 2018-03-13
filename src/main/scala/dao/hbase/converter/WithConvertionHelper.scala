@@ -54,18 +54,11 @@ trait WithConvertionHelper {
 
   private def rowToEnterprise(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern,timePeriod), createEnterpriseRecord(ern,"idbrref","9999999999",timePeriod))++
         Seq(
-          row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
-          row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
-          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls)),
-          row.getInt("avg").map(avg => createEnterpriseRecord(ern,"avg",avg.toString)),
-          row.getLong(s"sum($latest)").map(sum => createEnterpriseRecord(ern,"latestSum",sum.toString))
-        ).collect{case Some(v) => v}
-
-  private def rowToEnterprise(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern,timePeriod), createEnterpriseRecord(ern,"idbrref","9999999999",timePeriod))++
-        Seq(
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn,timePeriod)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc,timePeriod)),
-          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls,timePeriod))
+          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls,timePeriod)),
+          row.getInt("avg").map(avg => createEnterpriseRecord(ern,"avg",avg.toString,timePeriod)),
+          row.getLong(s"sum($latest)").map(sum => createEnterpriseRecord(ern,"latestSum",sum.toString,timePeriod))
         ).collect{case Some(v) => v}
 
   private def rowToLinks(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = {
