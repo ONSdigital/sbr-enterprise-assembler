@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
   Constants.apacheHBase   % "hbase-hadoop2-compat"              % Versions.clouderaHBase   classifier "tests",
   Constants.apacheHBase   % "hbase-server"                      % Versions.clouderaHBase   classifier "tests",
 
-  "org.apache.crunch"     % "crunch-hbase"                      % "0.11.0-cdh5.13.1" % Test,
+  "org.apache.crunch"     % "crunch-hbase"                      % "0.11.0-cdh5.13.1",
 
   // Hadoop
   Constants.apacheHadoop  % "hadoop-common"                     % Versions.clouderaHadoop,
@@ -41,9 +41,11 @@ libraryDependencies ++= Seq(
   Constants.apacheHadoop  % "hadoop-mapreduce-client-core"      % Versions.clouderaHadoop,
   Constants.apacheHadoop  % "hadoop-mapreduce-client-jobclient" % Versions.clouderaHadoop,
   "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0-cdh5.10.1" % Test,
+  "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0" % Test,
 
 
-  "com.typesafe"          % "config"                            % "1.3.2",
+
+"com.typesafe"          % "config"                            % "1.3.2",
   (Constants.apacheHBase  %  "hbase-server"                     % Versions.clouderaHBase).exclude("com.sun.jersey","jersey-server"),
   ("org.apache.spark"     %% "spark-core"                       % Versions.spark).exclude("aopalliance","aopalliance").exclude("commons-beanutils","commons-beanutils"),
   "org.apache.spark"      %% "spark-sql"                        % Versions.spark

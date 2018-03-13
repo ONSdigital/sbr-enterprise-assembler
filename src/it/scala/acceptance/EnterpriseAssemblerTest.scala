@@ -1,8 +1,6 @@
 package acceptance
 
 import java.util
-
-import acceptance.model.Ent
 import global.Configs
 import global.Configs.{HBASE_ENTERPRISE_TABLE_NAME, conf}
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Result, Table}
@@ -14,6 +12,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import service.EnterpriseAssemblerService
+import model.domain.Enterprise
 /**
   *
   */
@@ -38,7 +37,7 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with BeforeAndA
        val assembler = new EnterpriseAssemblerService{}
        assembler.loadFromJson
 
-       //val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
+       val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
        val tn: TableName = TableName.valueOf(conf.getStrings("hbase.table.enterprise.namespace").head, HBASE_ENTERPRISE_TABLE_NAME)//HBASE_ENTERPRISE_TABLE_NAME.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
        val table: Table = connection.getTable(tn)
        val admin = connection.getAdmin
@@ -54,9 +53,9 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with BeforeAndA
 
        val navMap: RDD[util.NavigableMap[Array[Byte], Array[Byte]]] = valuesBytes.map(_.getFamilyMap("d".getBytes()))
 
-       val str = navMap.map(Ent(_))
+       val str = navMap.map(Enterprise(_))
 
-       val res: Array[Ent] = str.collect.sortBy(_.ern)
+       val res: Array[Enterprise] = str.collect.sortBy(_.ern)
        val expected = testEnterprises(res).sortBy(_.ern)
        res shouldBe expected
 

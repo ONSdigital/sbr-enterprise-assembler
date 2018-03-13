@@ -1,10 +1,12 @@
+package model
+
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.util.Bytes
 
 /**
   *
   */
-package object model {
+package object hfile {
 
   case class RowObject(key:String, colFamily:String, qualifier:String, value:String){
     def toKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)

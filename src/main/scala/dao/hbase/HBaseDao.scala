@@ -19,7 +19,7 @@ object HBaseDao {
   val logger = LoggerFactory.getLogger(getClass)
 
 
-  def loadHFiles(implicit connection:Connection) ={
+  def loadHFiles(implicit connection:Connection) = {
     loadLinksHFile
     loadEnterprisesHFile
   }
