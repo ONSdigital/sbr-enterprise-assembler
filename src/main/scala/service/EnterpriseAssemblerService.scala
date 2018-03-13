@@ -14,14 +14,14 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
   def loadFromJson(timePeriod:String){
     withSpark{ implicit SparkSession =>
       ParquetDAO.jsonToParquet(PATH_TO_JSON)
-      ParquetDAO.parquetToHFile(timePeriod)
+      ParquetDAO.parquetToHFile
     }
     //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
   }
 
 
-  def loadFromParquet(timePeriod:String){
-    withSpark{ implicit SparkSession => ParquetDAO.parquetToHFile(timePeriod) }
+  def loadFromParquet{
+    withSpark{ implicit SparkSession => ParquetDAO.parquetToHFile }
     withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
   }
 

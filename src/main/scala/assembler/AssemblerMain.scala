@@ -10,7 +10,7 @@ object AssemblerMain extends EnterpriseAssemblerService {
   def main(args: Array[String]) {
 
      updateConf(args)
-     loadFromParquet(args(9)) /*loadFromJson*/
+     loadFromParquet /*loadFromJson*/
 
    }
 

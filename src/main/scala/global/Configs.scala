@@ -37,6 +37,11 @@ object Configs{
   Try{config.getString("files.links.hfile")}.map(conf.set("files.links.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/links/hfile"))
   Try{config.getString("files.enterprise.hfile")}.map(conf.set("files.enterprise.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/enterprise/hfile"))
 
+
+  Try{config.getString("enterprise.data.default.timeperiod")}.map(conf.set("enterprise.data.timeperiod",_)).getOrElse(conf.set(s"enterprise.data.timeperiod",defaultTimePeriod))
+
+
+
   val  defaultTimePeriod = "timeperiod-not-specified"
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
@@ -52,7 +57,7 @@ object Configs{
    lazy val HBASE_ENTERPRISE_TABLE_NAME = conf.getStrings("hbase.table.enterprise.name").head
    lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.enterprise.namespace").head
    lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("hbase.table.enterprise.column.family").head
-
+   lazy val TIME_PERIOD = conf.getStrings("enterprise.data.timeperiod").head
 
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
@@ -60,9 +65,6 @@ object Configs{
     val indexedParams = args.zipWithIndex.toSeq
 
     val params = indexedParams.map(p => (p._2,p._1)).toMap
-
-
-
 
     conf.set("hbase.table.links.name", params(0))
     conf.set("hbase.table.links.namespace", params(1))
