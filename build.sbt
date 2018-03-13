@@ -7,7 +7,7 @@ scalaVersion := "2.11.8"
 lazy val Versions = new {
   val clouderaHBase = "1.2.0-cdh5.10.1"
   val clouderaHadoop = "2.6.0-cdh5.10.1"
-  val spark = "2.1.0"
+  val spark = "2.2.0"
 }
 lazy val Constants = new {
   //orgs
