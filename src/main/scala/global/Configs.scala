@@ -13,6 +13,8 @@ object Configs{
 
   val logger = LoggerFactory.getLogger(getClass)
 
+  val  defaultTimePeriod = "timeperiod-not-specified"
+
   val config: Config = ConfigFactory.load()
 
   val conf: Configuration = HBaseConfiguration.create()
@@ -41,8 +43,6 @@ object Configs{
   Try{config.getString("enterprise.data.default.timeperiod")}.map(conf.set("enterprise.data.timeperiod",_)).getOrElse(conf.set(s"enterprise.data.timeperiod",defaultTimePeriod))
 
 
-
-  val  defaultTimePeriod = "timeperiod-not-specified"
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head

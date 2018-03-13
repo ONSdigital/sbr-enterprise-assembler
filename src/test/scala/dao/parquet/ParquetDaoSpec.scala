@@ -21,6 +21,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
   override def beforeAll() = {
 
+    conf.set("enterprise.data.timeperiod", "default")
 
     updateConf(Array[String](
       "LINKS", "ons", linkHfilePath,
@@ -30,15 +31,15 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
       "2181","201802"
     ))
 
-    conf.set("hbase.mapreduce.inputtable", "ons:ENT")
+
 
   }
 
-/*  override def afterAll() = {
+  override def afterAll() = {
     File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-  }*/
+  }
 
 
   "assembler" should {
@@ -47,8 +48,8 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
       //implicit val ctx = spark.sparkContext
 
-/*      ParquetDAO.jsonToParquet(jsonFilePath)(spark)
-      ParquetDAO.parquetToHFile(conf.getStrings("enterprise.data.timeperiod").head)*/
+      ParquetDAO.jsonToParquet(jsonFilePath)(spark)
+      ParquetDAO.parquetToHFile
 
 
 
