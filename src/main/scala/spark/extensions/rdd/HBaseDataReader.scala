@@ -7,6 +7,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.io.NullWritable
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 
 import scala.reflect.ClassTag
 /**
@@ -26,8 +27,8 @@ object HBaseDataReader{
 
 
 
-        def readEntitiesFromHBase[T:ClassTag](hfilePath:String)(implicit spark:SparkContext,readEntity:DataMap => T): RDD[T] =
-                                              spark.newAPIHadoopFile(
+        def readEntitiesFromHBase[T:ClassTag](hfilePath:String)(implicit spark:SparkSession,readEntity:DataMap => T): RDD[T] =
+                                              spark.sparkContext.newAPIHadoopFile(
                                                 hfilePath,
                                                 classOf[HFileInputFormat],
                                                 classOf[NullWritable],

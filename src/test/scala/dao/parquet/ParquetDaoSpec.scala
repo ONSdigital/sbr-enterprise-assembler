@@ -34,21 +34,21 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
   }
 
-  override def afterAll() = {
+/*  override def afterAll() = {
     File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-  }
+  }*/
 
 
   "assembler" should {
     "create hfiles populated with expected links data" in {
 
-      val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      implicit val ctx = spark.sparkContext
+      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+      //implicit val ctx = spark.sparkContext
 
-      ParquetDAO.jsonToParquet(jsonFilePath)(spark)
-      ParquetDAO.parquetToHFile(spark)
+/*      ParquetDAO.jsonToParquet(jsonFilePath)(spark)
+      ParquetDAO.parquetToHFile(conf.getStrings("enterprise.data.timeperiod").head)*/
 
 
 
