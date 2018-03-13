@@ -7,7 +7,7 @@ import scala.util.Try
 /**
   *
   */
-case class Enterprise(ern:String, idbrref:Option[String], businessName:Option[String], PostCode:Option[String], legalStatus:Option[String])
+case class Enterprise(ern:String, idbrref:Option[String], businessName:Option[String], PostCode:Option[String], legalStatus:Option[String], avg:Option[String], sum:Option[String])
 
 object Enterprise{
 
@@ -21,7 +21,9 @@ object Enterprise{
       getValue("idbrref"),
       getValue("name"),
       getValue("postcode"),
-      getValue("legalstatus"))
+      getValue("legalstatus"),
+      getValue("avg"),
+      getValue("sum(dec_jobs)"))
   }
 
   def apply(entry:(String, Iterable[(String, String)])) = buildFromHFileDataMap(entry)
@@ -37,9 +39,9 @@ object Enterprise{
       getValue("idbrref"),
       getValue("name"),
       getValue("postcode"),
-      getValue("legalstatus")
-    )
-
+      getValue("legalstatus"),
+      getValue("avg"),
+      getValue("sum(dec_jobs)"))
   }
 
 

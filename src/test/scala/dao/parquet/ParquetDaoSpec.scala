@@ -18,6 +18,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   val linkHfilePath = "src/test/resources/data/links"
   val entHfilePath = "src/test/resources/data/enterprise"
   val parquetHfilePath = "src/test/resources/data/sample.parquet"
+  val payeFilePath = "src/test/resouces/data/smallPaye.csv"
 
   override def beforeAll() = {
 
@@ -27,7 +28,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
       "ENT", "ons", entHfilePath,
       parquetHfilePath,
       "localhost",
-      "2181","201802"
+      "2181","201802",payeFilePath
     ))
 
     conf.set("hbase.mapreduce.inputtable", "ons:ENT")

@@ -24,7 +24,7 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with BeforeAndA
                                   "ENT", "ons", "src/test/resources/data/enterprise/hfile",
                                   "src/test/resources/data/sample.parquet",
                                   "localhost",
-                                  "2181"
+                                  "2181", "src/test/resources/data/smallPaye.csv"
                                 ))
     global.Configs.conf.set("hbase.mapreduce.inputtable","ons:ENT")
   }
