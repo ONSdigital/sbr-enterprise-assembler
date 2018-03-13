@@ -53,8 +53,6 @@ object Configs{
    lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.enterprise.namespace").head
    lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("hbase.table.enterprise.column.family").head
 
-   //val TIME_PERIOD = conf.getStrings("enterprise.data.timeperiod").head
-
 
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
@@ -63,9 +61,6 @@ object Configs{
 
     val params = indexedParams.map(p => (p._2,p._1)).toMap
 
-    println("ARGS<<<<<<<<<<<<<<<<<<<<<<<<<")
-    indexedParams.foreach(arg => println(s"${arg._2.toString}: ${arg._1.toString}") )
-    println("END OF ARGS>>>>>>>>>>>>>>>>>>")
 
 
 
@@ -80,8 +75,5 @@ object Configs{
     conf.set("hbase.zookeeper.property.clientPort", params(8))
     conf.set("enterprise.data.timeperiod",params(9))
 
-    println(s"!!!!!!!!!!!!!! before adding to conf:::TIME_PERIOD = ${params(9)} !!!!!!!!!!!!!!!!!")
-    println(s"!!!!!!!!!!!!!! after adding to conf:::TIME_PERIOD = ${conf.getStrings("enterprise.data.timeperiod").head} !!!!!!!!!!!!!!!!!")
-    //println(s"!!!!!!!!!!!!!! reading from variable TIME_PERIOD: $TIME_PERIOD !!!!!!!!!!!!!!!!!")
   }
 }
