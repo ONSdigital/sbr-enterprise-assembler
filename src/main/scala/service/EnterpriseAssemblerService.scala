@@ -16,7 +16,7 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
       ParquetDAO.jsonToParquet(PATH_TO_JSON)
       ParquetDAO.parquetToHFile
     }
-    withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
+    //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
   }
 
 

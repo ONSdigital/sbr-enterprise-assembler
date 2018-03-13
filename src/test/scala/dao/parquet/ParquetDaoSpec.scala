@@ -1,14 +1,8 @@
 package dao.parquet
 
 import model.domain.Enterprise
-import org.apache.crunch.io.hbase.HFileInputFormat
-import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.io.NullWritable
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import dao.parquet._
 import spark.extensions.rdd.HBaseDataReader._
 
 import scala.reflect.io.File
