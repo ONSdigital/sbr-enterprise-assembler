@@ -2,9 +2,8 @@ package dao.hbase.converter
 
 
 import global.Configs
-import model._
+import model.hfile._
 import org.apache.spark.sql.Row
-
 import scala.util.Random
 import spark.extensions.sql.SqlRowExtensions
 /**

@@ -1,4 +1,4 @@
-package acceptance
+package dao.parquet
 
 import model.domain.Enterprise
 
