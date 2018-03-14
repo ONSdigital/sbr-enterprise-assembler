@@ -74,5 +74,7 @@ lazy val myParameters = Array("LINKS", "ons",
   "ons", "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
   "localhost", "2181", "201802")
+
 lazy val runWithArgs = taskKey[Unit]("run-args")
+
 fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
