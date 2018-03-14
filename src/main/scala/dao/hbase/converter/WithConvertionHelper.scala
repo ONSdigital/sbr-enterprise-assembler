@@ -44,7 +44,6 @@ trait WithConvertionHelper {
 
     val childPrefix = "c_"
     val parentPrefix = "p_"
-    val latest = "dec_jobs"
 
   def toRecords(row:Row,timePeriod:String): Tables = {
     val ern = generateErn
@@ -56,8 +55,8 @@ trait WithConvertionHelper {
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn,timePeriod)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc,timePeriod)),
           row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls,timePeriod)),
-          row.getDouble("paye_employees").map(avg => createEnterpriseRecord(ern,"paye_employees",avg.toString,timePeriod)),
-          row.getLong(s"sum($latest)").map(sum => createEnterpriseRecord(ern,"latestSum",sum.toString,timePeriod))
+          row.getInt("paye_employees").map(avg => createEnterpriseRecord(ern,"paye_employees",avg.toString,timePeriod)),
+          row.getLong("paye_jobs").map(sum => createEnterpriseRecord(ern,"paye_jobs",sum.toString,timePeriod))
         ).collect{case Some(v) => v}
 
   private def rowToLinks(row:Row,ern:String,timePeriod:String): Seq[(String, RowObject)] = {

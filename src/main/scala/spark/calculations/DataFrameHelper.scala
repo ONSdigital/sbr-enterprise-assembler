@@ -1,12 +1,12 @@
 package spark.calculations
 
-import org.apache.spark.sql.functions.{array, explode_outer, udf, col}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.DataFrame
 
 trait DataFrameHelper {
 
-  val cols = Seq("june_jobs","sept_jobs","dec_jobs","mar_jobs")
+  val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
 
   val avg = udf((values: Seq[Integer]) => {
     val notNullValues = values.filter(_ != null).map(_.toInt)
@@ -19,10 +19,16 @@ trait DataFrameHelper {
   def finalCalculations(parquetDF:DataFrame, payeDF: DataFrame) : DataFrame = {
     val latest = "dec_jobs"
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")
-    val sumDf = df.groupBy("id").sum(latest)
-    val avgDf = df.withColumn("avg", avg(array(cols.map(s => df.col(s)):_*)))
-    val employees = avgDf.groupBy("id").count().join(avgDf.groupBy("id").sum("avg"),"id")
-    df.dropDuplicates(Seq("id")).join(sumDf,"id").join(employees, "id").withColumn("paye_employees",col("sum(avg)")/col("count"))
+    val sumDf = df.groupBy("id").agg(sum(latest) as "paye_jobs")
+
+    val sumQuarters = df.groupBy("id").sum("june_jobs")
+      .join(df.groupBy("id").sum("sept_jobs"), "id")
+      .join(df.groupBy("id").sum("dec_jobs"), "id")
+      .join(df.groupBy("id").sum("mar_jobs"), "id")
+
+    val dfQ = df.join(sumQuarters,"id")
+    val avgDf = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.col(s)):_*)))
+    avgDf.dropDuplicates(Seq("id")).join(sumDf,"id")
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
