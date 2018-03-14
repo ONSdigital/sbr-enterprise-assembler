@@ -5,50 +5,21 @@ version := "1.0"
 scalaVersion := "2.11.8"
 
 lazy val Versions = new {
-  val clouderaHBase = "1.2.0-cdh5.10.1"
-  val clouderaHadoop = "2.6.0-cdh5.10.1"
+  val hbase = "1.2.6"
   val spark = "2.1.0"
 }
-lazy val Constants = new {
-  //orgs
-  val apacheHBase = "org.apache.hbase"
-  val apacheHadoop = "org.apache.hadoop"
-}
-
-resolvers += "cloudera" at "https://repository.cloudera.com/cloudera/cloudera-repos/"
-resolvers += "mvnrepository" at "http://mvnrepository.com/artifact/"
-resolvers += "central" at "http://repo1.maven.org/maven2/"
 
 libraryDependencies ++= Seq(
-
-  Constants.apacheHBase   % "hbase-common"                      % Versions.clouderaHBase,
-  Constants.apacheHBase   % "hbase"                             % Versions.clouderaHBase,
-  Constants.apacheHBase   % "hbase-common"                      % Versions.clouderaHBase   classifier "tests",
-  Constants.apacheHBase   % "hbase-client"                      % Versions.clouderaHBase   exclude ("org.slf4j", "slf4j-api"),
-  Constants.apacheHBase   % "hbase-hadoop-compat"               % Versions.clouderaHBase,
-  Constants.apacheHBase   % "hbase-hadoop-compat"               % Versions.clouderaHBase   classifier "tests",
-  Constants.apacheHBase   % "hbase-hadoop2-compat"              % Versions.clouderaHBase,
-  Constants.apacheHBase   % "hbase-hadoop2-compat"              % Versions.clouderaHBase   classifier "tests",
-  Constants.apacheHBase   % "hbase-server"                      % Versions.clouderaHBase   classifier "tests",
-
-  "org.apache.crunch"     % "crunch-hbase"                      % "0.11.0-cdh5.13.1",
-
-  // Hadoop
-  Constants.apacheHadoop  % "hadoop-common"                     % Versions.clouderaHadoop,
-  Constants.apacheHadoop  % "hadoop-common"                     % Versions.clouderaHadoop  classifier "tests",
-  Constants.apacheHadoop  % "hadoop-hdfs"                       % Versions.clouderaHadoop  exclude ("commons-daemon", "commons-daemon"),
-  Constants.apacheHadoop  % "hadoop-hdfs"                       % Versions.clouderaHadoop  classifier "tests",
-  Constants.apacheHadoop  % "hadoop-mapreduce-client-core"      % Versions.clouderaHadoop,
-  Constants.apacheHadoop  % "hadoop-mapreduce-client-jobclient" % Versions.clouderaHadoop,
-  "org.apache.hadoop" % "hadoop-minicluster" % "2.6.0-cdh5.10.1" % Test,
-  "com.holdenkarau" %% "spark-testing-base" % "2.2.0_0.8.0" % Test,
-
-
-
-"com.typesafe"          % "config"                            % "1.3.2",
-  (Constants.apacheHBase  %  "hbase-server"                     % Versions.clouderaHBase).exclude("com.sun.jersey","jersey-server"),
-  ("org.apache.spark"     %% "spark-core"                       % Versions.spark).exclude("aopalliance","aopalliance").exclude("commons-beanutils","commons-beanutils"),
-  "org.apache.spark"      %% "spark-sql"                        % Versions.spark
+  ("org.apache.hbase"             %  "hbase-hadoop-compat"  % "1.4.2").exclude("org.mortbay.jetty","jsp-api-2.1"),
+  "com.typesafe" % "config" % "1.3.2",
+  ("org.apache.hbase"             %  "hbase-server"         % Versions.hbase).exclude("com.sun.jersey","jersey-server").exclude("org.mortbay.jetty","jsp-api-2.1"),
+  ("org.apache.hbase"             %  "hbase-common"         % Versions.hbase),
+  "org.apache.hbase"             %  "hbase-client"         % Versions.hbase,
+  ("org.apache.spark"             %% "spark-core"           % Versions.spark).exclude("com.twitter.chill","jersey-server").exclude("org.mortbay.jetty","jsp-api-2.1")
+    .exclude("aopalliance","aopalliance")
+    .exclude("commons-beanutils","commons-beanutils"),
+  ("org.apache.spark"             %% "spark-sql"            % Versions.spark).exclude("org.mortbay.jetty","jsp-api-2.1"),
+  ("org.apache.crunch"     % "crunch-hbase"                 % "0.15.0").exclude("org.mortbay.jetty","jsp-api-2.1").exclude("com.sun.jersey","jersey-server")
 
 )
 
@@ -66,15 +37,4 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-
-mainClass in (Compile, packageBin) := Some("assembler.AssemblerMain")
-
-lazy val myParameters = Array("LINKS", "ons",
-  "src/main/resources/data/links/hfile", "ENT",
-  "ons", "src/main/resources/data/enterprise/hfile",
-  "src/main/resources/data/sample.parquet",
-  "localhost", "2181", "201802")
-
-lazy val runWithArgs = taskKey[Unit]("run-args")
-
-fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
+mainClass in (Compile,run) := Some("assembler.AssemblerMain")
