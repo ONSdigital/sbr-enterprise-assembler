@@ -13,6 +13,8 @@ object Configs{
 
   val logger = LoggerFactory.getLogger(getClass)
 
+  val  defaultTimePeriod = "timeperiod-not-specified"
+
   val config: Config = ConfigFactory.load()
 
   val conf: Configuration = HBaseConfiguration.create()
@@ -39,7 +41,10 @@ object Configs{
   Try{config.getString("files.paye.csv")}.map(conf.set("files.paye.csv",_)).getOrElse(conf.set("files.paye.csv","src/main/resources/data/smallPaye.csv"))
 
 
-  val  defaultTimePeriod = "timeperiod-not-specified"
+
+  Try{config.getString("enterprise.data.default.timeperiod")}.map(conf.set("enterprise.data.timeperiod",_)).getOrElse(conf.set(s"enterprise.data.timeperiod",defaultTimePeriod))
+
+
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
@@ -55,7 +60,7 @@ object Configs{
    lazy val HBASE_ENTERPRISE_TABLE_NAME = conf.getStrings("hbase.table.enterprise.name").head
    lazy val HBASE_ENTERPRISE_TABLE_NAMESPACE = conf.getStrings("hbase.table.enterprise.namespace").head
    lazy val HBASE_ENTERPRISE_COLUMN_FAMILY = conf.getStrings("hbase.table.enterprise.column.family").head
-
+   lazy val TIME_PERIOD = conf.getStrings("enterprise.data.timeperiod").head
 
   def updateConf(args: Array[String]) = {
 //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802

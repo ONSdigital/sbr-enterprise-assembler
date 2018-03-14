@@ -18,16 +18,16 @@ object HBaseDataReader{
         type DataMap = (String,Iterable[(String, String)])
 
         def getKeyValue(kv:KeyValue) =
-              ( (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
+              (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
 
               (Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
                       kv.getQualifierOffset + kv.getQualifierLength),
                       Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
-                      kv.getValueOffset + kv.getValueLength))))
+                      kv.getValueOffset + kv.getValueLength)))
 
 
 
-        def readEntitiesFromHBase[T:ClassTag](hfilePath:String)(implicit spark:SparkSession,readEntity:DataMap => T): RDD[T] =
+        def readEntitiesFromHFile[T:ClassTag](hfilePath:String)(implicit spark:SparkSession, readEntity:DataMap => T): RDD[T] =
                                               spark.sparkContext.newAPIHadoopFile(
                                                 hfilePath,
                                                 classOf[HFileInputFormat],
