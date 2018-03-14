@@ -14,7 +14,9 @@ trait TestData {
   * */
   def testEnterprises(ents:Seq[Enterprise]) = {
 
-    def getKeyByName(name:String): String = ents.find(_.businessName.get==name).map(_.ern).getOrElse(throw new IllegalArgumentException("cannot find key"))
+    def getKeyByName(name:String): String =
+      ents.find(_.businessName==Some(name)).map(_.ern).getOrElse(throw new IllegalArgumentException(s"cannot find key for name: $name"))
+
 
       Array(
       Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6")),

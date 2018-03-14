@@ -1,6 +1,6 @@
 package dao.parquet
 
-import dao.hbase.converter.WithConvertionHelper
+import dao.hbase.converter.WithConversionHelper
 import global.Configs
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 
 
-object ParquetDAO extends WithConvertionHelper{
+object ParquetDAO extends WithConversionHelper{
 
   import Configs._
 

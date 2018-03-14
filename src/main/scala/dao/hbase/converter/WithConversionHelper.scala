@@ -23,7 +23,7 @@ import spark.extensions.sql.SqlRowExtensions
 *  10 -  VatRefs: array (nullable = true)
 *  11 -  id: long (nullable = true)
   */
-trait WithConvertionHelper {
+trait WithConversionHelper {
 /*
 * Rules:
 * fields needed for creating ENTERPRISE UNIT:
