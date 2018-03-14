@@ -8,7 +8,7 @@ trait SparkSessionManager {
 
   def withSpark(doWithinSparkSession: SparkSession => Unit) = {
 
-    implicit val spark: SparkSession = SparkSession.builder()/*.master("local[4]")*/.appName("enterprise assembler").getOrCreate()
+    implicit val spark: SparkSession = SparkSession.builder()/*.master("local[*]")*/.appName("enterprise assembler").getOrCreate()
 
     doWithinSparkSession(spark)
 
