@@ -18,7 +18,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   val linkHfilePath = "src/test/resources/data/links"
   val entHfilePath = "src/test/resources/data/enterprise"
   val parquetHfilePath = "src/test/resources/data/sample.parquet"
-  val payeFilePath = "src/test/resouces/data/smallPaye.csv"
+  val payeFilePath = "src/test/resources/data/smallPaye.csv"
 
   override def beforeAll() = {
 

@@ -1,10 +1,10 @@
 package spark.calculations
 
-import org.apache.spark.sql.functions.{array, explode_outer, udf}
+import org.apache.spark.sql.functions.{array, explode_outer, udf, col}
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.DataFrame
 
-trait dataFrameHelper {
+trait DataFrameHelper {
 
   val cols = Seq("june_jobs","sept_jobs","dec_jobs","mar_jobs")
 
@@ -20,8 +20,9 @@ trait dataFrameHelper {
     val latest = "dec_jobs"
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")
     val sumDf = df.groupBy("id").sum(latest)
-    val avgDf = df.withColumn("avg", avg(array(cols.map(s => df.col(s)):_*))).select("*")
-    avgDf.join(sumDf, "id")
+    val avgDf = df.withColumn("avg", avg(array(cols.map(s => df.col(s)):_*)))
+    val employees = avgDf.groupBy("id").count().join(avgDf.groupBy("id").sum("avg"),"id")
+    df.dropDuplicates(Seq("id")).join(sumDf,"id").join(employees, "id").withColumn("paye_employees",col("sum(avg)")/col("count"))
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {

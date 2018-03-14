@@ -56,7 +56,7 @@ trait WithConvertionHelper {
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn,timePeriod)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc,timePeriod)),
           row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls,timePeriod)),
-          row.getInt("avg").map(avg => createEnterpriseRecord(ern,"avg",avg.toString,timePeriod)),
+          row.getDouble("paye_employees").map(avg => createEnterpriseRecord(ern,"paye_employees",avg.toString,timePeriod)),
           row.getLong(s"sum($latest)").map(sum => createEnterpriseRecord(ern,"latestSum",sum.toString,timePeriod))
         ).collect{case Some(v) => v}
 

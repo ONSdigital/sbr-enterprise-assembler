@@ -1,7 +1,7 @@
 package dao.parquet
 
 import dao.hbase.converter.WithConvertionHelper
-import spark.calculations.dataFrameHelper
+import spark.calculations.DataFrameHelper
 import global.Configs
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -10,7 +10,7 @@ import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
 
 
-object ParquetDAO extends WithConvertionHelper with dataFrameHelper{
+object ParquetDAO extends WithConvertionHelper with DataFrameHelper{
 
   import Configs._
 
