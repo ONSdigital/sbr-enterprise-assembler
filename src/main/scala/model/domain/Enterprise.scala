@@ -15,15 +15,14 @@ object Enterprise{
 
     def getValue(key:String) = Try{new String(row.get(key.getBytes))}.toOption
 
-
     new Enterprise(
       new String(row.get("ern".getBytes)),
       getValue("idbrref"),
       getValue("name"),
       getValue("postcode"),
       getValue("legalstatus"),
-      getValue("avg"),
-      getValue("sum(dec_jobs)"))
+      getValue("paye_employees"),
+      getValue("paye_jobs"))
   }
 
   def apply(entry:(String, Iterable[(String, String)])) = buildFromHFileDataMap(entry)
@@ -40,8 +39,8 @@ object Enterprise{
       getValue("name"),
       getValue("postcode"),
       getValue("legalstatus"),
-      getValue("avg"),
-      getValue("sum(dec_jobs)"))
+      getValue("paye_employees"),
+      getValue("paye_jobs"))
   }
 
 
