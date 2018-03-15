@@ -38,6 +38,8 @@ object Configs{
   Try{config.getString("files.parquet")}.map(conf.set("files.parquet",_)).getOrElse(conf.set("files.parquet","src/main/resources/data/sample.parquet"))
   Try{config.getString("files.links.hfile")}.map(conf.set("files.links.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/links/hfile"))
   Try{config.getString("files.enterprise.hfile")}.map(conf.set("files.enterprise.hfile",_)).getOrElse(conf.set("files.hfile","src/main/resources/data/enterprise/hfile"))
+  Try{config.getString("files.paye.csv")}.map(conf.set("files.paye.csv",_)).getOrElse(conf.set("files.paye.csv","src/main/resources/data/smallPaye.csv"))
+
 
 
   Try{config.getString("enterprise.data.default.timeperiod")}.map(conf.set("enterprise.data.timeperiod",_)).getOrElse(conf.set(s"enterprise.data.timeperiod",defaultTimePeriod))
@@ -46,6 +48,7 @@ object Configs{
 
    lazy val PATH_TO_JSON = conf.getStrings("files.json").head
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
+   lazy val PATH_TO_PAYE = conf.getStrings("files.paye.csv").head
 
    lazy val PATH_TO_LINKS_HFILE =  conf.getStrings("files.links.hfile").head
    lazy val PATH_TO_ENTERPRISE_HFILE =  conf.getStrings("files.enterprise.hfile").head
@@ -77,6 +80,7 @@ object Configs{
     conf.set("hbase.zookeeper.quorum", params(7))
     conf.set("hbase.zookeeper.property.clientPort", params(8))
     conf.set("enterprise.data.timeperiod",params(9))
+    conf.set("files.paye.csv",params(10))
 
   }
 }
