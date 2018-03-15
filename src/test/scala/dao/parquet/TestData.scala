@@ -15,8 +15,7 @@ trait TestData {
   def testEnterprises(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
-      ents.find(ent => ent.businessName==Some(name)).map(_.ern).getOrElse(throw new IllegalArgumentException(s"cannot find key for name: $name"))
-
+      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
 
       Seq(
         Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("8"),Some("10")),
