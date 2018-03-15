@@ -1,7 +1,6 @@
 package dao.parquet
 
 import model.domain.Enterprise
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
