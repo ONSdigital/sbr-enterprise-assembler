@@ -11,7 +11,6 @@ object AssemblerMain extends EnterpriseAssemblerService {
 
      updateConf(args)
      loadFromParquet /*loadFromJson*/
-
-   }
+  }
 
 }
