@@ -60,7 +60,8 @@ object Configs{
    lazy val TIME_PERIOD = conf.getStrings("enterprise.data.timeperiod").head
 
   def updateConf(args: Array[String]) = {
-//args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802
+
+    //args sample:  LINKS ons src/main/resources/data/links/hfile ENT ons src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802 src/main/resources/data/smallPaye.csv
 
     val indexedParams = args.zipWithIndex.toSeq
 
