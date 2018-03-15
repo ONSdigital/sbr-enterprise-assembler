@@ -16,13 +16,19 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
       ParquetDAO.jsonToParquet(PATH_TO_JSON)
       ParquetDAO.parquetToHFile
     }
-    withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
+    //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}
   }
 
 
   def loadFromParquet{
     withSpark{ implicit SparkSession => ParquetDAO.parquetToHFile }
-    withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
+    //withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles }
+  }
+
+  def refreshFromParquet: Unit ={
+    withSpark{ implicit SparkSession => ParquetDAO.parquetToRefreshHFile }
+    withHbaseConnection { implicit connection: Connection => HBaseDao.loadLinksHFile }
+
   }
 
   def loadFromHFile = withHbaseConnection { implicit connection: Connection => HBaseDao.loadHFiles}

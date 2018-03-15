@@ -45,9 +45,15 @@ trait WithConversionHelper {
     val childPrefix = "c_"
     val parentPrefix = "p_"
 
-  def toRecords(row:Row): Tables = {
+  def toEnterpriseRecords(row:Row): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
+  }
+
+  def toLuRecords(row:Row): Seq[(String, RowObject)] = {
+    val ubrn = getId(row)
+    val luKey = generateLinkKey(ubrn,legalUnit)
+    (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
   }
 
   private def rowToEnterprise(row:Row,ern:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern), createEnterpriseRecord(ern,"idbrref","9999999999"))++
@@ -55,9 +61,11 @@ trait WithConversionHelper {
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
           row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls)),
-          row.getInt("paye_employees").map(avg => createEnterpriseRecord(ern,"paye_employees",avg.toString)),
-          row.getLong("paye_jobs").map(sum => createEnterpriseRecord(ern,"paye_jobs",sum.toString))
+          row.getInt("paye_employees").map(employees => createEnterpriseRecord(ern,"paye_employees",employees.toString)),
+          row.getLong("paye_jobs").map(jobs => createEnterpriseRecord(ern,"paye_jobs",jobs.toString))
         ).collect{case Some(v) => v}
+
+
 
   private def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
       val ubrn = getId(row)
@@ -70,6 +78,7 @@ trait WithConversionHelper {
       val luKey = generateLinkKey(ubrn,legalUnit)
       createLinksRecord(luKey,s"$parentPrefix$enterprise",ern) +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
     }
+
 
   private def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
       createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse),
