@@ -33,11 +33,11 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
     ))
   }
 
-  override def afterAll() = {
+/*  override def afterAll() = {
     File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-  }
+  }*/
 
 
   "assembler" should {
@@ -46,12 +46,12 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
       //implicit val ctx = spark.sparkContext
 
-      ParquetDAO.jsonToParquet(jsonFilePath)
-      ParquetDAO.parquetToHFile
+/*      ParquetDAO.jsonToParquet(jsonFilePath)
+      ParquetDAO.parquetToHFile*/
 
-      val res: Seq[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.sortBy(_.ern).toSeq
-      val expected = testEnterprises(res).sortBy(_.ern)
-      res shouldBe expected
+      val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList.sortBy(_.ern)
+      val expected: List[Enterprise] = testEnterprises(actual).sortBy(_.ern).toList
+      actual shouldBe expected
 
 
       spark.close()

@@ -15,10 +15,10 @@ trait TestData {
   def testEnterprises(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
-      ents.find(_.businessName==Some(name)).map(_.ern).getOrElse(throw new IllegalArgumentException(s"cannot find key for name: $name"))
+      ents.find(ent => ent.businessName==Some(name)).map(_.ern).getOrElse(throw new IllegalArgumentException(s"cannot find key for name: $name"))
 
 
-      Array(
+      Seq(
         Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("6"),Some("8")),
         Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("4"), None),
         Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("2"),Some("4")),
