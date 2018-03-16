@@ -24,6 +24,15 @@ object HBaseDao {
     loadEnterprisesHFile
   }
 
+  def deleteRows(rowIds:List[Array[Byte]])(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
+    import collection.JavaConversions._
+    table.delete(rowIds.map(rid => new Delete(rid)))
+  }
+
+  def deleteRow(rowId:Array[Byte])(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
+    table.delete(new Delete(rowId))
+  }
+
 
   def loadLinksHFile(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)

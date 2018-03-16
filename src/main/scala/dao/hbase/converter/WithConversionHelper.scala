@@ -2,8 +2,10 @@ package dao.hbase.converter
 
 
 import global.Configs
+import global.Configs.HBASE_LINKS_COLUMN_FAMILY
 import model.hfile._
 import org.apache.spark.sql.Row
+
 import scala.util.Random
 import spark.extensions.sql.SqlRowExtensions
 /**
@@ -45,10 +47,12 @@ trait WithConversionHelper {
     val childPrefix = "c_"
     val parentPrefix = "p_"
 
+
   def toEnterpriseRecords(row:Row): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
   }
+
 
   def toLuRecords(row:Row): Seq[(String, RowObject)] = {
     val ubrn = getId(row)
@@ -95,7 +99,7 @@ trait WithConversionHelper {
         createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse(Seq[(String, RowObject)]())
 
-  private def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
+  def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 
   private def createLinksRecord(key:String,column:String, value:String) = createRecord(key,HBASE_LINKS_COLUMN_FAMILY,column,value)
 

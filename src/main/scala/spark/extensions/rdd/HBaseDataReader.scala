@@ -17,7 +17,7 @@ object HBaseDataReader{
 
         type DataMap = (String,Iterable[(String, String)])
 
-        def getKeyValue(kv:KeyValue) =
+        def getKeyValue(kv:KeyValue): (String, (String, String)) =
               (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
 
               (Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
@@ -27,7 +27,7 @@ object HBaseDataReader{
 
 
 
-        def readEntitiesFromHFile[T:ClassTag](hfilePath:String)(implicit spark:SparkSession, readEntity:DataMap => T): RDD[T] =
+        def readEntitiesFromHFile[T:ClassTag](hfilePath:String)(implicit spark:SparkSession, readEntity:DataMap => T ): RDD[T] =
                                               spark.sparkContext.newAPIHadoopFile(
                                                 hfilePath,
                                                 classOf[HFileInputFormat],
@@ -35,6 +35,17 @@ object HBaseDataReader{
                                                 classOf[KeyValue],
                                                 conf
                                               ).map(v => getKeyValue(v._2)).groupByKey().map(entity => readEntity(entity))
+
+
+
+        def readKvsFromHFile(hfilePath:String)(implicit spark:SparkSession): RDD[(String,Iterable[(String, String)])] =
+                                              spark.sparkContext.newAPIHadoopFile(
+                                                hfilePath,
+                                                classOf[HFileInputFormat],
+                                                classOf[NullWritable],
+                                                classOf[KeyValue],
+                                                conf
+                                              ).map(v => getKeyValue(v._2)).groupByKey()
 
 
 

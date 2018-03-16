@@ -34,13 +34,30 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
     parquetRDD.unpersist()
   }
 
+  def toDeleteLinksHFile(implicit spark:SparkSession) {
+
+    val rr: RDD[(ImmutableBytesWritable, KeyValue)] = spark.read.parquet(PATH_TO_PARQUET).rdd.map(row => {
+      val id = getId(row).getBytes
+      (new ImmutableBytesWritable(id), new KeyValue(id, HBASE_LINKS_COLUMN_FAMILY.getBytes, "blx122344545rrgh".getBytes, System.currentTimeMillis(), KeyValue.Type.Delete)) }).sortBy(t => s"${t._2.getKey}")
+
+
+    rr.saveAsNewAPIHadoopFile(
+      PATH_TO_LINKS_HFILE,
+      classOf[ImmutableBytesWritable],
+      classOf[KeyValue],
+      classOf[HFileOutputFormat2],
+      Configs.conf
+    )
+  }
+
 
   def parquetToRefreshHFile(implicit spark:SparkSession){
 
-    finalCalculations(spark.read.parquet(PATH_TO_PARQUET), spark.read.option("header", "true").csv(PATH_TO_PAYE)).rdd.flatMap(row => toLuRecords(row))
+    val rdd: RDD[(ImmutableBytesWritable, KeyValue)] = finalCalculations(spark.read.parquet(PATH_TO_PARQUET), spark.read.option("header", "true").csv(PATH_TO_PAYE)).rdd.flatMap(row => toLuRecords(row))
            .sortBy(t => s"${t._2.key}${t._2.qualifier}")
                                .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-                                                          .saveAsNewAPIHadoopFile(
+
+                                                          rdd.saveAsNewAPIHadoopFile(
                                                                                   PATH_TO_LINKS_HFILE,
                                                                                   classOf[ImmutableBytesWritable],
                                                                                   classOf[KeyValue],

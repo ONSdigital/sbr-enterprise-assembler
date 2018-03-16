@@ -1,6 +1,6 @@
 package dao.parquet
 
-import model.domain.Enterprise
+import model.domain.{Enterprise, HFileRow}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
@@ -41,10 +41,9 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
 
   "assembler" should {
-    "create hfiles populated with expected links data" in {
+    "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      //implicit val ctx = spark.sparkContext
 
 /*      ParquetDAO.jsonToParquet(jsonFilePath)
       ParquetDAO.parquetToHFile*/
@@ -57,9 +56,26 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
       spark.close()
 
     }
+  }
 
 
 
+  "assembler" should {
+    "create hfiles populated with expected links data" in {
+
+      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+
+
+/*      ParquetDAO.jsonToParquet(jsonFilePath)
+      ParquetDAO.parquetToHFile*/
+
+      val actual: List[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
+      val expected = testLinkRows
+      actual shouldBe expected
+
+
+      spark.close()
+    }
   }
 
 
