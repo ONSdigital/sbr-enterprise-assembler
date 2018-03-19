@@ -9,8 +9,8 @@ object AssemblerMain extends EnterpriseAssemblerService {
 
   def main(args: Array[String]) {
      //refreshFromParquet(AppParams(args))
-     //loadFromParquet(AppParams(args))
-     loadFromJson(AppParams(args))
+     loadFromParquet(AppParams(args))
+     //loadFromJson(AppParams(args))
     //loadFromHFile(AppParams(args))
 
   }
