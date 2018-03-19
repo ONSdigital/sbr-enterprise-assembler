@@ -1,7 +1,7 @@
 package dao.hbase.converter
 
 
-import global.Configs
+import global.{AppParams, Configs}
 import global.Configs.HBASE_LINKS_COLUMN_FAMILY
 import model.hfile._
 import org.apache.spark.sql.Row
@@ -48,19 +48,19 @@ trait WithConversionHelper {
     val parentPrefix = "p_"
 
 
-  def toEnterpriseRecords(row:Row): Tables = {
+  def toEnterpriseRecords(row:Row)(implicit appParams:AppParams): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern),rowToLinks(row,ern))
   }
 
 
-  def toLuRecords(row:Row): Seq[(String, RowObject)] = {
+  def toLuRecords(row:Row)(implicit appParams:AppParams): Seq[(String, RowObject)] = {
     val ubrn = getId(row)
     val luKey = generateLinkKey(ubrn,legalUnit)
     (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
   }
 
-  private def rowToEnterprise(row:Row,ern:String): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern), createEnterpriseRecord(ern,"idbrref","9999999999"))++
+  private def rowToEnterprise(row:Row,ern:String)(implicit appParams:AppParams): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern), createEnterpriseRecord(ern,"idbrref","9999999999"))++
         Seq(
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc)),
@@ -71,49 +71,49 @@ trait WithConversionHelper {
 
 
 
-  private def rowToLinks(row:Row,ern:String): Seq[(String, RowObject)] = {
+  private def rowToLinks(row:Row,ern:String)(implicit appParams:AppParams): Seq[(String, RowObject)] = {
       val ubrn = getId(row)
       val keyStr = generateLinkKey(ern,enterprise)
       createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit)+:rowToLegalUnitLinks(row,ern)
     }
 
-  private def rowToLegalUnitLinks(row:Row, ern:String):Seq[(String, RowObject)] = {
+  private def rowToLegalUnitLinks(row:Row, ern:String)(implicit appParams:AppParams):Seq[(String, RowObject)] = {
       val ubrn = getId(row)
       val luKey = generateLinkKey(ubrn,legalUnit)
       createLinksRecord(luKey,s"$parentPrefix$enterprise",ern) +: (rowToCHLinks(row,luKey,ubrn) ++ rowToVatRefsLinks(row,luKey,ubrn) ++ rowToPayeRefLinks(row,luKey,ubrn))
     }
 
 
-  private def rowToCHLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
+  private def rowToCHLinks(row:Row, luKey:String, ubrn:String)(implicit appParams:AppParams):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
       createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse),
       createLinksRecord(generateLinkKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn)
     )).getOrElse(Seq[(String, RowObject)]())
 
-  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
+  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String)(implicit appParams:AppParams):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
         createLinksRecord(luKey,s"$childPrefix$vat",vatValue),
         createLinksRecord(generateLinkKey(vat.toString,vatValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse (Seq[(String, RowObject)]())
 
-  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
+  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String)(implicit appParams:AppParams):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
         createLinksRecord(luKey,s"$childPrefix$paye",payeValue),
         createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString)
       ))).getOrElse(Seq[(String, RowObject)]())
 
   def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 
-  private def createLinksRecord(key:String,column:String, value:String) = createRecord(key,HBASE_LINKS_COLUMN_FAMILY,column,value)
+  private def createLinksRecord(key:String,column:String, value:String)(implicit appParams:AppParams) = createRecord(key,appParams.HBASE_LINKS_COLUMN_FAMILY,column,value)
 
-  private def createEnterpriseRecord(ern:String,column:String, value:String) = createRecord(generateEntKey(ern),HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+  private def createEnterpriseRecord(ern:String,column:String, value:String)(implicit appParams:AppParams) = createRecord(generateEntKey(ern),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> RowObject(key,columnFamily,column,value)
 
   private def generateErn = Random.alphanumeric.take(18).mkString
 
-  private def generateEntKey(ern:String) = {
-    s"${ern.reverse}~$TIME_PERIOD"
+  private def generateEntKey(ern:String)(implicit appParams:AppParams) = {
+    s"${ern.reverse}~${appParams.TIME_PERIOD}"
   }
 
-  private def generateLinkKey(id:String, suffix:String) = {
-    s"$id~$suffix~$TIME_PERIOD"
+  private def generateLinkKey(id:String, suffix:String)(implicit appParams:AppParams) = {
+    s"$id~$suffix~${appParams.TIME_PERIOD}"
   }
 }
