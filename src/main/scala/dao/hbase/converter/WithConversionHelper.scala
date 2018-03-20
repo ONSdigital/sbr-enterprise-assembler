@@ -2,7 +2,6 @@ package dao.hbase.converter
 
 
 import global.{AppParams, Configs}
-import global.Configs.HBASE_LINKS_COLUMN_FAMILY
 import model.hfile._
 import org.apache.spark.sql.Row
 

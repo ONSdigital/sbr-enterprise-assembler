@@ -12,7 +12,7 @@ trait TestData {
   * As ENT keys generated dynamically and cannot be matched, the keys are copied from actual results so that the rest of Ent object's attribute values
   * can be checked for equality
   * */
-  def testEnterprises(ents:Seq[Enterprise]) = {
+  def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
       ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
@@ -29,11 +29,23 @@ trait TestData {
         Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),None,None),
         Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),None,None)
     )
-
-
-
   }
-  val testLinkRows = List(
+
+  def testEnterprises3Recs(ents:Seq[Enterprise] ) = {
+
+    def getKeyByName(name:String): String =
+      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
+
+    Seq(
+      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("8"),Some("10")),
+      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),None,None),
+      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("2"),Some("4"))
+    )
+  }
+
+
+
+  def testLinkRowsSmallWithNullValues(entLinks:Seq[HFileRow]) = List(
                 HFileRow("27280354~CH~201802",List(HFileCell("p_LEU","10544190"))),
                 HFileRow("12345W~PAYE~201802",List(HFileCell("p_LEU","15931638"))),
                 HFileRow("15931638~LEU~201802",List(HFileCell("p_ENT","4KiXL1hlDH3GGnbbKq"), HFileCell("c_12345W","PAYE"), HFileCell("c_10002","VAT"), HFileCell("c_SZ124306","CH"), HFileCell("c_ERT12","PAYE"))),
@@ -82,5 +94,28 @@ trait TestData {
                 HFileRow("20002~PAYE~201802",List(HFileCell("p_LEU","28919372"))),
                 HFileRow("20006~PAYE~201802",List(HFileCell("p_LEU","38557538")))
              ).sortBy(_.key)
+
+
+
+  val testLinkRows3Recs = List(
+    HFileRow("testEnterpriseId-22222",List(HFileCell("c_15931638","LEU"))),
+    HFileRow("21840175~LEU~201802",List(HFileCell("c_20000","VAT"), HFileCell("c_10000","VAT"), HFileCell("p_ENT","testEnterpriseId-11111"))),
+    HFileRow("testEnterpriseId-11111",List(HFileCell("c_21840175","LEU"))),
+    HFileRow("testEnterpriseId-33333",List(HFileCell("c_28919372","LEU"))),
+    HFileRow("15931638~LEU~201802",List(HFileCell("c_SZ124306","CH"), HFileCell("c_12345W","PAYE"), HFileCell("c_ERT12","PAYE"), HFileCell("c_10002","VAT"), HFileCell("p_ENT","testEnterpriseId-22222"))),
+    HFileRow("28919372~LEU~201802",List(HFileCell("p_ENT","testEnterpriseId-33333"), HFileCell("c_20002","PAYE"), HFileCell("c_30003","PAYE"))),
+    HFileRow("12345W~PAYE~201802",List(HFileCell("p_LEU","15931638"))),
+    HFileRow("10002~VAT~201802",List(HFileCell("p_LEU","15931638"))),
+    HFileRow("10000~VAT~201802",List(HFileCell("p_LEU","21840175"))),
+    HFileRow("20000~VAT~201802",List(HFileCell("p_LEU","21840175"))),
+    HFileRow("30003~PAYE~201802",List(HFileCell("p_LEU","28919372"))),
+    HFileRow("SZ124306~CH~201802",List(HFileCell("p_LEU","15931638"))),
+    HFileRow("20002~PAYE~201802",List(HFileCell("p_LEU","28919372"))),
+    HFileRow("ERT12~PAYE~201802",List(HFileCell("p_LEU","15931638")))
+
+
+)//.sortBy((_.cells.map(_.column).mkString))
+  
+  
 
 }

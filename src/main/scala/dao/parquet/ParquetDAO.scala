@@ -34,15 +34,15 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
     parquetRDD.unpersist()
   }
 
-  def toDeleteLinksHFile(implicit spark:SparkSession) {
+  def toDeleteLinksHFile(implicit spark:SparkSession,appconf:AppParams) {
 
-    val rr: RDD[(ImmutableBytesWritable, KeyValue)] = spark.read.parquet(PATH_TO_PARQUET).rdd.map(row => {
+    val rr: RDD[(ImmutableBytesWritable, KeyValue)] = spark.read.parquet(appconf.PATH_TO_PARQUET).rdd.map(row => {
       val id = getId(row).getBytes
-      (new ImmutableBytesWritable(id), new KeyValue(id, HBASE_LINKS_COLUMN_FAMILY.getBytes, "blx122344545rrgh".getBytes, System.currentTimeMillis(), KeyValue.Type.Delete)) }).sortBy(t => s"${t._2.getKey}")
+      (new ImmutableBytesWritable(id), new KeyValue(id, appconf.HBASE_LINKS_COLUMN_FAMILY.getBytes, "blx122344545rrgh".getBytes, System.currentTimeMillis(), KeyValue.Type.Delete)) }).sortBy(t => s"${t._2.getKey}")
 
 
     rr.saveAsNewAPIHadoopFile(
-      PATH_TO_LINKS_HFILE,
+      appconf.PATH_TO_LINKS_HFILE,
       classOf[ImmutableBytesWritable],
       classOf[KeyValue],
       classOf[HFileOutputFormat2],

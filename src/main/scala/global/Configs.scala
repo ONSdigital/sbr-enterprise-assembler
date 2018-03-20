@@ -26,7 +26,8 @@ object Configs{
     conf.set("hbase.zookeeper.quorum", config.getString("hbase.zookeper.url"))
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.files.per.region"))
   }
-  Try{config.getString("hbase.table.links.name")}.map(conf.set("hbase.table.links.name",_)).getOrElse(conf.set("hbase.table.links.name","LINKS"))
+  lazy val PATH_TO_JSON = conf.getStrings("files.json").head
+ /* Try{config.getString("hbase.table.links.name")}.map(conf.set("hbase.table.links.name",_)).getOrElse(conf.set("hbase.table.links.name","LINKS"))
   Try{config.getString("hbase.table.links.column.family")}.map(conf.set("hbase.table.links.column.family",_)).getOrElse(conf.set("hbase.table.links.column.family","l"))
   Try{config.getString("hbase.table.links.namespace")}.map(conf.set("hbase.table.links.namespace",_)).getOrElse(conf.set("hbase.table.links.namespace","ons"))
 
@@ -46,7 +47,7 @@ object Configs{
 
 
 
-   lazy val PATH_TO_JSON = conf.getStrings("files.json").head
+
    lazy val PATH_TO_PARQUET = conf.getStrings("files.parquet").head
    lazy val PATH_TO_PAYE = conf.getStrings("files.paye.csv").head
 
@@ -82,5 +83,5 @@ object Configs{
     conf.set("enterprise.data.timeperiod",params(9))
     conf.set("files.paye.csv",params(10))
 
-  }
+  }*/
 }
