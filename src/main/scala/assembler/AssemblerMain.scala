@@ -12,8 +12,8 @@ object AssemblerMain extends EnterpriseAssemblerService {
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
     //Configs.conf.set(AppParams(9),AppParams(10))
      //refreshFromParquet(AppParams(args))
-     //loadFromParquet(AppParams(args))
-     loadFromJson(AppParams(args))
+     loadFromParquet(AppParams(args))
+     //loadFromJson(AppParams(args))
     //loadFromHFile(AppParams(args))
 
   }
