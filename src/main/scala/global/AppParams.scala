@@ -14,11 +14,8 @@ case class AppParams(
                         HBASE_ENTERPRISE_COLUMN_FAMILY:String,
                         PATH_TO_ENTERPRISE_HFILE:String,
                         PATH_TO_PARQUET:String,
-                        QUORUM_HOST:String,
-                        QUORUM_PORT:String,
                         TIME_PERIOD:String,
-                        PATH_TO_PAYE:String,
-                        HFILE_TOTAL_COUNT:String
+                        PATH_TO_PAYE:String
                    )
 
 object AppParams{
@@ -34,10 +31,7 @@ object AppParams{
                                                   args(7),
                                                   args(8),
                                                   args(9),
-                                                  args(10),
-                                                  args(11),
-                                                  args(12),
-                                                  args(13)
+                                                  args(10)
                                                 )
   
 }

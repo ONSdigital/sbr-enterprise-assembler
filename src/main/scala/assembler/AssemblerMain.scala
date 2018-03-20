@@ -10,11 +10,11 @@ object AssemblerMain extends EnterpriseAssemblerService {
   def main(args: Array[String]) {
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
-    //Configs.conf.set(AppParams(9),AppParams(10))
-     //refreshFromParquet(AppParams(args))
-     loadFromParquet(AppParams(args))
-     //loadFromJson(AppParams(args))
-    //loadFromHFile(AppParams(args))
+    val appParams = args.take(9)++args.takeRight(2)
+     //refreshFromParquet(AppParams(appParams))
+     loadFromParquet(AppParams(appParams))
+     //loadFromJson(AppParams(appParams))
+    //loadFromHFile(AppParams(appParams))
 
   }
 
