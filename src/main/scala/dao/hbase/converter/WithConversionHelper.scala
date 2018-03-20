@@ -102,13 +102,13 @@ trait WithConversionHelper {
 
   private def createLinksRecord(key:String,column:String, value:String, appParams:AppParams) = createRecord(key,appParams.HBASE_LINKS_COLUMN_FAMILY,column,value)
 
-  private def createEnterpriseRecord(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+  private def createEnterpriseRecord(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> RowObject(key,columnFamily,column,value)
 
   private def generateErn = Random.alphanumeric.take(18).mkString
 
-  private def generateEntKey(ern:String)(implicit appParams:AppParams) = {
+  private def generateEntKey(ern:String,appParams:AppParams) = {
     s"${ern.reverse}~${appParams.TIME_PERIOD}"
   }
 
