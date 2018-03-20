@@ -28,7 +28,7 @@ trait DataFrameHelper {
 
     val dfQ = df.join(sumQuarters,"id")
     val avgDf = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.col(s)):_*)))
-    avgDf.dropDuplicates(Seq("id")).join(sumDf,"id")
+    avgDf.dropDuplicates(Seq("id")).join(sumDf,"id").coalesce(parquetDF.rdd.getNumPartitions)
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
