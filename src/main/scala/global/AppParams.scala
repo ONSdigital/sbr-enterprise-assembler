@@ -17,7 +17,8 @@ case class AppParams(
                         QUORUM_HOST:String,
                         QUORUM_PORT:String,
                         TIME_PERIOD:String,
-                        PATH_TO_PAYE:String
+                        PATH_TO_PAYE:String,
+                        HFILE_TOTAL_COUNT:String
                    )
 
 object AppParams{
@@ -35,7 +36,8 @@ object AppParams{
                                                   args(9),
                                                   args(10),
                                                   args(11),
-                                                  args(12)
+                                                  args(12),
+                                                  args(13)
                                                 )
   
 }
