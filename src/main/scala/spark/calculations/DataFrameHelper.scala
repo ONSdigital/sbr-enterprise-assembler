@@ -18,17 +18,20 @@ trait DataFrameHelper {
 
   def finalCalculations(parquetDF:DataFrame, payeDF: DataFrame) : DataFrame = {
     val latest = "dec_jobs"
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")
+    val partitionsCount = parquetDF.rdd.getNumPartitions
+
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
     val sumDf = df.groupBy("id").agg(sum(latest) as "paye_jobs")
 
     val sumQuarters = df.groupBy("id").sum("june_jobs")
       .join(df.groupBy("id").sum("sept_jobs"), "id")
       .join(df.groupBy("id").sum("dec_jobs"), "id")
       .join(df.groupBy("id").sum("mar_jobs"), "id")
+      .coalesce(partitionsCount)
 
     val dfQ = df.join(sumQuarters,"id")
     val avgDf = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.col(s)):_*)))
-    avgDf.dropDuplicates(Seq("id")).join(sumDf,"id").coalesce(parquetDF.rdd.getNumPartitions)
+    avgDf.dropDuplicates(Seq("id")).join(sumDf,"id").coalesce(partitionsCount)
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
