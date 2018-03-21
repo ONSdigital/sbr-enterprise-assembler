@@ -39,23 +39,21 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
   }
 
-/*  override def afterAll() = {
+  override def afterAll() = {
     File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-  }*/
+  }
 
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      //implicit val confs = appConfs
-      /*ParquetDAO.jsonToParquet(jsonFilePath)(spark,appConfs)
-      ParquetDAO.parquetToHFile(spark,appConfs)*/
+      ParquetDAO.jsonToParquet(jsonFilePath)(spark,appConfs)
+      ParquetDAO.parquetToHFile(spark,appConfs)
 
       val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList.sortBy(_.ern)
-      //val expected: List[Enterprise] = testEnterprisesSmallWithNullValues(actual).sortBy(_.ern).toList
       val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
       actual shouldBe expected
 
@@ -73,9 +71,8 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
 
 
-/*      ParquetDAO.jsonToParqu
-et(jsonFilePath)
-      ParquetDAO.parquetToHFile*/
+      ParquetDAO.jsonToParquet(jsonFilePath)
+      ParquetDAO.parquetToHFile
 
        def replaceDynamicEntIdWithStatic(entLinks:Seq[HFileRow]) = {
          val erns = entLinks.collect{ case row if(row.key.contains("~ENT~")) => }
@@ -109,7 +106,6 @@ et(jsonFilePath)
                   }else row
         }
       }
-      //val expected = testLinkRowsSmallWithNullValues
       val expected = testLinkRows3Recs
       actualUpdated shouldBe expected
 
