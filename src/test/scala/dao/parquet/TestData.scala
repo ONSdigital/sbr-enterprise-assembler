@@ -96,14 +96,13 @@ trait TestData {
              ).sortBy(_.key)
 
 
-
   val testLinkRows3Recs = List(
     HFileRow("testEnterpriseId-22222",List(HFileCell("c_15931638","LEU"))),
-    HFileRow("21840175~LEU~201802",List(HFileCell("c_20000","VAT"), HFileCell("c_10000","VAT"), HFileCell("p_ENT","testEnterpriseId-11111"))),
+    HFileRow("21840175~LEU~201802",List(HFileCell("c_10000","VAT"),HFileCell("c_20000","VAT"),  HFileCell("p_ENT","testEnterpriseId-11111"))),
     HFileRow("testEnterpriseId-11111",List(HFileCell("c_21840175","LEU"))),
     HFileRow("testEnterpriseId-33333",List(HFileCell("c_28919372","LEU"))),
-    HFileRow("15931638~LEU~201802",List(HFileCell("c_SZ124306","CH"), HFileCell("c_12345W","PAYE"), HFileCell("c_ERT12","PAYE"), HFileCell("c_10002","VAT"), HFileCell("p_ENT","testEnterpriseId-22222"))),
-    HFileRow("28919372~LEU~201802",List(HFileCell("p_ENT","testEnterpriseId-33333"), HFileCell("c_20002","PAYE"), HFileCell("c_30003","PAYE"))),
+    HFileRow("15931638~LEU~201802",List(HFileCell("c_10002","VAT"), HFileCell("c_12345W","PAYE"), HFileCell("c_ERT12","PAYE"), HFileCell("c_SZ124306","CH"), HFileCell("p_ENT","testEnterpriseId-22222"))),
+    HFileRow("28919372~LEU~201802",List(HFileCell("c_20002","PAYE"), HFileCell("c_30003","PAYE") , HFileCell("p_ENT","testEnterpriseId-33333"))),
     HFileRow("12345W~PAYE~201802",List(HFileCell("p_LEU","15931638"))),
     HFileRow("10002~VAT~201802",List(HFileCell("p_LEU","15931638"))),
     HFileRow("10000~VAT~201802",List(HFileCell("p_LEU","21840175"))),
