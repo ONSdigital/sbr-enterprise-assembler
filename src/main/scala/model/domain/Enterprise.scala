@@ -7,7 +7,7 @@ import scala.util.Try
 /**
   *
   */
-case class Enterprise(ern:String, idbrref:Option[String], businessName:Option[String], PostCode:Option[String], legalStatus:Option[String], avg:Option[String], sum:Option[String])
+case class Enterprise(ern:String, idbrref:Option[String], businessName:Option[String], PostCode:Option[String], legalStatus:Option[String], employees:Option[String], jobs:Option[String])
 
 object Enterprise{
 

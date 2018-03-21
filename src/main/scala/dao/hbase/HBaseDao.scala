@@ -1,5 +1,6 @@
 package dao.hbase
 
+import global.AppParams
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -19,22 +20,31 @@ object HBaseDao {
   val logger = LoggerFactory.getLogger(getClass)
 
 
-  def loadHFiles(implicit connection:Connection) = {
+  def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
   }
 
-
-  def loadLinksHFile(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PATH_TO_LINKS_HFILE), admin,table,regionLocator)
+/*  def deleteRows(rowIds:List[Array[Byte]])(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
+    import collection.JavaConversions._
+    table.delete(rowIds.map(rid => new Delete(rid)))
   }
 
-  def loadEnterprisesHFile(implicit connection:Connection) = wrapTransaction(HBASE_ENTERPRISE_TABLE_NAME,Try(conf.getStrings("hbase.table.enterprise.namespace").head).toOption){ (table, admin) =>
+  def deleteRow(rowId:Array[Byte])(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
+    table.delete(new Delete(rowId))
+  }*/
+
+
+  def loadLinksHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PATH_TO_ENTERPRISE_HFILE), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE), admin,table,regionLocator)
+  }
+
+  def loadEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_ENTERPRISE_TABLE_NAME,Some(appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE)){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_ENTERPRISE_HFILE), admin,table,regionLocator)
   }
 
   private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection){
