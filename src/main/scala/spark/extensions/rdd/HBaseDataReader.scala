@@ -1,11 +1,12 @@
 package spark.extensions.rdd
 
 import global.Configs.conf
+import model.domain.{HBaseCell, HBaseRow}
 import org.apache.crunch.io.hbase.HFileInputFormat
-import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.{Cell, KeyValue}
 import org.apache.hadoop.io.NullWritable
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -17,13 +18,15 @@ object HBaseDataReader{
 
         type DataMap = (String,Iterable[(String, String)])
 
-        def getKeyValue(kv:KeyValue): (String, (String, String)) =
+        def getKeyValue[T <: Cell](kv:T): (String, (String, String)) =
               (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
 
               (Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
                       kv.getQualifierOffset + kv.getQualifierLength),
                       Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
                       kv.getValueOffset + kv.getValueLength)))
+
+
 
 
 
@@ -46,6 +49,19 @@ object HBaseDataReader{
                                                 classOf[KeyValue],
                                                 conf
                                               ).map(v => getKeyValue(v._2)).groupByKey()
+
+
+
+        def readKvsFromHBase(implicit spark:SparkSession) =
+                                                spark.sparkContext.newAPIHadoopRDD(
+                                                  conf,
+                                                  classOf[TableInputFormat],
+                                                  classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
+                                                  classOf[org.apache.hadoop.hbase.client.Result]
+                                                )//.map(v => v._2).groupBy(_.getRow).map(row => new KeyValue(row._1,row._2.map(_._2)))
+                                      .map(_._2).map(HBaseRow(_)//.map(cell => getKeyValue(cell)))
+
+                                      )//.map(r => (r._1,r._2.map(e => e._2)))
 
 
 

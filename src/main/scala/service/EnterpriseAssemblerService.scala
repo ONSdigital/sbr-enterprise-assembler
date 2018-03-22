@@ -23,12 +23,36 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
     withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
   }
 
+  def readAll(appconf:AppParams) = withSpark{ implicit ss:SparkSession =>
+    withHbaseConnection { implicit con: Connection =>
+      HBaseDao.readAll(appconf,ss)
+    }
+  }
+
+
+  def readWithFilter(appconf:AppParams) = withSpark{ implicit ss:SparkSession =>
+    withHbaseConnection { implicit con: Connection =>
+      HBaseDao.readWithFilterAll(appconf,ss)
+    }
+  }
+
+
+
+  def readFromHBase(appconf:AppParams) = withHbaseConnection { implicit con: Connection =>
+    HBaseDao.readLinksFromHbase(appconf)
+  }
+
+  def deleteFromHFile(appconf:AppParams) = withHbaseConnection { implicit con: Connection => HBaseDao.loadLinksHFile(con,appconf)}
 
   def loadFromParquet(appconf:AppParams){
     withSpark{ implicit ss:SparkSession => ParquetDAO.parquetToHFile(ss,appconf) }
     withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf) }
   }
 
+  def refreshFromParquet(appconf:AppParams){
+    withSpark{ implicit ss:SparkSession => ParquetDAO.toDeleteLinksHFile(ss,appconf) }
+    withHbaseConnection { implicit con: Connection => HBaseDao.loadLinksHFile(con,appconf) }
+  }
 
   def loadFromHFile(appconf:AppParams) = withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
 

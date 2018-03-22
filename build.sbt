@@ -42,8 +42,8 @@ assemblyMergeStrategy in assembly := {
 
 mainClass in (Compile,run) := Some("assembler.AssemblerMain")
 
-lazy val myParameters = Array("unit_links", "local_ns","l",
-  "src/main/resources/data/links/hfile", "enterprise","local_ns", "d",
+lazy val myParameters = Array("LINKS", "ons","l",
+  "src/main/resources/data/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links

@@ -8,13 +8,13 @@ import model.domain._
   */
 trait HFileTestUtils {
 
-   def assignStaticKeys(rows:Seq[HFileRow]): Set[HFileRow] = {
+   def assignStaticKeys(rows:Seq[HBaseRow]): Set[HBaseRow] = {
 
 
     //dictionary mapping actual erns to static
     val ernsDictionary: Seq[(String, String)] = {
 
-      val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case HFileCell("p_ENT",value) => value}}}.flatten.zipWithIndex
+      val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case HBaseCell("p_ENT",value) => value}}}.flatten.zipWithIndex
 
       erns.map(ernTup => {
         val (ern,index) = ernTup
@@ -25,7 +25,7 @@ trait HFileTestUtils {
     //replace erns in rows:
     rows.map {  case row  => if (ernsDictionary.find(_._1 == row.key.slice(0, 18)).isDefined) {
                                   val ern = ernsDictionary.find(_._1 == row.key.slice(0, 18))
-                                  HFileRow(ern.get._2, row.cells)
+                                  HBaseRow(ern.get._2, row.cells)
                                 }else if(row.cells.find(cell => cell.column=="p_ENT").isDefined) {
                                         row.copy(row.key, row.cells.map {cell =>
                                         if (cell.column == "p_ENT"){

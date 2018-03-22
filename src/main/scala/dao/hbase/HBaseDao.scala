@@ -1,13 +1,26 @@
 package dao.hbase
 
+import java.util
+
 import global.AppParams
+import model.domain.HBaseRow
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
+import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
+import org.apache.hadoop.hbase.filter.{FuzzyRowFilter, RegexStringComparator, RowFilter}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles}
+import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles, TableInputFormat}
+import org.apache.hadoop.hbase.protobuf.ProtobufUtil
+import org.apache.hadoop.hbase.protobuf.generated.ClientProtos
+import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
+import spark.extensions.rdd.HBaseDataReader
+import org.apache.hadoop.hbase.util.Pair
+import spark.extensions.rdd.HBaseDataReader.getKeyValue
 
 import scala.util.Try
 
@@ -16,6 +29,7 @@ import scala.util.Try
   */
 object HBaseDao {
   import global.Configs._
+  import collection.JavaConverters._
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -24,6 +38,48 @@ object HBaseDao {
     loadLinksHFile
     loadEnterprisesHFile
   }
+
+
+  def readAll(appParams:AppParams,spark:SparkSession) = {
+
+   val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
+   conf.set(TableInputFormat.INPUT_TABLE, tableName)
+
+    val rdd  = HBaseDataReader.readKvsFromHBase(spark)
+
+    val recs: Seq[HBaseRow] = rdd.collect.toSeq
+    print("RECS SIZE: "+recs.size)
+   }
+
+
+  def readWithFilterAll(appParams:AppParams,spark:SparkSession) = {
+
+   val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
+   conf.set(TableInputFormat.INPUT_TABLE, tableName)
+    val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
+    setScanner(regex,appParams)
+    val rdd: RDD[HBaseRow] = HBaseDataReader.readKvsFromHBase(spark)
+
+    val recs: Iterable[HBaseRow] = rdd.collect
+   print("RECS SIZE: "+recs.size)
+   }
+
+
+
+   def readLinksFromHbase(appParams:AppParams)(implicit connection:Connection) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
+     val comparator = new RegexStringComparator("~LEU~"+{appParams.TIME_PERIOD}+"$")
+     val filter = new RowFilter(CompareOp.EQUAL, comparator)
+
+
+
+     val scan = new Scan()
+     scan.setFilter(filter)
+     val res: Seq[Result] = table.getScanner(scan).iterator().asScala.toList
+     val ret: Seq[(String, Array[(String, (String, String))])] = res.map(v => (Bytes.toString(v.getRow),v.rawCells().map(cell => getKeyValue(cell))))
+     val fr: Seq[(String, Array[(String, String)])] = ret.map(r => (r._1,r._2.map(e => e._2)))
+     fr
+
+   }
 
 /*  def deleteRows(rowIds:List[Array[Byte]])(implicit connection:Connection) = wrapTransaction(HBASE_LINKS_TABLE_NAME, Try(conf.getStrings("hbase.table.links.namespace").head).toOption){ (table, admin) =>
     import collection.JavaConversions._
@@ -65,5 +121,21 @@ object HBaseDao {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
+  private def setScanner(regex:String, appParams:AppParams) = {
+
+    val comparator = new RegexStringComparator(regex)
+    val filter = new RowFilter(CompareOp.EQUAL, comparator)
+
+    def convertScanToString(scan: Scan): String = {
+      val proto: ClientProtos.Scan = ProtobufUtil.toScan(scan)
+      return Base64.encodeBytes(proto.toByteArray())
+    }
+
+    val scan = new Scan()
+    scan.setFilter(filter)
+    val scanStr = convertScanToString(scan)
+
+    conf.set(TableInputFormat.SCAN,scanStr)
+  }
 
 }

@@ -2,7 +2,7 @@ package dao.parquet
 
 import dao.HFileTestUtils
 import global.{AppParams, Configs}
-import model.domain.{Enterprise, HFileCell, HFileRow}
+import model.domain.{Enterprise, HBaseCell, HBaseRow}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
@@ -78,12 +78,12 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
       ParquetDAO.parquetToHFile(spark,appConfs)
 
-      def replaceDynamicEntIdWithStatic(entLinks:Seq[HFileRow]) = {
+      def replaceDynamicEntIdWithStatic(entLinks:Seq[HBaseRow]) = {
         val erns = entLinks.collect{ case row if(row.key.contains("~ENT~")) => }
       }
 
-      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString).map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
-      val erns: Seq[(String, Int)] = actual.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case HFileCell("p_ENT",value) => value}}}.flatten.zipWithIndex
+      val actual: Seq[HBaseRow] = readEntitiesFromHFile[HBaseRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)//.map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
+      val erns: Seq[(String, Int)] = actual.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case HBaseCell("p_ENT",value) => value}}}.flatten.zipWithIndex
       val ernsDictionary: Seq[(String, String)] = erns.map(ernTup => {
         val (ern,index) = ernTup
         (ern,{
