@@ -20,9 +20,23 @@ case class HBaseRow(key:String, cells:Iterable[HBaseCell[String,String]]){
     case _ => false
   }
 
-  def toDeleteHBaseCell(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = cells.map(cell =>
-    (new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
+/*  def toDeleteHBaseRow(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = cells.map(cell =>
+    (new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))*/
 
+
+  def toDeleteHBaseRows(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
+    val excludedColumns = Seq("p_ENT")
+    if(key.contains("~LEU~")){ cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>
+      Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)))
+    )}else{
+    val cell = cells.head
+    Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
+  }}
+
+  def toDeleteColumnsExcept(colFamily:String,columns:Seq[String]): Iterable[KeyValue] = { cells.filterNot(cell => columns.contains(cell.column)).map(kv =>
+
+    new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)
+  )}
 
 }
 

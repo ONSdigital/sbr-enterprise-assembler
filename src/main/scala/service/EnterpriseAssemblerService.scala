@@ -42,7 +42,6 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
   }
 
 
-
   def readFromHBase(appconf:AppParams) = withHbaseConnection { implicit con: Connection => HBaseDao.readLinksFromHbase(appconf) }
 
   def deleteFromHFile(appconf:AppParams) = withHbaseConnection { implicit con: Connection => HBaseDao.loadLinksHFile(con,appconf)}
@@ -53,13 +52,30 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
   }
 
   def refreshFromParquet(appconf:AppParams){
-    withSpark{ implicit ss:SparkSession => withHbaseConnection { implicit con: Connection =>
-      val regex = ".*(?<!~LEU~"+{appconf.TIME_PERIOD}+")$"
-      val toDelete: RDD[HBaseRow] = HBaseDao.readWithKeyFilter(appconf,regex)
 
+    withSpark{ implicit ss:SparkSession => withHbaseConnection { implicit con: Connection =>
+      val regex = ".*(?<!~ENT~"+{appconf.TIME_PERIOD}+")$"
+      //read existing records from HBase
+      val toDelete: RDD[HBaseRow] = HBaseDao.readWithKeyFilter(appconf,regex)
+      //delete all rows except ~ENT~ and ~LEU~, but remove all columns from ~LEU~, except 'p_ENT'
       toDelete.sortBy(row => s"${row.key}")
-        .flatMap(_.toDeleteHBaseCell(appconf.HBASE_LINKS_COLUMN_FAMILY))
-        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+        .flatMap(_.toDeleteHBaseRows(appconf.HBASE_LINKS_COLUMN_FAMILY))
+           .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+
+      HBaseDao.loadLinksHFile(con,appconf)
+    }}
+  }
+
+  def cleanExistingRecords(appconf:AppParams){
+
+    withSpark{ implicit ss:SparkSession => withHbaseConnection { implicit con: Connection =>
+      val regex = ".*(?<!~ENT~"+{appconf.TIME_PERIOD}+")$"
+      //read existing records from HBase
+      val toDelete: RDD[HBaseRow] = HBaseDao.readWithKeyFilter(appconf,regex)
+      //delete all rows except ~ENT~ and ~LEU~, but remove all columns from ~LEU~, except 'p_ENT'
+      toDelete.sortBy(row => s"${row.key}")
+        .flatMap(_.toDeleteHBaseRows(appconf.HBASE_LINKS_COLUMN_FAMILY))
+           .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
 
       HBaseDao.loadLinksHFile(con,appconf)
     }}
