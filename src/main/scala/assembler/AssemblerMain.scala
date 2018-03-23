@@ -15,10 +15,10 @@ object AssemblerMain extends EnterpriseAssemblerService {
      //refreshFromParquet(AppParams(appParams))
      //loadFromParquet(AppParams(appParams))
      //loadFromJson(AppParams(appParams))
-    //loadFromHFile(AppParams(appParams))
+    loadFromHFile(AppParams(appParams))
     //readAll(AppParams(appParams))
     //readFromHBase(AppParams(appParams))
-    readWithFilter(AppParams(appParams))
+    //readWithFilter(AppParams(appParams))
 
   }
 

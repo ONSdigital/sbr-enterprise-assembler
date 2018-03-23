@@ -48,6 +48,26 @@ lazy val myParameters = Array("LINKS", "ons","l",
   "src/main/resources/data/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
 
+
+lazy val recsParams = Array("LINKS", "ons","l",
+  "src/main/resources/data/temp/3recs/links/hfile", "ENT","ons", "d",
+   "src/main/resources/data/temp/3recs/enterprise/hfile",
+  "src/main/resources/data/temp/3recs/sample.parquet",
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+
+
+lazy val recsParamsRefresh = Array("LINKS", "ons","l",
+  "src/main/resources/data/temp/3recsRefresh/links/hfile", "ENT","ons", "d",
+   "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
+  "src/main/resources/data/temp/3recsRefresh/sample.parquet",
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+
+
+
 lazy val runWithArgs = taskKey[Unit]("run-args")
+lazy val runRecs = taskKey[Unit]("run-args")
+lazy val runRecsRefresh = taskKey[Unit]("run-args")
 
 fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
+fullRunTask(runRecs, Runtime, "assembler.AssemblerMain", recsParams: _*)
+fullRunTask(runRecsRefresh, Runtime, "assembler.AssemblerMain", recsParamsRefresh: _*)

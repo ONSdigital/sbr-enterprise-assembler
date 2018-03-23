@@ -1,7 +1,8 @@
 package model.domain
 
-import org.apache.hadoop.hbase.Cell
+import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
 import spark.extensions.rdd.HBaseDataReader.getKeyValue
 
@@ -19,7 +20,12 @@ case class HBaseRow(key:String, cells:Iterable[HBaseCell[String,String]]){
     case _ => false
   }
 
+  def toDeleteHBaseCell(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = cells.map(cell =>
+    (new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
+
+
 }
+
 object HBaseRow{
 
   def getKeyValue[T <: Cell](kv:T): (String, (String, String)) =
@@ -37,6 +43,9 @@ object HBaseRow{
     val cells: Array[(String, String)] = result.rawCells().map(c => getKeyValue(c)._2)
     new HBaseRow(rowKey,cells.map(HBaseCell(_)))
   }
+
+
+
   /*def apply(entry:(String, Iterable[Cell])) = new HBaseRow(
     entry._1,
     entry._2.map(c => HBaseCell(getKeyValue(c)._2)))*/

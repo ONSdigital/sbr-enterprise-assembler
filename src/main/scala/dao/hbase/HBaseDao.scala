@@ -52,25 +52,25 @@ object HBaseDao {
    }
 
 
-  def readWithFilterAll(appParams:AppParams,spark:SparkSession) = {
+  def readWithKeyFilter(appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HBaseRow] = {
 
    val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
    conf.set(TableInputFormat.INPUT_TABLE, tableName)
-    val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
+    //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
     setScanner(regex,appParams)
     val rdd: RDD[HBaseRow] = HBaseDataReader.readKvsFromHBase(spark)
-
-    val recs: Iterable[HBaseRow] = rdd.collect
-   print("RECS SIZE: "+recs.size)
+    rdd
+/*    val recs: Iterable[HBaseRow] = rdd.collect
+   print("RECS SIZE: "+recs.size)*/
    }
 
 
 
    def readLinksFromHbase(appParams:AppParams)(implicit connection:Connection) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
-     val comparator = new RegexStringComparator("~LEU~"+{appParams.TIME_PERIOD}+"$")
+
+     //val comparator = new RegexStringComparator("~LEU~"+{appParams.TIME_PERIOD}+"$")
+     val comparator = new RegexStringComparator(".*(?<!~LEU~"+{appParams.TIME_PERIOD}+")$")//.*(?<!ab)$
      val filter = new RowFilter(CompareOp.EQUAL, comparator)
-
-
 
      val scan = new Scan()
      scan.setFilter(filter)
@@ -121,7 +121,7 @@ object HBaseDao {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  private def setScanner(regex:String, appParams:AppParams) = {
+ def setScanner(regex:String, appParams:AppParams) = {
 
     val comparator = new RegexStringComparator(regex)
     val filter = new RowFilter(CompareOp.EQUAL, comparator)

@@ -52,16 +52,13 @@ object HBaseDataReader{
 
 
 
-        def readKvsFromHBase(implicit spark:SparkSession) =
+        def readKvsFromHBase(implicit spark:SparkSession): RDD[HBaseRow] =
                                                 spark.sparkContext.newAPIHadoopRDD(
                                                   conf,
                                                   classOf[TableInputFormat],
                                                   classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
-                                                  classOf[org.apache.hadoop.hbase.client.Result]
-                                                )//.map(v => v._2).groupBy(_.getRow).map(row => new KeyValue(row._1,row._2.map(_._2)))
-                                      .map(_._2).map(HBaseRow(_)//.map(cell => getKeyValue(cell)))
-
-                                      )//.map(r => (r._1,r._2.map(e => e._2)))
+                                                  classOf[org.apache.hadoop.hbase.client.Result])
+                                      .map(_._2).map(HBaseRow(_))
 
 
 
