@@ -1,7 +1,7 @@
 package spark.extensions.rdd
 
 import global.Configs.conf
-import model.domain.{HBaseCell, HBaseRow}
+import model.domain.{KVCell, HFileRow}
 import org.apache.crunch.io.hbase.HFileInputFormat
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.util.Bytes
@@ -52,13 +52,13 @@ object HBaseDataReader{
 
 
 
-        def readKvsFromHBase(implicit spark:SparkSession): RDD[HBaseRow] =
+        def readKvsFromHBase(implicit spark:SparkSession): RDD[HFileRow] =
                                                 spark.sparkContext.newAPIHadoopRDD(
                                                   conf,
                                                   classOf[TableInputFormat],
                                                   classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
                                                   classOf[org.apache.hadoop.hbase.client.Result])
-                                      .map(_._2).map(HBaseRow(_))
+                                      .map(_._2).map(HFileRow(_))
 
 
 

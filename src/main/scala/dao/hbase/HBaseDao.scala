@@ -3,7 +3,7 @@ package dao.hbase
 import java.util
 
 import global.AppParams
-import model.domain.HBaseRow
+import model.domain.HFileRow
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
@@ -47,18 +47,18 @@ object HBaseDao {
 
     val rdd  = HBaseDataReader.readKvsFromHBase(spark)
 
-    val recs: Seq[HBaseRow] = rdd.collect.toSeq
+    val recs: Seq[HFileRow] = rdd.collect.toSeq
     print("RECS SIZE: "+recs.size)
    }
 
 
-  def readWithKeyFilter(appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HBaseRow] = {
+  def readWithKeyFilter(appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
 
    val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
    conf.set(TableInputFormat.INPUT_TABLE, tableName)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
     setScanner(regex,appParams)
-    val rdd: RDD[HBaseRow] = HBaseDataReader.readKvsFromHBase(spark)
+    val rdd: RDD[HFileRow] = HBaseDataReader.readKvsFromHBase(spark)
     rdd
 /*    val recs: Iterable[HBaseRow] = rdd.collect
    print("RECS SIZE: "+recs.size)*/

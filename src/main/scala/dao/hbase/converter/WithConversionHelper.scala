@@ -52,14 +52,21 @@ trait WithConversionHelper {
     Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
   }
 
+  def toRefreshRecords(row:Row,appParams:AppParams): Seq[(String, HFileCell)] = {
+    val ubrn = getId(row)
+    val luKey = generateLinkKey(ubrn,legalUnit,appParams)
 
-  def toLuRecords(row:Row,appParams:AppParams): Seq[(String, RowObject)] = {
+    (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
+  }
+
+
+  def toLuRecords(row:Row,appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row)
     val luKey = generateLinkKey(ubrn,legalUnit,appParams)
     (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
   }
 
-  private def rowToEnterprise(row:Row,ern:String,appParams:AppParams): Seq[(String, RowObject)] = Seq(createEnterpriseRecord(ern,"ern",ern,appParams), createEnterpriseRecord(ern,"idbrref","9999999999",appParams))++
+  private def rowToEnterprise(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseRecord(ern,"ern",ern,appParams), createEnterpriseRecord(ern,"idbrref","9999999999",appParams))++
         Seq(
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn,appParams)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc,appParams)),
@@ -70,33 +77,33 @@ trait WithConversionHelper {
 
 
 
-  private def rowToLinks(row:Row,ern:String,appParams:AppParams): Seq[(String, RowObject)] = {
+  private def rowToLinks(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
       val ubrn = getId(row)
       val keyStr = generateLinkKey(ern,enterprise,appParams)
       createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit,appParams)+:rowToLegalUnitLinks(row,ern,appParams)
     }
 
-  private def rowToLegalUnitLinks(row:Row, ern:String,appParams:AppParams):Seq[(String, RowObject)] = {
+  private def rowToLegalUnitLinks(row:Row, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
       val ubrn = getId(row)
       val luKey = generateLinkKey(ubrn,legalUnit,appParams)
       createLinksRecord(luKey,s"$parentPrefix$enterprise",ern,appParams) +: (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
     }
 
 
-  private def rowToCHLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, RowObject)] = row.getString("CompanyNo").map(companyNo => Seq(
+  private def rowToCHLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getString("CompanyNo").map(companyNo => Seq(
       createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse,appParams),
       createLinksRecord(generateLinkKey(companyNo,companiesHouse,appParams),s"$parentPrefix$legalUnit",ubrn,appParams)
-    )).getOrElse(Seq[(String, RowObject)]())
+    )).getOrElse(Seq[(String, HFileCell)]())
 
-  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, RowObject)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
+  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
         createLinksRecord(luKey,s"$childPrefix$vat",vatValue,appParams),
         createLinksRecord(generateLinkKey(vat.toString,vatValue,appParams),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
-      ))).getOrElse (Seq[(String, RowObject)]())
+      ))).getOrElse (Seq[(String, HFileCell)]())
 
-  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, RowObject)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
+  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
         createLinksRecord(luKey,s"$childPrefix$paye",payeValue,appParams),
         createLinksRecord(generateLinkKey(paye,payeValue,appParams),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
-      ))).getOrElse(Seq[(String, RowObject)]())
+      ))).getOrElse(Seq[(String, HFileCell)]())
 
   def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 
@@ -104,7 +111,7 @@ trait WithConversionHelper {
 
   private def createEnterpriseRecord(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
-  private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> RowObject(key,columnFamily,column,value)
+  private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
   private def generateErn = Random.alphanumeric.take(18).mkString
 

@@ -6,10 +6,10 @@ import org.apache.hadoop.hbase.Cell
   *
   */
 
-case class HBaseCell[K,V](column:K, value:V)
+case class KVCell[K,V](column:K, value:V)
 
-object HBaseCell{
+object KVCell{
   def apply[T,V](entry:(T,V)) = {
-    new HBaseCell[T,V](entry._1,entry._2)
+    new KVCell[T,V](entry._1,entry._2)
   }
 }
