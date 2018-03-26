@@ -40,7 +40,7 @@ object HBaseDataReader{
                                               ).map(v => getKeyValue(v._2)).groupByKey().map(entity => readEntity(entity))
 
 
-
+//RDD[(String, hfile.HFileCell)]
         def readKvsFromHFile(hfilePath:String)(implicit spark:SparkSession): RDD[(String,Iterable[(String, String)])] =
                                               spark.sparkContext.newAPIHadoopFile(
                                                 hfilePath,

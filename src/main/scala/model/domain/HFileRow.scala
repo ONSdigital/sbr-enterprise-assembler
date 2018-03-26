@@ -1,5 +1,7 @@
 package model.domain
 
+import model.hfile
+import model.hfile.HFileCell
 import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -20,11 +22,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     case _ => false
   }
 
-/*  def toDeleteHBaseRow(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = cells.map(cell =>
-    (new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))*/
-
-
-  def toDeleteHBaseRows(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
+  def toDeleteHFileEntries(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
     val excludedColumns = Seq("p_ENT")
     if(key.contains("~LEU~")){ cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>
       Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)))
@@ -33,10 +31,22 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
   }}
 
-  def toDeleteColumnsExcept(colFamily:String,columns:Seq[String]): Iterable[KeyValue] = { cells.filterNot(cell => columns.contains(cell.column)).map(kv =>
+
+  def toDeleteHFileRows(colFamily:String): Iterable[(String, hfile.HFileCell)] = {
+    val excludedColumns = Seq("p_ENT")
+    if(key.contains("~LEU~")){ cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>
+      Seq((key, new HFileCell(key, colFamily, kv.column, "", HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn.ordinal())))
+    )}else{
+    val cell = cells.head  //delete is made on row level, so there's no need to repeat delete for every column
+      Seq((key, new HFileCell(key, colFamily, cell.column, "", HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn.ordinal())))
+  }}
+
+
+
+  def toDeleteColumnsExcept(colFamily:String,columns:Seq[String]): Iterable[KeyValue] = cells.filterNot(cell => columns.contains(cell.column)).map(kv =>
 
     new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)
-  )}
+  )
 
 }
 
@@ -57,13 +67,6 @@ object HFileRow{
     val cells: Array[(String, String)] = result.rawCells().map(c => getKeyValue(c)._2)
     new HFileRow(rowKey,cells.map(KVCell(_)))
   }
-
-
-
-  /*def apply(entry:(String, Iterable[Cell])) = new HBaseRow(
-    entry._1,
-    entry._2.map(c => HBaseCell(getKeyValue(c)._2)))*/
-  //def apply(entry:(String, Array[(String, String)])) = new HBaseRow(entry._1, entry._2.map(c => HBaseCell(c)))
 
   implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])) = HFileRow(entry)
 }

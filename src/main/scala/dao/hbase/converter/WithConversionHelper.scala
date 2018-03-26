@@ -52,7 +52,7 @@ trait WithConversionHelper {
     Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
   }
 
-  def toRefreshRecords(row:Row,appParams:AppParams): Seq[(String, HFileCell)] = {
+  def toLinksRefreshRecords(row:Row, appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row)
     val luKey = generateLinkKey(ubrn,legalUnit,appParams)
 
