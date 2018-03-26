@@ -15,6 +15,8 @@ import spark.extensions.rdd.HBaseDataReader.getKeyValue
 
 case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
 
+  def getId = key.split("~").head
+
   override def equals(obj: scala.Any): Boolean = obj match{
     case HFileRow(otherKey, otherCells) if(
                   (otherKey == this.key) && (this.cells.toSet == otherCells.toSet)

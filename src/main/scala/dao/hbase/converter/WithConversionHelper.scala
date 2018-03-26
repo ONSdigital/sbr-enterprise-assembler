@@ -66,7 +66,7 @@ trait WithConversionHelper {
     (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
   }
 
-  private def rowToEnterprise(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseRecord(ern,"ern",ern,appParams), createEnterpriseRecord(ern,"idbrref","9999999999",appParams))++
+ def rowToEnterprise(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseRecord(ern,"ern",ern,appParams), createEnterpriseRecord(ern,"idbrref","9999999999",appParams))++
         Seq(
           row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn,appParams)),
           row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc,appParams)),

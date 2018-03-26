@@ -43,7 +43,7 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
                                     .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
 
 
-  }
+      }
 
 
 }
