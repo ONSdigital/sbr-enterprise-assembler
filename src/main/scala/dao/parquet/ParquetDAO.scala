@@ -40,13 +40,12 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
     def createRefreshLinksHFile(appconf:AppParams)(implicit spark:SparkSession) = {
 
-      val localConfigs = Configs.conf
 
       val parquetRDD: RDD[(String, hfile.HFileCell)] = spark.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => toLinksRefreshRecords(row,appconf))
 
       parquetRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}")
         .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE_UPDATE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfigs)
+        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE_UPDATE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
       }
 
 
@@ -54,7 +53,7 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
     def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = {
             val localConfigs = Configs.conf
             val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
-            val lus: RDD[HFileRow] = HBaseDao.readWithKeyFilter(localConfigs,appconf,regex) //read LUs from links
+            val lus: RDD[HFileRow] = HBaseDao.readWithKeyFilter(appconf,regex) //read LUs from links
 
             val rows: RDD[Row] = lus.map(row => Row(row.getId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
 

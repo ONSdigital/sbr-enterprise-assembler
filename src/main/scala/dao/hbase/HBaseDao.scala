@@ -37,22 +37,22 @@ object HBaseDao {
     loadEnterprisesHFile
   }
 
-  def saveDeleteLinksToHFile(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
-    val localConfCopy = configs
-    val data = readWithKeyFilter(localConfCopy,appParams,regex)
+  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+
+    val data = readWithKeyFilter(appParams,regex)
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeleteHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], conf)
   }
 
-  def readWithKeyFilter(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-
-   val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
-    configs.set(TableInputFormat.INPUT_TABLE, tableName)
+  def readWithKeyFilter(appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+    val localConfCopy = conf
+    val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
+    localConfCopy.set(TableInputFormat.INPUT_TABLE, tableName)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
-    setScanner(regex,appParams)
-    val data = HBaseDataReader.readKvsFromHBase(spark)
-    unsetScanner
+    setScanner(localConfCopy,regex,appParams)
+    val data = HBaseDataReader.readKvsFromHBase(localConfCopy)(spark)
+    unsetScanner(localConfCopy)
     data
    }
 
@@ -97,9 +97,9 @@ object HBaseDao {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
- def unsetScanner = conf.unset(TableInputFormat.SCAN)
+ def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
 
- def setScanner(regex:String, appParams:AppParams) = {
+ def setScanner(config:Configuration,regex:String, appParams:AppParams) = {
 
     val comparator = new RegexStringComparator(regex)
     val filter = new RowFilter(CompareOp.EQUAL, comparator)
@@ -113,7 +113,7 @@ object HBaseDao {
     scan.setFilter(filter)
     val scanStr = convertScanToString(scan)
 
-    conf.set(TableInputFormat.SCAN,scanStr)
+   config.set(TableInputFormat.SCAN,scanStr)
   }
 
 }
