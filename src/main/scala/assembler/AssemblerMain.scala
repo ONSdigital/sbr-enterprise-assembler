@@ -2,10 +2,10 @@ package assembler
 
 
 import global.{AppParams, Configs}
-import service.EnterpriseAssemblerService
+import service._
 
 
-object AssemblerMain extends EnterpriseAssemblerService {
+object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService{
 
   def main(args: Array[String]) {
     Configs.conf.set("hbase.zookeeper.quorum", args(9))

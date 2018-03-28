@@ -2,6 +2,7 @@ package dao.hbase
 
 import global.AppParams
 import model.domain.HFileRow
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
@@ -36,11 +37,18 @@ object HBaseDao {
     loadEnterprisesHFile
   }
 
-//!
-  def readWithKeyFilter(appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def saveDeleteLinksToHFile(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+    val localConfCopy = configs
+    val data = readWithKeyFilter(localConfCopy,appParams,regex)
+    data.sortBy(row => s"${row.key}")
+      .flatMap(_.toDeleteHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
+  }
+
+  def readWithKeyFilter(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
 
    val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
-   conf.set(TableInputFormat.INPUT_TABLE, tableName)
+    configs.set(TableInputFormat.INPUT_TABLE, tableName)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
     setScanner(regex,appParams)
     val data = HBaseDataReader.readKvsFromHBase(spark)
