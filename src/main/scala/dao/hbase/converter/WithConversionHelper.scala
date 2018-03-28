@@ -47,6 +47,7 @@ trait WithConversionHelper {
   val parentPrefix = "p_"
 
   def longNull(long: Long): String = if (long.isValidLong) "" else long.toString
+  def intNull(int: Int): String = if (int.isValidLong) "" else int.toString
 
   def toEnterpriseRecords(row:Row, appParams:AppParams): Tables = {
     val ern = generateErn
@@ -72,8 +73,8 @@ trait WithConversionHelper {
       row.getString("BusinessName").map(bn  => createEnterpriseCell(ern,"name",bn,appParams)),
       row.getString("PostCode")map(pc => createEnterpriseCell(ern,"postcode",pc,appParams)),
       row.getString("LegalStatus").map(ls => createEnterpriseCell(ern,"legalstatus",ls,appParams)),
-      row.getLong("paye_employees").map(employees => createEnterpriseCell(ern,"paye_employees",longNull(employees),appParams)),
-      row.getLong("paye_jobs").map(jobs => createEnterpriseCell(ern,"paye_jobs",longNull(jobs),appParams))
+      Some(createEnterpriseCell(ern,"paye_employees",row.getInt("paye_employees").getOrElse(0).toString,appParams)),
+      Some(createEnterpriseCell(ern,"paye_jobs",row.getInt("paye_jobs").getOrElse(0).toString,appParams))
     ).collect{case Some(v) => v}
 
 

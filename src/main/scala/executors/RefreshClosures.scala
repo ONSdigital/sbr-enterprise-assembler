@@ -46,8 +46,8 @@ object RefreshClosures {
 
     //get cells for jobs and employees - the only updateable columns in enterprise table
     val entsRDD: RDD[(String, hfile.HFileCell)] = finalCalculations(fullLUs, spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.flatMap(row => Seq(
-      ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getInt("paye_employees").get.toString,appconf),
-      ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getLong("paye_jobs").get.toString,appconf)
+      ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getInt("paye_employees").map(_.toString).getOrElse("0"),appconf),
+      ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getInt("paye_jobs").map(_.toString).getOrElse("0"),appconf)
     ))
 
     entsRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}").map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
