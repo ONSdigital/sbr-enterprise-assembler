@@ -103,6 +103,18 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   }
 
 
+  /*    "test content of hfile" should {
+        " test" in {
 
+          implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+
+          val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow]("src/main/resources/data/temp/3recsRefresh/enterprise/hfile").collect.toList.sortBy(_.cells.map(_.column).mkString)//.map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
+
+          1 shouldBe 1
+
+
+          spark.close()
+        }
+      }*/
 
 }
