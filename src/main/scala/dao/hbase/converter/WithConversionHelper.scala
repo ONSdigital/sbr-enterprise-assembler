@@ -66,13 +66,13 @@ trait WithConversionHelper {
     (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
   }
 
- def rowToEnterprise(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseRecord(ern,"ern",ern,appParams), createEnterpriseRecord(ern,"idbrref","9999999999",appParams))++
+ def rowToEnterprise(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseCell(ern,"ern",ern,appParams), createEnterpriseCell(ern,"idbrref","9999999999",appParams))++
         Seq(
-          row.getString("BusinessName").map(bn  => createEnterpriseRecord(ern,"name",bn,appParams)),
-          row.getString("PostCode")map(pc => createEnterpriseRecord(ern,"postcode",pc,appParams)),
-          row.getString("LegalStatus").map(ls => createEnterpriseRecord(ern,"legalstatus",ls,appParams)),
-          row.getInt("paye_employees").map(employees => createEnterpriseRecord(ern,"paye_employees",employees.toString,appParams)),
-          row.getLong("paye_jobs").map(jobs => createEnterpriseRecord(ern,"paye_jobs",jobs.toString,appParams))
+          row.getString("BusinessName").map(bn  => createEnterpriseCell(ern,"name",bn,appParams)),
+          row.getString("PostCode")map(pc => createEnterpriseCell(ern,"postcode",pc,appParams)),
+          row.getString("LegalStatus").map(ls => createEnterpriseCell(ern,"legalstatus",ls,appParams)),
+          row.getInt("paye_employees").map(employees => createEnterpriseCell(ern,"paye_employees",employees.toString,appParams)),
+          row.getLong("paye_jobs").map(jobs => createEnterpriseCell(ern,"paye_jobs",jobs.toString,appParams))
         ).collect{case Some(v) => v}
 
 
@@ -109,7 +109,7 @@ trait WithConversionHelper {
 
   private def createLinksRecord(key:String,column:String, value:String, appParams:AppParams) = createRecord(key,appParams.HBASE_LINKS_COLUMN_FAMILY,column,value)
 
-  private def createEnterpriseRecord(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+  def createEnterpriseCell(ern:String, column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
