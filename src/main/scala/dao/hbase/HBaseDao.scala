@@ -38,22 +38,21 @@ object HBaseDao {
   }
 
   def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
-
-    val data = readWithKeyFilter(appParams,regex)
+    val localConfCopy = conf
+    val data = readWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeleteHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], conf)
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
   }
 
-  def readWithKeyFilter(appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-    val localConfCopy = conf
+  def readWithKeyFilter(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+
     val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
-    localConfCopy.set(TableInputFormat.INPUT_TABLE, tableName)
+    configs.set(TableInputFormat.INPUT_TABLE, tableName)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
-    setScanner(localConfCopy,regex,appParams)
-    val data = HBaseDataReader.readKvsFromHBase(localConfCopy)(spark)
-    unsetScanner(localConfCopy)
-    data
+    withScanner(configs,regex,appParams){
+      HBaseDataReader.readKvsFromHBase
+    }
    }
 
   def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
@@ -97,9 +96,16 @@ object HBaseDao {
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
- def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
+  def withScanner(config:Configuration,regex:String, appParams:AppParams)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
+    setScanner(config,regex,appParams)
+    val res = getResult(config)
+    unsetScanner(config)
+    res
+  }
 
- def setScanner(config:Configuration,regex:String, appParams:AppParams) = {
+ private def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
+
+  private def setScanner(config:Configuration,regex:String, appParams:AppParams) = {
 
     val comparator = new RegexStringComparator(regex)
     val filter = new RowFilter(CompareOp.EQUAL, comparator)
