@@ -61,7 +61,7 @@ object AssemblerMain{
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
     val appParams = args.take(9)++args.takeRight(2)
     val appconf  = AppParams(appParams)
-    implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+    implicit val spark: SparkSession = SparkSession.builder()./*master("local[*]").*/appName("enterprise assembler").getOrCreate()
     val regex = ".*(?<!~ENT~"+{appconf.TIME_PERIOD}+")$"
     val rdd: RDD[HFileRow] = readWithKeyFilter(Configs.conf,appconf,regex)
     val rows: Array[HFileRow] = rdd.take(5)
