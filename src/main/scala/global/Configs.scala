@@ -26,6 +26,6 @@ object Configs{
     conf.set("hbase.zookeeper.quorum", config.getString("hbase.zookeper.url"))
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", config.getInt("hbase.files.per.region"))
   }
-  lazy val PATH_TO_JSON = config.getString("files.json")
+  //lazy val PATH_TO_JSON = config.getString("files.json")
 
 }
