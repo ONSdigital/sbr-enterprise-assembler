@@ -15,7 +15,7 @@ import spark.SparkSessionManager
 import spark.extensions.rdd.HBaseDataReader
 
 
-object AssemblerMain extends HBaseDataReader with SparkSessionManager{
+object AssemblerMain extends HBaseDataReader{
 
   private def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
 
@@ -40,7 +40,9 @@ object AssemblerMain extends HBaseDataReader with SparkSessionManager{
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
     val appParams = AppParams(args.take(9)++args.takeRight(2))
-    withSpark{ implicit ss:SparkSession =>
+
+    implicit val spark: SparkSession = SparkSession.builder()/*.master("local[*]")*/.appName("enterprise assembler").getOrCreate()
+
       val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
       Configs.conf.set(TableInputFormat.INPUT_TABLE, tableName)
       val regex = ".*(?<!~ENT~"+{appParams.TIME_PERIOD}+")$"
@@ -52,8 +54,9 @@ object AssemblerMain extends HBaseDataReader with SparkSessionManager{
         row+'\n'+
         "="*10
     ))
+   spark.stop()
 
-    }
+
     //printDeleteData(AppParams(appParams))
     //loadRefresh(AppParams(appParams))
 
