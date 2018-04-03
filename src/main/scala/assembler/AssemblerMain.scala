@@ -11,7 +11,8 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
     val appParams = args.take(9)++args.takeRight(2)
-    loadRefresh(AppParams(appParams))
+    printDeleteData(AppParams(appParams))
+    //loadRefresh(AppParams(appParams))
 
      //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))

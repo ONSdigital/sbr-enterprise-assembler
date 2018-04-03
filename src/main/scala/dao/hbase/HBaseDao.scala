@@ -37,6 +37,17 @@ object HBaseDao {
     loadEnterprisesHFile
   }
 
+  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+    val localConfCopy = conf
+    val data: RDD[HFileRow] = readWithKeyFilter(localConfCopy,appParams,regex)
+    val rows: Array[HFileRow] = data.take(5)
+    rows.map(_.toString).foreach(row => print(
+      "="*10+
+        row+'\n'+
+        "="*10
+    ))
+  }
+
   def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val data = readWithKeyFilter(localConfCopy,appParams,regex)

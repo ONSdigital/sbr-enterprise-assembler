@@ -20,6 +20,14 @@ import spark.extensions.sql.SqlRowExtensions
   */
 object RefreshClosures {
 
+
+
+  def readDeleteData(appconf:AppParams)(implicit ss:SparkSession){
+    val regex = ".*(?<!~ENT~"+{appconf.TIME_PERIOD}+")$"
+    HBaseDao.readDeleteData(appconf,regex)
+  }
+
+
   def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession){
     val regex = ".*(?<!~ENT~"+{appconf.TIME_PERIOD}+")$"
     HBaseDao.saveDeleteLinksToHFile(appconf,regex)

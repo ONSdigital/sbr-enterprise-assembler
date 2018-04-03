@@ -50,6 +50,17 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)
   )
 
+  override def toString = {
+    val key = this.key
+    val cellsToString = cells.map(cell => " \t"+cell.toString).mkString("\n")
+
+    '\n'+
+    "key: " +key+
+    '\n' +
+    " cells: "+
+    cellsToString
+  }
+
 }
 
 object HFileRow{
