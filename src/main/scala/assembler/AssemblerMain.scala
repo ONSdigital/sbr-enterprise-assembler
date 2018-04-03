@@ -1,8 +1,6 @@
 package assembler
 
 
-import dao.hbase.HBaseDao.withScanner
-import executors.RefreshClosures.readDeleteData
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Scan
@@ -13,11 +11,11 @@ import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.protobuf.generated.ClientProtos
 import org.apache.hadoop.hbase.util.Base64
 import org.apache.spark.sql.SparkSession
-import service._
+import spark.SparkSessionManager
 import spark.extensions.rdd.HBaseDataReader
 
 
-object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService{
+object AssemblerMain extends HBaseDataReader with SparkSessionManager{
 
   private def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
 
@@ -47,7 +45,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
       Configs.conf.set(TableInputFormat.INPUT_TABLE, tableName)
       val regex = ".*(?<!~ENT~"+{appParams.TIME_PERIOD}+")$"
       setScanner(Configs.conf,regex,appParams)
-      val resRdd = HBaseDataReader.readKvsFromHBase(Configs.conf)
+      val resRdd = readKvsFromHBase(Configs.conf)
       unsetScanner(Configs.conf)
       resRdd.take(5).map(_.toString).foreach(row => print(
       "="*10+

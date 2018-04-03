@@ -6,7 +6,6 @@ import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
-import spark.extensions.rdd.HBaseDataReader.getKeyValue
 
 /**
   *

@@ -18,12 +18,11 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
 import spark.extensions.rdd.HBaseDataReader
-import spark.extensions.rdd.HBaseDataReader.getKeyValue
 
 /**
   *
   */
-object HBaseDao {
+object HBaseDao extends HBaseDataReader{
   import global.Configs._
 
   import collection.JavaConverters._
@@ -62,7 +61,7 @@ object HBaseDao {
     configs.set(TableInputFormat.INPUT_TABLE, tableName)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
     withScanner(configs,regex,appParams){
-      HBaseDataReader.readKvsFromHBase
+      readKvsFromHBase
     }
    }
 

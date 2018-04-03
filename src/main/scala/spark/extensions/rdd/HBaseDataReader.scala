@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
 /**
   *
   */
-object HBaseDataReader{
+trait HBaseDataReader{
 
         type DataMap = (String,Iterable[(String, String)])
 
@@ -45,7 +45,7 @@ object HBaseDataReader{
 
 
 //RDD[(String, hfile.HFileCell)]
-        def readKvsFromHFile(hfilePath:String)(implicit spark:SparkSession): RDD[(String,Iterable[(String, String)])] = {
+        def readKvsFromHFile(hfilePath:String)(implicit spark:SparkSession): RDD[DataMap] = {
           val confLocalCopy = conf
           spark.sparkContext.newAPIHadoopFile(
             hfilePath,
@@ -56,9 +56,6 @@ object HBaseDataReader{
           ).map(v => getKeyValue(v._2)).groupByKey()
 
         }
-
-
-
 
         def readKvsFromHBase(configuration:Configuration)(implicit spark:SparkSession): RDD[HFileRow] =  {
           spark.sparkContext.newAPIHadoopRDD(
