@@ -11,8 +11,6 @@ package object sql {
 
     def getString(field:String): Option[String] = getValue[String](field)
 
-    def getInt(field:String): Option[Int] = getValue[Int](field)
-
     def getLong(field:String): Option[Long] = getValue[Long](field)
 
     def getStringSeq(field:String): Option[Seq[String]] = getSeq(field,Some((s:String) => s.trim.nonEmpty))
@@ -23,13 +21,11 @@ package object sql {
 
     def isNull(field:String) = row.isNullAt(row.fieldIndex(field))
 
-    def longNull(long: Long): String = if (long.isValidLong) "" else long.toString
-
-    def getCalcValue[T](fieldName:String, eval:Option[T => Boolean] = None): Option[T] = {
-      val v = row.getAs[T](fieldName)
-      eval match{
-        case Some(f) => if(f(v)) Some(v) else None
-        case None  => Some(v)
+    def getCalcValue(fieldName:String): Option[String] = {
+      val v = isNull(fieldName)
+      v match{
+        case true  => Some("")
+        case false => Some(row.getAs(fieldName).toString)
       }}
 
     def getValue[T](

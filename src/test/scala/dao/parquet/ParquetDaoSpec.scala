@@ -1,18 +1,17 @@
 package dao.parquet
 
 import dao.HFileTestUtils
-import global.{AppParams, Configs}
-import model.domain.{Enterprise, KVCell, HFileRow}
+import global.AppParams
+import model.domain.{Enterprise, HFileRow, KVCell}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
-import spark.extensions.rdd.HBaseDataReader._
+import spark.extensions.rdd.HBaseDataReader
 
-import scala.collection.immutable
 import scala.reflect.io.File
 /**
   *
   */
-class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with HFileTestUtils{
+class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with HBaseDataReader with TestData with HFileTestUtils{
 
   import global.Configs._
 
