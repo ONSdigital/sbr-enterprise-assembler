@@ -57,19 +57,4 @@ object HBaseDataReader{
 
         }
 
-        def readKvsFromHBase(configuration:Configuration)(implicit spark:SparkSession): RDD[HFileRow] =  {
-          spark.sparkContext.newAPIHadoopRDD(
-            configuration,
-            classOf[TableInputFormat],
-            classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
-            classOf[org.apache.hadoop.hbase.client.Result])
-            .map(_._2).map(HFileRow(_))
-        }
-
-
-
-
-
-
-
 }

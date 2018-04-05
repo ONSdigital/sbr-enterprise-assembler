@@ -17,7 +17,6 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
-import spark.extensions.rdd.HBaseDataReader._
 
 /**
   *
@@ -109,6 +108,15 @@ object HBaseDao{
     val res = getResult(config)
     unsetScanner(config)
     res
+  }
+
+  def readKvsFromHBase(configuration:Configuration)(implicit spark:SparkSession): RDD[HFileRow] =  {
+    spark.sparkContext.newAPIHadoopRDD(
+      configuration,
+      classOf[TableInputFormat],
+      classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
+      classOf[org.apache.hadoop.hbase.client.Result])
+      .map(_._2).map(HFileRow(_))
   }
 
  private def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
