@@ -1,4 +1,4 @@
-package executors
+package closures
 
 import dao.hbase.HBaseDao
 import dao.parquet.ParquetDAO
@@ -14,9 +14,9 @@ import org.apache.spark.sql.SparkSession
 /**
   *
   */
-object CreateClosures {
+trait CreateClosures {
 
-  def loadFromParquet(appconf:AppParams)(implicit ss:SparkSession,con: Connection){
+  def loadFromCreateParquet(appconf:AppParams)(implicit ss:SparkSession,con: Connection){
     ParquetDAO.parquetToHFile(ss,appconf)
     HBaseDao.loadHFiles(con,appconf)
   }

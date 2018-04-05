@@ -1,4 +1,4 @@
-package executors
+package closures
 
 import dao.hbase.HBaseDao
 import dao.parquet.ParquetDAO
@@ -18,7 +18,7 @@ import spark.extensions.sql.SqlRowExtensions
 /**
   *
   */
-object RefreshClosures {
+trait RefreshClosures {
 
 
 
