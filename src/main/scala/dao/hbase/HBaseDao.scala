@@ -11,7 +11,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles, TableInputFormat}
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.protobuf.generated.ClientProtos
-import org.apache.hadoop.hbase.util.{Base64, Bytes}
+import org.apache.hadoop.hbase.util.Base64
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
@@ -24,8 +24,6 @@ import spark.extensions.rdd.HBaseDataReader._
   */
 object HBaseDao{
   import global.Configs._
-
-  import collection.JavaConverters._
 
   val logger = LoggerFactory.getLogger(getClass)
 

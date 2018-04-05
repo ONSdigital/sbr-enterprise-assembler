@@ -1,12 +1,12 @@
 package dao.parquet
 
 import dao.HFileTestUtils
-import dao.hbase.HBaseDao
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, KVCell}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
+
 import scala.reflect.io.File
 /**
   *
