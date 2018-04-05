@@ -15,7 +15,7 @@ import scala.reflect.ClassTag
 /**
   *
   */
-trait HBaseDataReader{
+object HBaseDataReader{
 
         type DataMap = (String,Iterable[(String, String)])
 

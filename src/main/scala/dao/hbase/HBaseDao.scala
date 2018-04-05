@@ -17,12 +17,12 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
-import spark.extensions.rdd.HBaseDataReader
+import spark.extensions.rdd.HBaseDataReader._
 
 /**
   *
   */
-object HBaseDao extends HBaseDataReader{
+object HBaseDao{
   import global.Configs._
 
   import collection.JavaConverters._
