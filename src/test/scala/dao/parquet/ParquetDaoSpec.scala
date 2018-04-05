@@ -1,13 +1,12 @@
 package dao.parquet
 
 import dao.HFileTestUtils
-import global.{AppParams, Configs}
-import model.domain.{Enterprise, HFileCell, HFileRow}
+import global.AppParams
+import model.domain.{Enterprise, HFileRow, KVCell}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
 
-import scala.collection.immutable
 import scala.reflect.io.File
 /**
   *
@@ -82,8 +81,8 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
         val erns = entLinks.collect{ case row if(row.key.contains("~ENT~")) => }
       }
 
-      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString).map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
-      val erns: Seq[(String, Int)] = actual.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case HFileCell("p_ENT",value) => value}}}.flatten.zipWithIndex
+      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)//.map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
+      val erns: Seq[(String, Int)] = actual.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case KVCell("p_ENT",value) => value}}}.flatten.zipWithIndex
       val ernsDictionary: Seq[(String, String)] = erns.map(ernTup => {
         val (ern,index) = ernTup
         (ern,{
@@ -103,6 +102,18 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   }
 
 
+  /*    "test content of hfile" should {
+        " test" in {
 
+          implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+
+          val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow]("src/main/resources/data/temp/3recsRefresh/enterprise/hfile").collect.toList.sortBy(_.cells.map(_.column).mkString)//.map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
+
+          1 shouldBe 1
+
+
+          spark.close()
+        }
+      }*/
 
 }

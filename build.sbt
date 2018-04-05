@@ -42,12 +42,50 @@ assemblyMergeStrategy in assembly := {
 
 mainClass in (Compile,run) := Some("assembler.AssemblerMain")
 
-lazy val myParameters = Array("unit_links", "local_ns","l",
-  "src/main/resources/data/links/hfile", "enterprise","local_ns", "d",
+lazy val myParameters = Array("LINKS", "ons","l",
+  "src/main/resources/data/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
 
+
+lazy val recsParams = Array("LINKS", "ons","l",
+  "src/main/resources/data/temp/3recs/links/hfile", "ENT","ons", "d",
+   "src/main/resources/data/temp/3recs/enterprise/hfile",
+  "src/main/resources/data/temp/3recs/sample.parquet",
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+
+
+lazy val recsParamsRefresh = Array("LINKS", "ons","l",
+  "src/main/resources/data/temp/3recsRefresh/links/hfile", "ENT","ons", "d",
+   "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
+  "src/main/resources/data/temp/3recsRefresh/sample.parquet",
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+
+lazy val createRecordsParams = Array("unit_links", "sbr_dev_db","l",
+  "src/main/resources/data/temp/cr/links/hfile", "enterprise","sbr_dev_db", "d",
+   "src/main/resources/data/temp/cr/enterprise/hfile",
+  "src/main/resources/data/temp/cr/sample.parquet",
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+
+
+lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
+"src/main/resources/data/temp/refresh/links/hfile", "enterprise","sbr_dev_db", "d",
+"src/main/resources/data/temp/refresh/enterprise/hfile",
+"src/main/resources/data/temp/refresh/sample.parquet",
+"localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+
+
+
 lazy val runWithArgs = taskKey[Unit]("run-args")
+lazy val runRecs = taskKey[Unit]("run-args")
+lazy val runRecsRefresh = taskKey[Unit]("run-args")
+lazy val runCreateRecs = taskKey[Unit]("run-args")
+lazy val runRefreshRecs = taskKey[Unit]("run-args")
+
 
 fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
+fullRunTask(runRecs, Runtime, "assembler.AssemblerMain", recsParams: _*)
+fullRunTask(runRecsRefresh, Runtime, "assembler.AssemblerMain", recsParamsRefresh: _*)
+fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsParams: _*)
+fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsParams: _*)

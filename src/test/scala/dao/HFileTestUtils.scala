@@ -14,7 +14,7 @@ trait HFileTestUtils {
     //dictionary mapping actual erns to static
     val ernsDictionary: Seq[(String, String)] = {
 
-      val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case HFileCell("p_ENT",value) => value}}}.flatten.zipWithIndex
+      val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case KVCell("p_ENT",value) => value}}}.flatten.zipWithIndex
 
       erns.map(ernTup => {
         val (ern,index) = ernTup

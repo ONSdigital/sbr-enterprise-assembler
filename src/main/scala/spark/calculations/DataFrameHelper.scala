@@ -30,8 +30,10 @@ trait DataFrameHelper {
       .coalesce(partitionsCount)
 
     val dfQ = df.join(sumQuarters,"id")
-    val avgDf = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.col(s)):_*)))
-    avgDf.dropDuplicates(Seq("id")).join(sumDf,"id").coalesce(partitionsCount)
+    val avgDf = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
+    val done = avgDf.dropDuplicates(Seq("id")).join(sumDf,"id").coalesce(partitionsCount)
+    //done.printSchema()
+    done
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
