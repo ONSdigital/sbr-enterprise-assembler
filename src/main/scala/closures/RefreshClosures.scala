@@ -23,13 +23,13 @@ trait RefreshClosures {
 
 
   def readDeleteData(appconf:AppParams)(implicit ss:SparkSession){//.*(?!~ENT~)201802$
-    val regex = ".*(?!ENT)~"+{appconf.TIME_PERIOD}+"$"
+    val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.readDeleteData(appconf,regex)
   }
 
 
   def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession){
-    val regex = ".*(?!ENT)~"+{appconf.TIME_PERIOD}+"$"
+    val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.saveDeleteLinksToHFile(appconf,regex)
   }
 
