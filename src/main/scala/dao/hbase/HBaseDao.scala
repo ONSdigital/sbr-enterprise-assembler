@@ -35,7 +35,7 @@ object HBaseDao{
 
   def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
-    val data: RDD[HFileRow] = readWithKeyFilter(localConfCopy,appParams,regex)
+    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     val rows: Array[HFileRow] = data.take(5)
     rows.map(_.toString).foreach(row => print(
       "="*10+
@@ -46,22 +46,35 @@ object HBaseDao{
 
   def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
-    val data = readWithKeyFilter(localConfCopy,appParams,regex)
+    val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeleteHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
       .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
   }
 
-  def readWithKeyFilter(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
 
     val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
-    configs.set(TableInputFormat.INPUT_TABLE, tableName)
+    readTableWithKeyFilter(confs, appParams, tableName, regex)
+
+  }
+
+  def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+
+    val tableName = s"${appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appParams.HBASE_ENTERPRISE_TABLE_NAME}"
+    readTableWithKeyFilter(confs, appParams, tableName, regex)
+
+  }
+
+  def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+    val localConfCopy = confs
+    localConfCopy.set(TableInputFormat.INPUT_TABLE, tableName)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
-    withScanner(configs,regex,appParams){
+    withScanner(localConfCopy,regex,appParams){
       readKvsFromHBase
     }
    }
-
+  
   def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)

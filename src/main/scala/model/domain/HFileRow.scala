@@ -23,6 +23,15 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     case _ => false
   }
 
+   def toHfileCells(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
+     cells.map(cell => (key,HFileCell(key, colFamily, cell.column, cell.value)))
+   }
+
+  def toPutHFileEntries(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
+    cells.flatMap(kv =>
+      Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, kv.value.getBytes)))
+    )}
+
   def toDeleteHFileEntries(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
     val excludedColumns = Seq("p_ENT")
     if(key.contains("~LEU~")){ cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>

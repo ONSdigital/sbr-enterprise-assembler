@@ -38,6 +38,19 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
         parquetRDD.unpersist()
   }
 
+    def readParquet(appconf:AppParams)(implicit spark:SparkSession)  = {
+      val parquetRDD: RDD[(String, hfile.HFileCell)] = spark.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => toLinksRefreshRecords(row,appconf))
+      parquetRDD
+    }
+
+
+    def readParquetIntoHFileRow(appconf:AppParams)(implicit spark:SparkSession)  = {
+      val parquetRDD: RDD[(String, hfile.HFileCell)] = spark.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => toLinksRefreshRecords(row,appconf))
+      parquetRDD
+    }
+
+
+
     def createRefreshLinksHFile(appconf:AppParams)(implicit spark:SparkSession) = {
 
 
@@ -53,7 +66,7 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
     def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = {
             val localConfigs = Configs.conf
             val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
-            val lus: RDD[HFileRow] = HBaseDao.readWithKeyFilter(localConfigs,appconf,regex) //read LUs from links
+            val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfigs,appconf,regex) //read LUs from links
 
             val rows: RDD[Row] = lus.map(row => Row(row.getId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
 
