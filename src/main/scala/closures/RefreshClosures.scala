@@ -38,7 +38,7 @@ trait RefreshClosures {
   def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = {
     val localConfCopy = conf
     val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
-    val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfCopy,appconf,regex) //read LUs from links
+    val lus: RDD[HFileRow] = HBaseDao.readWithKeyFilter(localConfCopy,appconf,regex) //read LUs from links
 
     val rows: RDD[Row] = lus.map(row => Row(row.getId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
 
