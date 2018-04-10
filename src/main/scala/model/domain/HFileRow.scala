@@ -73,13 +73,18 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
 
 object HFileRow{
 
-  def getKeyValue[T <: Cell](kv:T): (String, (String, String)) =
-    (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
+  def getKeyValue[T <: Cell](kv:T): (String, (String, String)) = {
 
-      (Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
-        kv.getQualifierOffset + kv.getQualifierLength),
-        Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
-          kv.getValueOffset + kv.getValueLength)))
+    val key = Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength)
+
+    val column = Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
+      kv.getQualifierOffset + kv.getQualifierLength)
+
+    val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset-1,
+      kv.getValueOffset + kv.getValueLength)
+
+     (key,(column,value))
+}
 
 
   def apply(entry:(String, Iterable[(String, String)])) = new HFileRow(entry._1, entry._2.map(c => KVCell(c)).toSeq)

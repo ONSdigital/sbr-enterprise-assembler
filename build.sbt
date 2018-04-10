@@ -76,11 +76,11 @@ lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
 "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
 
 
-lazy val addNewPeriodParams = Array("unit_links", "sbr_dev_db","l",
-"src/main/resources/data/temp/addperiod/links/hfile", "enterprise","sbr_dev_db", "d",
+lazy val addNewPeriodParams = Array("LINKS", "ons","l",
+"src/main/resources/data/temp/addperiod/links/hfile", "ENT","ons", "d",
 "src/main/resources/data/temp/addperiod/enterprise/hfile",
 "src/main/resources/data/temp/addperiod/sample.parquet",
-"localhost", "2181", "201805","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+"localhost", "2181", "201804","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
 
 
 lazy val runWithArgs = taskKey[Unit]("run-args")
