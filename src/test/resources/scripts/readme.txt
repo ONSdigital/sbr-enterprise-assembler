@@ -10,8 +10,7 @@ hbase commands to populate ENT and LINKS tables:
 
 in newPeriod.json:
 
-1.added IBM - 4
-2.PayeRef: "3333L" added to IBM-3
-3. New LU added: id:999000508999, "BusinessName": "NEW ENTERPRISE LU"
+1.PayeRef: "3333L" added to IBM-3
+2. New LU added: id:999000508999, "BusinessName": "NEW ENTERPRISE LU"
 
 newPeriodLUs-noChanges.json contains same data as is in hbase, it's saved just for deriving files with updates from it.
