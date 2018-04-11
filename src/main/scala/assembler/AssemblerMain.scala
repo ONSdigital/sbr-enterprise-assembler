@@ -13,7 +13,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     val appParams = args.take(9)++args.takeRight(2)
     //createRefreshParquet(AppParams(appParams))
     //loadRefreshFromHFiles(AppParams(appParams))
-    //loadRefresh(AppParams(appParams))
+    loadRefresh(AppParams(appParams))
     /*
     3recsRefresh:
     1. where "id": 21840175, "VatRefs": [10000, 20000]
@@ -27,7 +27,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
      change from 8 - 10 && 2 - 4 change to 8-10 and 0 - 0
     */
 
-    loadFromParquet(AppParams(appParams))
+    //loadFromParquet(AppParams(appParams))
      //loadFromJson(AppParams(appParams))
     //loadFromHFile(AppParams(appParams))
 
