@@ -27,7 +27,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
      change from 8 - 10 && 2 - 4 change to 8-10 and 0 - 0
     */
 
-    loadFromParquet(AppParams(appParams))
+    //loadFromParquet(AppParams(appParams))
      //loadFromJson(AppParams(appParams))
     //loadFromHFile(AppParams(appParams))
 
