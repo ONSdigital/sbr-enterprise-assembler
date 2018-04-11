@@ -1,0 +1,22 @@
+refresh tests for local env:
+populate hbase with data from 3recs with smallPaye.csv
+
+refresh with data from 3recsRefresh with same smallPaye.cv
+
+changes are:
+
+1. added VatRef 30000 to "id": 21840175
+2. deleted PayeRef 20002 from "id": 28919372
+
+results should be observed:
+
+1. One row added to LINKS table:
+   30000~VAT~[timeperiod] p_LEU:21840175
+2. One column  added to LINKS table to row id: 21840175~LEU~[timeperiod] , column:  c_30000:VAT
+
+4. One row deleted from LINKS table:
+   20002~PAYE~[timeperiod] p_LEU:28919372
+5. One column  deleted from LINKS table, row id: 28919372~LEU~[timeperiod] , column:  c_20002:PAYE
+6. paye_employees and paye_jobs for ENT with name "5TH PROPERTY TRADING LIMITED" should change from 2 and 4 correspondingly
+   to "" and ""
+

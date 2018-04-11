@@ -46,34 +46,34 @@ lazy val myParameters = Array("LINKS", "ons","l",
   "src/main/resources/data/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 
 lazy val recsParams = Array("LINKS", "ons","l",
   "src/main/resources/data/temp/3recs/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/temp/3recs/enterprise/hfile",
   "src/main/resources/data/temp/3recs/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 
 lazy val recsParamsRefresh = Array("LINKS", "ons","l",
   "src/main/resources/data/temp/3recsRefresh/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
   "src/main/resources/data/temp/3recsRefresh/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 lazy val createRecordsParams = Array("unit_links", "sbr_dev_db","l",
   "src/main/resources/data/temp/cr/links/hfile", "enterprise","sbr_dev_db", "d",
    "src/main/resources/data/temp/cr/enterprise/hfile",
   "src/main/resources/data/temp/cr/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 
 lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
 "src/main/resources/data/temp/refresh/links/hfile", "enterprise","sbr_dev_db", "d",
 "src/main/resources/data/temp/refresh/enterprise/hfile",
 "src/main/resources/data/temp/refresh/sample.parquet",
-"localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+"localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 
 
