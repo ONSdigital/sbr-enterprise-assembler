@@ -11,9 +11,9 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
     val appParams = args.take(9)++args.takeRight(2)
-    createRefreshParquet(AppParams(appParams))
+    //createRefreshParquet(AppParams(appParams))
     //loadRefreshFromHFiles(AppParams(appParams))
-    //loadRefresh(AppParams(appParams))
+    loadRefresh(AppParams(appParams))
     /*
     3recsRefresh:
     1. where "id": 21840175, "VatRefs": [10000, 20000]
