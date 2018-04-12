@@ -6,6 +6,7 @@ import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.sql.{DataFrame, Row}
 
 /**
   *
@@ -16,6 +17,16 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
 
   def getId = key.split("~").head
 
+  def getCellValue(key:String, byKey:Boolean=true) = if(byKey) cells.collect{case KVCell(`key`,value) => value}.headOption.getOrElse(null)
+                                                                  else cells.collect{case KVCell(value,`key`) => value}.headOption.getOrElse(null)
+
+  def getCellArrayValue(key:String) = {
+
+    val result = cells.collect{case KVCell(value,`key`) => value}
+    if(result.isEmpty) null
+    else result
+  }
+  
   override def equals(obj: scala.Any): Boolean = obj match{
     case HFileRow(otherKey, otherCells) if(
                   (otherKey == this.key) && (this.cells.toSet == otherCells.toSet)
@@ -23,6 +34,37 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     case _ => false
   }
 
+   def toEntRow = {
+
+     Row(
+       getCellValue("ern"),
+       getCellValue("idbrref"),
+       getCellValue("name"),
+       getCellValue("tradingstyle"),
+       getCellValue("address1"),
+       getCellValue("address2"),
+       getCellValue("address3"),
+       getCellValue("address4"),
+       getCellValue("address5"),
+       getCellValue("postcode"),
+       getCellValue("status")
+       )
+   }
+  
+     def toLuRow = {
+
+
+     Row(
+         getId,
+         getCellValue("p_ENT"),
+         getCellValue("CH",false),
+         getCellArrayValue("PAYE"),
+         getCellArrayValue("VAT")
+       )
+   }
+  
+  
+  
    def toHfileCells(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
      cells.map(cell => (key,HFileCell(key, colFamily, cell.column, cell.value)))
    }
