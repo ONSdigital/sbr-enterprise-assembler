@@ -133,7 +133,7 @@ object HFileRow{
   def apply(result:Result) = {
     val rowKey = Bytes.toString(result.getRow)
     val cells: Array[(String, String)] = result.rawCells().map(c => getKeyValue(c)._2)
-    new HFileRow(rowKey,cells.map(KVCell(_)))
+    new HFileRow(rowKey,cells.map(cell => KVCell(cell._1.trim(),cell._2.trim())))
   }
 
   implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])) = HFileRow(entry)
