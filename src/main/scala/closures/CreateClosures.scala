@@ -18,7 +18,7 @@ trait CreateClosures {
 
   def loadFromCreateParquet(appconf:AppParams)(implicit ss:SparkSession,con: Connection){
     ParquetDAO.parquetToHFile(ss,appconf)
-    HBaseDao.loadHFiles(con,appconf)
+    //HBaseDao.loadHFiles(con,appconf)
   }
 
 
