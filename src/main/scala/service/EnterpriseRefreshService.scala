@@ -22,7 +22,7 @@ trait EnterpriseRefreshService extends HBaseConnectionManager with SparkSessionM
     createDeleteLinksHFile(appconf)
     createLinksRefreshHFile(appconf)
     createEnterpriseRefreshHFile(appconf)
-    withHbaseConnection{ implicit con:Connection => loadRefreshFromHFiles(appconf)}
+    //withHbaseConnection{ implicit con:Connection => loadRefreshFromHFiles(appconf)}
   }
 
   def printDeleteData(appconf:AppParams) = withSpark{ implicit ss:SparkSession =>
