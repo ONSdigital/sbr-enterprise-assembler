@@ -2,7 +2,7 @@ package spark.calculations
 
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, Dataset, Row}
 
 trait DataFrameHelper {
 
@@ -16,22 +16,22 @@ trait DataFrameHelper {
     }
   })
 
-  def finalCalculations(parquetDF:DataFrame, payeDF: DataFrame) : DataFrame = {
+  def finalCalculations(parquetDF:DataFrame, payeDF: DataFrame,idColumnName:String = "id") : DataFrame = {
     val latest = "dec_jobs"
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
-    val sumDf = df.groupBy("id").agg(sum(latest) as "paye_jobs")
+    val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val sumQuarters = df.groupBy("id").sum("june_jobs")
-      .join(df.groupBy("id").sum("sept_jobs"), "id")
-      .join(df.groupBy("id").sum("dec_jobs"), "id")
-      .join(df.groupBy("id").sum("mar_jobs"), "id")
+    val sumQuarters = df.groupBy(idColumnName).sum("june_jobs")
+      .join(df.groupBy(idColumnName).sum("sept_jobs"), idColumnName)
+      .join(df.groupBy(idColumnName).sum("dec_jobs"), idColumnName)
+      .join(df.groupBy(idColumnName).sum("mar_jobs"), idColumnName)
       .coalesce(partitionsCount)
 
-    val dfQ = df.join(sumQuarters,"id")
-    val avgDf = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
-    val done = avgDf.dropDuplicates(Seq("id")).join(sumDf,"id").coalesce(partitionsCount)
+    val dfQ: DataFrame = df.join(sumQuarters,idColumnName)
+    val avgDf: DataFrame = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
+    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(partitionsCount)
     //done.printSchema()
     done
   }

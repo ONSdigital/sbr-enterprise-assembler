@@ -6,6 +6,7 @@ import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{DataFrame, Row}
 
 /**
@@ -35,8 +36,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
   }
 
    def toEntRow = {
-
-     Row(
+     import spark.extensions.sql._
+     new GenericRowWithSchema(Array(
        getCellValue("ern"),
        getCellValue("idbrref"),
        getCellValue("name"),
@@ -48,19 +49,22 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("address5"),
        getCellValue("postcode"),
        getCellValue("status")
-       )
+       ),entRowSchema)
    }
   
      def toLuRow = {
+       import spark.extensions.sql._
 
-
-     Row(
-         getId,
+       new GenericRowWithSchema(Array(
+         getId.toLong,
          getCellValue("p_ENT"),
-         getCellValue("CH",false),
-         getCellArrayValue("PAYE"),
-         getCellArrayValue("VAT")
-       )
+         {
+           val ch: String = getCellValue("CH",false)
+           if (ch!=null && ch.nonEmpty && ch.startsWith("c_") ){ch.substring(2)} else ch
+         },
+         getCellArrayValue("PAYE").map(paye => if(paye.startsWith("c_")){paye.substring(2)} else paye),
+         getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2).toLong} else vat)
+     ),luRowSchema)
    }
   
   
