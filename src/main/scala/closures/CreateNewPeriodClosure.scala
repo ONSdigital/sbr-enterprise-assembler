@@ -88,11 +88,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
     val luDF: DataFrame = spark.createDataFrame(luRows,luRowSchema)
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
-    val calculated: DataFrame = finalCalculations(luDF,payeDF,"ubrn")
+/*    val calculated: DataFrame = finalCalculations(luDF,payeDF,"ubrn")
     val calc2: DataFrame = calculated.drop(calculated.columns.filterNot(c => Seq("ern","paye_employees","paye_jobs").contains(c)): _*)
 
-    val entWithEmployee: DataFrame = entDF.join(calc2,"ern").coalesce(numOfPartitions)
-    val entSqlRows = entWithEmployee.rdd.map(df => new GenericRowWithSchema(Array(
+    val entWithEmployee: DataFrame = entDF.join(calc2,"ern").coalesce(numOfPartitions)*/
+    val entSqlRows = entDF.rdd.map(df => new GenericRowWithSchema(Array(
                                                    Try{df.getAs[String]("ern")}.getOrElse(""),
                                                    Try{df.getAs[String]("idbrref")}.getOrElse(""),
                                                    Try{df.getAs[String]("name")}.getOrElse(""),
@@ -104,8 +104,10 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
                                                    Try{df.getAs[String]("address5")}.getOrElse(""),
                                                    Try{df.getAs[String]("postcode")}.getOrElse(""),
                                                    Try{df.getAs[String]("legalstatus")}.getOrElse(""),
-                                                   Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
-                                                   Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")
+                                                   "",
+                                                   ""
+                                                   /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
+                                                   Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
                                                  ),entRowWithEmplDataSchema))
     /**
       * add new + existing enterprises and save to hfile
