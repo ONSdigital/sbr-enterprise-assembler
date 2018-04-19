@@ -35,6 +35,12 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
           .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
               .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
+         parquetRDD.flatMap(_.localUnits).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+          .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+              .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+
+
         parquetRDD.unpersist()
   }
 
