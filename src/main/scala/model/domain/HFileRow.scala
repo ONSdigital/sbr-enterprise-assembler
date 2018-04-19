@@ -9,6 +9,8 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{DataFrame, Row}
 
+import scala.util.Try
+
 /**
   *
   */
@@ -62,8 +64,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
            val ch: String = getCellValue("CH",false)
            if (ch!=null && ch.nonEmpty && ch.startsWith("c_") ){ch.substring(2)} else ch
          },
-         getCellArrayValue("PAYE").map(paye => if(paye.startsWith("c_")){paye.substring(2)} else paye),
-         getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2).toLong} else vat)
+         Try{getCellArrayValue("PAYE").map(paye => if(paye.startsWith("c_")){paye.substring(2)} else paye)}.getOrElse(null),
+         Try{getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2).toLong} else vat)}.getOrElse(null)
      ),luRowSchema)
    }
   
