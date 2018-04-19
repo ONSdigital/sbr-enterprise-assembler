@@ -33,5 +33,5 @@ package object hfile {
     def apply(key:String, colFamily:String, qualifier:String, kvType:Int) = new HFileCell(key, colFamily, qualifier, "", HConstants.LATEST_TIMESTAMP, kvType)
   }
 
-  case class Tables(enterprises: Seq[(String, HFileCell)], links:Seq[(String, HFileCell)])
+  case class Tables(enterprises: Seq[(String, HFileCell)], links:Seq[(String, HFileCell)], localUnits:Seq[(String, HFileCell)])
 }

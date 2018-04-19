@@ -13,6 +13,10 @@ case class AppParams(
                         HBASE_ENTERPRISE_TABLE_NAMESPACE:String,
                         HBASE_ENTERPRISE_COLUMN_FAMILY:String,
                         PATH_TO_ENTERPRISE_HFILE:String,
+                        HBASE_LOCALUNITS_TABLE_NAME:String,
+                        HBASE_LOCALUNITS_TABLE_NAMESPACE:String,
+                        HBASE_LOCALUNITS_COLUMN_FAMILY:String,
+                        PATH_TO_LOCALUNITS_HFILE:String,
                         PATH_TO_PARQUET:String,
                         TIME_PERIOD:String,
                         PATH_TO_PAYE:String
@@ -36,7 +40,11 @@ object AppParams{
                                                   args(7),
                                                   args(8),
                                                   args(9),
-                                                  args(10)
+                                                  args(10),
+                                                  args(11),
+                                                  args(12),
+                                                  args(13),
+                                                  args(14)
                                                 )
   
 }

@@ -46,10 +46,34 @@ trait WithConversionHelper {
   val childPrefix = "c_"
   val parentPrefix = "p_"
 
-  def toEnterpriseRecords(row:Row, appParams:AppParams): Tables = {
-    val ern = generateErn
-    Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
+  def toEnterpriseRecords(row: Row, appParams: AppParams): Tables = {
+    val ern = generateUniqueKey
+    Tables(rowToEnterprise(row, ern, appParams), rowToLinks(row, ern, appParams), toLocalUnits(row, ern, appParams))
   }
+
+  def toLocalUnits(row: Row, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
+
+      val lurn = generateUniqueKey
+
+      Seq(
+        createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
+        createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+        createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
+        createLocalUnitCell(lurn,ern, "postcode", row.getString("PostCode").getOrElse(""), appParams),
+        createLocalUnitCell(lurn,ern, "sic07", row.getString("sic07").getOrElse(""), appParams)
+      ) ++ Seq(
+        row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
+        row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
+        row.getString("BusinessName").map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
+        row.getString("TradingStatus").map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
+        row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
+        row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
+        row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+        row.getString("LegalStatus").map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams)),
+        row.getCalcValue("paye_employees").map(employees => createLocalUnitCell(lurn,ern, "employees", employees, appParams))
+      ).collect { case Some(v) => v }
+}
+
 
   def toLinksRefreshRecords(row:Row, appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row)
@@ -110,9 +134,15 @@ trait WithConversionHelper {
 
   def createEnterpriseCell(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
+  def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
-  private def generateErn = Random.alphanumeric.take(18).mkString
+  private def generateUniqueKey = Random.alphanumeric.take(18).mkString
+
+  private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = {
+    s"${ern.reverse}~$lurn~${appParams.TIME_PERIOD}"
+  }
 
   private def generateEntKey(ern:String,appParams:AppParams) = {
     s"${ern.reverse}~${appParams.TIME_PERIOD}"
