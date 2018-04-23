@@ -35,7 +35,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     saveLinksHFiles(confs, appParams, ".*(~ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+")$")
   }
 
-  def printObj(name:String, df:DataFrame) = {
+  def printDF(name:String, df:DataFrame) = {
     println(s"$name Schema:")
     df.printSchema()
   }
@@ -54,7 +54,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
     val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
-    printObj("update parquet Schema:",parquetDF)
+    printDF("update parquet Schema:",parquetDF)
 
     //set period to previous to make join possible
     val parquetRows: RDD[Row] = parquetDF.rdd
@@ -113,7 +113,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
     val luDF: DataFrame = spark.createDataFrame(luRows,luRowSchema)
+
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    printDF("payeDF", payeDF)
 /*    val calculated: DataFrame = finalCalculations(luDF,payeDF,"ubrn")
     val calc2: DataFrame = calculated.drop(calculated.columns.filterNot(c => Seq("ern","paye_employees","paye_jobs").contains(c)): _*)
 
@@ -135,6 +137,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
                                                    /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
                                                    Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
                                                  ),entRowWithEmplDataSchema))
+
+    printRdd("entSqlRows",entSqlRows)
     /**
       * add new + existing enterprises and save to hfile
       * */
@@ -153,7 +157,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
   val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf))
 
+    printRdd("existingLusCells",existingLusCells)
+
   val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
+
+    printRdd("allLus",allLus)
 
   allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
