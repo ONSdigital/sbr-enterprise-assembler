@@ -35,25 +35,51 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     saveLinksHFiles(confs, appParams, ".*(~ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+")$")
   }
 
+  def printObj(name:String, df:DataFrame) = {
+    println(s"$name Schema:")
+    df.printSchema()
+  }
+
+  def printRdd[T](name:String,rdd:RDD[T])(implicit spark:SparkSession) = {
+    rdd.cache()
+    print(s"START>> check for errors rdd $name")
+    rdd.collect()
+    print(s"FINISHED>> checking $name")
+    rdd.unpersist()
+  }
 
   def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession) = {
 
     val confs = Configs.conf
 
-    val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD) //set period to previous to make join possible
-    val parquetRows: RDD[Row] = spark.read.parquet(appconf.PATH_TO_PARQUET).rdd
+    val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
+    val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
+    printObj("update parquet Schema:",parquetDF)
+
+    //set period to previous to make join possible
+    val parquetRows: RDD[Row] = parquetDF.rdd
     val linksRecords: RDD[(String, HFileCell)] = parquetRows.flatMap(row => toLinksRefreshRecords(row,appconf))
     val updatesRdd: RDD[Record] = linksRecords.groupByKey().map(v => (v._1,v._2.map(kv => KVCell[String,String](kv.qualifier,kv.value))))//get LINKS updates from input parquet
+
+    printRdd("updatesRdd", updatesRdd)
+
 
     //next 3 lines: select LU rows from hbase
     val linksTableName = s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}"
     val luRegex = ".*(ENT|LEU)~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val existingLuRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
+    printRdd("existingLuRdd", updatesRdd)
+
     val numOfPartitions = updatesRdd.getNumPartitions
+
     val joined: RDD[(String, (Option[Cells], Option[Cells]))] = updatesRdd.fullOuterJoin(existingLuRdd, numOfPartitions)
 
+    printRdd("links record updates rdd joined with existing LUs rdd",joined)
+
     val updatedExistingLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), Some(oldCells))) => HFileRow(key,{newCells ++ oldCells.find(_.column=="p_ENT").map(ernCell => Seq(ernCell)).getOrElse(Seq.empty) })} // existing LUs updated with new cells
+
+    printRdd("updatedExistingLUs", updatedExistingLUs)
 
     val newLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), None)) => HFileRow(key, newCells) }
 
