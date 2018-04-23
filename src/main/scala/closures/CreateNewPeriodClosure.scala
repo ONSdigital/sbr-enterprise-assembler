@@ -44,7 +44,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
   def printDF(name:String, df:DataFrame) = {
     println(s"$name Schema:\n")
     df.printSchema()
+    df.cache()
     printRecords(df.collect,"DataFrame")
+    df.unpersist()
   }
 
   def printRdd[T](name:String,rdd:RDD[T],`type`:String)(implicit spark:SparkSession) = {
@@ -108,8 +110,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
     printDF("newRowsDf",newRowsDf)
-
-    val payeDf = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val pathToPaye = appconf.PATH_TO_PAYE
+    println(s"extracting paye file from path: $pathToPaye")
+    val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     printDF("payeDf",payeDf)
 
     val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDf).rdd.map(row => toEnterpriseRecords(row,appconf))
