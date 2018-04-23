@@ -45,7 +45,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     println(s"$name Schema:\n")
     df.printSchema()
     df.cache()
-    printRecords(df.collect,"DataFrame")
+    printRecords(df.collect(),"DataFrame")
     df.unpersist()
   }
 
