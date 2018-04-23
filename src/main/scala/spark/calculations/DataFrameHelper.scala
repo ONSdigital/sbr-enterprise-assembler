@@ -6,6 +6,15 @@ import org.apache.spark.sql.{DataFrame, Dataset, Row}
 
 trait DataFrameHelper {
 
+  def checkDF(name:String,df:DataFrame) = {
+    println(s"START>> Info for $name df:\n")
+    df.printSchema()
+    df.cache()
+    df.collect().foreach(println)
+    df.unpersist()
+    println(s"END>> Info for $name df:\n")
+  }
+
   val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
 
   val avg = udf((values: Seq[Integer]) => {
@@ -21,6 +30,7 @@ trait DataFrameHelper {
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
+    checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val sumQuarters = df.groupBy(idColumnName).sum("june_jobs")
@@ -37,16 +47,21 @@ trait DataFrameHelper {
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
-    parquetDF
+    val res = parquetDF
       .withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
       .withColumn("payeref", explode_outer(parquetDF.col("PayeRefs")))
+
+    checkDF("flattened DataFrame", res)
+    res
   }
 
   private def intConvert(payeFrame: DataFrame): DataFrame = {
-    payeFrame
+    val res = payeFrame
       .withColumn("mar_jobs", payeFrame("mar_jobs").cast(IntegerType))
       .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
       .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
       .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
+    checkDF("int Converedt DataFrame", res)
+    res
   }
 }

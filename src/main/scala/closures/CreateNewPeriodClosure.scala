@@ -37,12 +37,12 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
   }
 
   def printRecords[T](recs:Array[T], dataStructure:String): Unit ={
-    println(s" RECORDS of type:$dataStructure")
+    println(s" RECORDS of type:$dataStructure \n")
     recs.foreach(record => println(s"  ${record.toString()}"))
   }
 
   def printDF(name:String, df:DataFrame) = {
-    println(s"$name Schema:")
+    println(s"$name Schema:\n")
     df.printSchema()
     printRecords(df.collect,"DataFrame")
   }
@@ -109,7 +109,10 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     printDF("newRowsDf",newRowsDf)
 
-    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.map(row => toEnterpriseRecords(row,appconf))
+    val payeDf = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    printDF("payeDf",payeDf)
+
+    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDf).rdd.map(row => toEnterpriseRecords(row,appconf))
 
     printRdd("newEntTree",newEntTree,"hfile.Tables")
 
