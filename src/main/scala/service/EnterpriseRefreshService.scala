@@ -18,15 +18,18 @@ trait EnterpriseRefreshService extends HBaseConnectionManager with SparkSessionM
 
   def createRefreshParquet(appconf:AppParams) = withSpark{ implicit ss:SparkSession => ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)}
 
-  def loadRefresh(appconf:AppParams) = withSpark{ implicit ss:SparkSession =>
-    createDeleteLinksHFile(appconf)
-    createLinksRefreshHFile(appconf)
-    createEnterpriseRefreshHFile(appconf)
-    withHbaseConnection{ implicit con:Connection => loadRefreshFromHFiles(appconf)}
+  def loadRefresh(appconf:AppParams) = withSpark{ implicit ss:SparkSession => withHbaseConnection{ implicit con:Connection =>
+       createDeleteLinksHFile(appconf)
+       createLinksRefreshHFile(appconf)
+       createEnterpriseRefreshHFile(appconf)
+       loadRefreshFromHFiles(appconf)
+    }
   }
 
   def printDeleteData(appconf:AppParams) = withSpark{ implicit ss:SparkSession =>
-    readDeleteData(appconf)
+    withHbaseConnection{ implicit con:Connection =>
+      readDeleteData(appconf)
+    }
   }
 
 

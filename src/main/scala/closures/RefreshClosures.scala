@@ -22,20 +22,20 @@ trait RefreshClosures {
 
 
 
-  def readDeleteData(appconf:AppParams)(implicit ss:SparkSession){//.*(?!~ENT~)201802$
+  def readDeleteData(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){//.*(?!~ENT~)201802$
     val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.readDeleteData(appconf,regex)
   }
 
 
-  def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession){
+  def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
     val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.saveDeleteLinksToHFile(appconf,regex)
   }
 
   def createLinksRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = ParquetDAO.createRefreshLinksHFile(appconf)
 
-  def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = {
+  def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession,connection:Connection) = {
     val localConfCopy = conf
     val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
     val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfCopy,appconf,regex) //read LUs from links

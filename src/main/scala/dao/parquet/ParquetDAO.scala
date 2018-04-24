@@ -6,6 +6,7 @@ import global.{AppParams, Configs}
 import model.domain.HFileRow
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -63,7 +64,7 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
 
 
-    def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = {
+    def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession,connection:Connection) = {
             val localConfigs = Configs.conf
             val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
             val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfigs,appconf,regex) //read LUs from links

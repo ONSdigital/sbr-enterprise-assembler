@@ -16,6 +16,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
+import org.apache.hadoop.hbase.client.Connection
 
 import scala.util.Try
 
@@ -30,7 +31,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
   /**
     * copies data from Enterprise and Local Units tables into a new period data
     **/
-  def createNewPeriodHfiles(confs: Configuration, appParams: AppParams)(implicit spark: SparkSession): Unit = {
+  def createNewPeriodHfiles(confs: Configuration, appParams: AppParams)(implicit spark: SparkSession,connection:Connection): Unit = {
     //do enterprise. Local units to follow
     saveEnterpriseHFiles(confs, appParams, ".*ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+"$") //.*(~201802)$ //.*(?!~ENT~)201802$
     saveLinksHFiles(confs, appParams, ".*(~ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+")$")
@@ -38,17 +39,24 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
   def printRecords[T](recs:Array[T], dataStructure:String): Unit = {
     println(s" RECORDS of type:$dataStructure \n")
+    if(recs.head.isInstanceOf[Row]) {
+      val row = recs.head.asInstanceOf[Row]
+      println("  Row schema:")
+
+      Try{row.schema.fields.foreach(f => println(s"   ${Try{f.toString()}.getOrElse("null")}"))}.getOrElse(Unit)
+    }
+
     recs.foreach(record => println(s"  ${record.toString()}"))
   }
 
   def printDF(name:String, df:DataFrame) = {
-    println("printing FD, START>>")
+    println("printing DF, START>>")
     println(s"$name Schema:\n")
     df.printSchema()
     df.cache()
-    val collected = df.collect()
-    printRecords(collected,s"$name DataFrame")
-    println("printing FD, END>>")
+    val collected: Array[Row] = df.collect()
+    printRecords(collected,s"$name DataFrame converted to RDD[Row]")
+    println("printing DF, END>>")
     df.unpersist()
   }
 
@@ -60,7 +68,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     rdd.unpersist()
   }
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession) = {
+  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
 
     val confs = Configs.conf
 
@@ -97,7 +105,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     val existingLinksEnts: RDD[HFileRow] = joined.collect { case (key, (None, Some(oldCells))) if(key.endsWith(s"ENT~${appconf.TIME_PERIOD}"))=> HFileRow(key, oldCells) }
 
-    printRdd("existingLinksEnts",existingLinksEnts,"HFileRow")
+    printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
 
     //new Records
     val newLuIds: RDD[(Long, Row)] = newLUs.filter(_.key.endsWith(s"~LEU~${appconf.TIME_PERIOD}")).collect{case HFileRow(key,_) if(key.endsWith(s"~${appconf.TIME_PERIOD}")) => (key.stripSuffix(s"~LEU~${appconf.TIME_PERIOD}").toLong,Row.empty)}
@@ -108,9 +116,27 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     printRdd("joinedParquetRows",joinedParquetRows,"(Long, (Row, Option[Row]))")
 
-    val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => newRow }
-    printRdd("newLUParquetRows",newLUParquetRows,"Row")
+    val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => {
+      Row(
+                newRow.getAs[String]("BusinessName"),
+                newRow.getAs[String]("CompanyNo"),
+                newRow.getAs[String]("EmploymentBands"),
+                Try{newRow.getAs[String]("IndustryCode").toLong}.getOrElse(null),
+                newRow.getAs[String]("LegalStatus"),
+                newRow.getAs[Seq[String]]("PayeRefs"),
+                newRow.getAs[String]("PostCode"),
+                newRow.getAs[String]("TradingStatus"),
+                newRow.getAs[String]("Turnover"),
+                newRow.getAs[Long]("UPRN"),
+                newRow.getAs[Seq[Long]]("VatRefs"),
+                newRow.getAs[Long]("id")
+      )
 
+
+    } }
+
+
+    printRdd("newLUParquetRows",newLUParquetRows,"Row")
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
@@ -149,22 +175,39 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     val entWithEmployee: DataFrame = entDF.join(calc2,"ern").coalesce(numOfPartitions)*/
     val entSqlRows = entDF.rdd.map(df => new GenericRowWithSchema(Array(
-                                                   Try{df.getAs[String]("ern")}.getOrElse(""),
-                                                   Try{df.getAs[String]("idbrref")}.getOrElse(""),
-                                                   Try{df.getAs[String]("name")}.getOrElse(""),
-                                                   Try{df.getAs[String]("tradingstyle")}.getOrElse(""),
-                                                   Try{df.getAs[String]("address1")}.getOrElse(""),
-                                                   Try{df.getAs[String]("address2")}.getOrElse(""),
-                                                   Try{df.getAs[String]("address3")}.getOrElse(""),
-                                                   Try{df.getAs[String]("address4")}.getOrElse(""),
-                                                   Try{df.getAs[String]("address5")}.getOrElse(""),
-                                                   Try{df.getAs[String]("postcode")}.getOrElse(""),
-                                                   Try{df.getAs[String]("legalstatus")}.getOrElse(""),
-                                                   "",
-                                                   ""
+                                                   Try{df.getAs[String]("ern")}.getOrElse(null),
+                                                   Try{df.getAs[String]("idbrref")}.getOrElse(null),
+                                                   Try{df.getAs[String]("name")}.getOrElse(null),
+                                                   Try{df.getAs[String]("tradingstyle")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address1")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address2")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address3")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address4")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address5")}.getOrElse(null),
+                                                   Try{df.getAs[String]("postcode")}.getOrElse(null),
+                                                   Try{df.getAs[String]("legalstatus")}.getOrElse(null),
+                                                   null,
+                                                   null
                                                    /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
                                                    Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
                                                  ),entRowWithEmplDataSchema))
+    /*Row(
+                                                   Try{df.getAs[String]("ern")}.getOrElse(null),
+                                                   Try{df.getAs[String]("idbrref")}.getOrElse(null),
+                                                   Try{df.getAs[String]("name")}.getOrElse(null),
+                                                   Try{df.getAs[String]("tradingstyle")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address1")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address2")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address3")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address4")}.getOrElse(null),
+                                                   Try{df.getAs[String]("address5")}.getOrElse(null),
+                                                   Try{df.getAs[String]("postcode")}.getOrElse(null),
+                                                   Try{df.getAs[String]("legalstatus")}.getOrElse(null),
+                                                   null,
+                                                   null
+                                                   /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
+                                                   Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
+                                                 ))*/
 
     printRdd("entSqlRows",entSqlRows,"GenericRowWithSchema")
     /**
@@ -198,7 +241,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
  }
 
-  private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession) = {
+  private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
     HBaseDao.readEnterprisesWithKeyFilter(confs, appParams, regex)
       .map(row => row.copy(row.key.replace(s"~${appParams.PREVIOUS_TIME_PERIOD}",s"~${appParams.TIME_PERIOD}")))
       .sortBy(row => s"${row.key}")
@@ -206,7 +249,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
       .saveAsNewAPIHadoopFile(appParams.PATH_TO_ENTERPRISE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], confs)
   }
 
-  private def saveLinksHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession) = {
+  private def saveLinksHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
     HBaseDao.readLinksWithKeyFilter(confs, appParams, regex)
       .map(row => row.copy(row.key.replace(s"~${appParams.PREVIOUS_TIME_PERIOD}",s"~${appParams.TIME_PERIOD}")))
       .sortBy(row => s"${row.key}")

@@ -22,7 +22,7 @@ trait CreateClosures {
   }
 
 
-  def createSingleRefreshHFile(appconf: AppParams)(implicit ss: SparkSession) = {
+  def createSingleRefreshHFile(appconf: AppParams)(implicit ss: SparkSession,connection:Connection) = {
     val localConfigs = Configs.conf
     val cleanRecs: RDD[(String, hfile.HFileCell)] = HBaseDao.readLinksWithKeyFilter(localConfigs,appconf, ".*(?<!~ENT~" + {
       appconf.TIME_PERIOD

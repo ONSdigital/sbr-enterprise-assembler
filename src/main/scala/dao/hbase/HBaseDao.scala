@@ -33,7 +33,7 @@ object HBaseDao{
     loadEnterprisesHFile
   }
 
-  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
     val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     val rows: Array[HFileRow] = data.take(5)
@@ -44,7 +44,7 @@ object HBaseDao{
     ))
   }
 
-  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
     val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
@@ -52,23 +52,23 @@ object HBaseDao{
       .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
   }
 
-  def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession,connection:Connection): RDD[HFileRow] = {
 
     val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
     readTableWithKeyFilter(confs, appParams, tableName, regex)
 
   }
 
-  def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession,connection:Connection): RDD[HFileRow] = {
 
     val tableName = s"${appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appParams.HBASE_ENTERPRISE_TABLE_NAME}"
     readTableWithKeyFilter(confs, appParams, tableName, regex)
 
   }
 
-  def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession,connection:Connection) = wrapReadTransaction(tableName){ table =>
     val localConfCopy = confs
-    localConfCopy.set(TableInputFormat.INPUT_TABLE, tableName)
+    localConfCopy.set(TableInputFormat.INPUT_TABLE, table)
     //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
     withScanner(localConfCopy,regex,appParams){
       readKvsFromHBase
@@ -106,6 +106,16 @@ object HBaseDao{
     setJob(table)
     action(table,admin)
     table.close
+  }
+
+
+  private def wrapReadTransaction(tableName:String)(action: String => RDD[HFileRow])(implicit connection:Connection):RDD[HFileRow] = {
+    val table: Table = connection.getTable(TableName.valueOf(tableName))
+    val admin = connection.getAdmin
+    setJob(table)
+    val res = action(tableName)
+    table.close
+    res
   }
 
 
