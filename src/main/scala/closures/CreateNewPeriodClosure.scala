@@ -36,16 +36,19 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     saveLinksHFiles(confs, appParams, ".*(~ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+")$")
   }
 
-  def printRecords[T](recs:Array[T], dataStructure:String): Unit ={
+  def printRecords[T](recs:Array[T], dataStructure:String): Unit = {
     println(s" RECORDS of type:$dataStructure \n")
     recs.foreach(record => println(s"  ${record.toString()}"))
   }
 
   def printDF(name:String, df:DataFrame) = {
+    println("printing FD, START>>")
     println(s"$name Schema:\n")
     df.printSchema()
     df.cache()
-    printRecords(df.collect(),"DataFrame")
+    val collected = df.collect()
+    printRecords(collected,s"$name DataFrame")
+    println("printing FD, END>>")
     df.unpersist()
   }
 
@@ -106,12 +109,16 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     printRdd("joinedParquetRows",joinedParquetRows,"(Long, (Row, Option[Row]))")
 
     val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => newRow }
+    printRdd("newLUParquetRows",newLUParquetRows,"Row")
+
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
     printDF("newRowsDf",newRowsDf)
+
     val pathToPaye = appconf.PATH_TO_PAYE
     println(s"extracting paye file from path: $pathToPaye")
+
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     printDF("payeDf",payeDf)
 
@@ -165,11 +172,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
       * */
 
     val hfileRdd: RDD[(String, HFileCell)] = entSqlRows.flatMap(row => rowToEnterprise(row,appconf))
-    val allEnts = newEnts.union(hfileRdd).coalesce(numOfPartitions)
+    val allEnts: RDD[(String, HFileCell)] = newEnts.union(hfileRdd).coalesce(numOfPartitions)
+     printRdd("allEnts",allEnts,"(String, HFileCell)")
 
-    allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
 
 /** 
@@ -187,6 +192,10 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
   allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
  }
 
   private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession) = {

@@ -12,7 +12,7 @@ trait DataFrameHelper {
     df.cache()
     df.collect().foreach(println)
     df.unpersist()
-    println(s"END>> Info for $name df:\n")
+    println(s"END>> Info for $name df\n")
   }
 
   val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
