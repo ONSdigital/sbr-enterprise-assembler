@@ -2,7 +2,7 @@ package spark.calculations
 
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
-import org.apache.spark.sql.{DataFrame, Dataset, Row}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
 trait DataFrameHelper {
 
@@ -33,15 +33,24 @@ trait DataFrameHelper {
     checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val sumQuarters = df.groupBy(idColumnName).sum("june_jobs")
-      .join(df.groupBy(idColumnName).sum("sept_jobs"), idColumnName)
-      .join(df.groupBy(idColumnName).sum("dec_jobs"), idColumnName)
-      .join(df.groupBy(idColumnName).sum("mar_jobs"), idColumnName)
-      .coalesce(partitionsCount)
+    val avgDf = getEmployeeCount(df, idColumnName)
 
-    val dfQ: DataFrame = df.join(sumQuarters,idColumnName)
-    val avgDf: DataFrame = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(partitionsCount)
+    //done.printSchema()
+    done
+  }
+
+  def finalCalculationsEnt(parquetDF:DataFrame, payeDF: DataFrame,idColumnName:String = "ern") : DataFrame = {
+    val latest = "dec_jobs"
+    val partitionsCount = parquetDF.rdd.getNumPartitions
+
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
+    checkDF("df joining paye and new period data",df)
+    val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
+
+    val avgDf = getEmployeeCount(df, idColumnName)
+
+    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs").coalesce(partitionsCount)
     //done.printSchema()
     done
   }
@@ -64,4 +73,15 @@ trait DataFrameHelper {
     checkDF("int Converedt DataFrame", res)
     res
   }
+
+  private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
+    val idEmp = payeDF.groupBy(idColumnName).sum("june_jobs")
+      .join(payeDF.groupBy(idColumnName).sum("sept_jobs"), idColumnName)
+      .join(payeDF.groupBy(idColumnName).sum("dec_jobs"), idColumnName)
+      .join(payeDF.groupBy(idColumnName).sum("mar_jobs"), idColumnName)
+
+    val dfQ = payeDF.join(idEmp,idColumnName)
+    dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
+  }
+
 }
