@@ -117,7 +117,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     printRdd("joinedParquetRows",joinedParquetRows,"(Long, (Row, Option[Row]))")
 
     val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => {
-      Row(
+      new GenericRowWithSchema(Array(
                 newRow.getAs[String]("BusinessName"),
                 newRow.getAs[String]("CompanyNo"),
                 newRow.getAs[String]("EmploymentBands"),
@@ -130,7 +130,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
                 newRow.getAs[Long]("UPRN"),
                 newRow.getAs[Seq[Long]]("VatRefs"),
                 newRow.getAs[Long]("id")
-      )
+      ),parquetRowSchema)
 
 
     } }
@@ -191,23 +191,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
                                                    /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
                                                    Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
                                                  ),entRowWithEmplDataSchema))
-    /*Row(
-                                                   Try{df.getAs[String]("ern")}.getOrElse(null),
-                                                   Try{df.getAs[String]("idbrref")}.getOrElse(null),
-                                                   Try{df.getAs[String]("name")}.getOrElse(null),
-                                                   Try{df.getAs[String]("tradingstyle")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address1")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address2")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address3")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address4")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address5")}.getOrElse(null),
-                                                   Try{df.getAs[String]("postcode")}.getOrElse(null),
-                                                   Try{df.getAs[String]("legalstatus")}.getOrElse(null),
-                                                   null,
-                                                   null
-                                                   /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
-                                                   Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
-                                                 ))*/
+
 
     printRdd("entSqlRows",entSqlRows,"GenericRowWithSchema")
     /**
