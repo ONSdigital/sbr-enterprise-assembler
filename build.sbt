@@ -46,41 +46,46 @@ lazy val myParameters = Array("LINKS", "ons","l",
   "src/main/resources/data/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
+
+lazy val initialPopulationParams = Array("LINKS", "ons","l",
+  "src/main/resources/data/original/links/hfile", "ENT","ons", "d",
+   "src/main/resources/data/original/enterprise/hfile",
+  "src/main/resources/data/original/sample.parquet",
+  "localhost", "2181", "201802","src/main/resources/data/original/originalPaye.csv")
 
 
 lazy val recsParams = Array("LINKS", "ons","l",
   "src/main/resources/data/temp/3recs/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/temp/3recs/enterprise/hfile",
   "src/main/resources/data/temp/3recs/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
-
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 lazy val recsParamsRefresh = Array("LINKS", "ons","l",
   "src/main/resources/data/temp/3recsRefresh/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
   "src/main/resources/data/temp/3recsRefresh/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 lazy val createRecordsParams = Array("unit_links", "sbr_dev_db","l",
   "src/main/resources/data/temp/cr/links/hfile", "enterprise","sbr_dev_db", "d",
    "src/main/resources/data/temp/cr/enterprise/hfile",
   "src/main/resources/data/temp/cr/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 
 lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
 "src/main/resources/data/temp/refresh/links/hfile", "enterprise","sbr_dev_db", "d",
 "src/main/resources/data/temp/refresh/enterprise/hfile",
 "src/main/resources/data/temp/refresh/sample.parquet",
-"localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")//local_ns:unit_links
+"localhost", "2181", "201802","src/main/resources/data/smallPaye.csv")
 
 
 lazy val addNewPeriodParams = Array("LINKS", "ons","l",
 "src/main/resources/data/temp/addperiod/links/hfile", "ENT","ons", "d",
 "src/main/resources/data/temp/addperiod/enterprise/hfile",
 "src/main/resources/data/temp/addperiod/sample.parquet",
-"localhost", "2181", "201804","src/main/resources/data/addNewPeriodPaye.csv")//local_ns:unit_links
+"localhost", "2181", "201804","src/main/resources/data/newperiod/newPeriodPaye.csv")
 
 
 lazy val runWithArgs = taskKey[Unit]("run-args")
@@ -88,6 +93,7 @@ lazy val runRecs = taskKey[Unit]("run-args")
 lazy val runRecsRefresh = taskKey[Unit]("run-args")
 lazy val runCreateRecs = taskKey[Unit]("run-args")
 lazy val runRefreshRecs = taskKey[Unit]("run-args")
+lazy val runInitialPopulationRecs = taskKey[Unit]("run-args")
 lazy val runAddPeriodRecs = taskKey[Unit]("run-args")
 
 
@@ -97,3 +103,4 @@ fullRunTask(runRecsRefresh, Runtime, "assembler.AssemblerMain", recsParamsRefres
 fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsParams: _*)
 fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsParams: _*)
 fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodParams: _*)
+fullRunTask(runInitialPopulationRecs, Runtime, "assembler.AssemblerMain", initialPopulationParams: _*)

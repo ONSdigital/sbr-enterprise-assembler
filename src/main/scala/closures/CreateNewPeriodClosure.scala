@@ -15,7 +15,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.calculations.DataFrameHelper
-import spark.extensions.sql._
+import spark.extensions.sql.{luRowSchema, _}
 import org.apache.hadoop.hbase.client.Connection
 
 import scala.util.Try
@@ -35,6 +35,17 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     //do enterprise. Local units to follow
     saveEnterpriseHFiles(confs, appParams, ".*ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+"$") //.*(~201802)$ //.*(?!~ENT~)201802$
     saveLinksHFiles(confs, appParams, ".*(~ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+")$")
+  }
+
+  /**
+    * calculate employees data
+    * */
+
+  def calculateEmployees(data:(String,(Seq[String],Seq[String])), payeData:(String,Array[Option[String]])) = {
+    val (ern,(payeRefs,vatRefs)) = data
+
+
+
   }
 
   def printRecords[T](recs:Array[T], dataStructure:String): Unit = {
@@ -97,12 +108,17 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     printRdd("links record updates rdd joined with existing LUs rdd",joined,"Tuple (String,Tuple(option[Iterable[KVCells]],option[Iterable[KVCells]])")
 
+    /*
+    * updatedExistingLUs - lu rows with all new data and with column link to parent enterprise copied from existing record("p_ENT")
+    * */
     val updatedExistingLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), Some(oldCells))) => HFileRow(key,{newCells ++ oldCells.find(_.column=="p_ENT").map(ernCell => Seq(ernCell)).getOrElse(Seq.empty) })} // existing LUs updated with new cells
 
     printRdd("updatedExistingLUs", updatedExistingLUs, "HFileRow")
 
     val newLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), None)) => HFileRow(key, newCells) }
-
+    /*
+    * existingLinksEnts contains links rows with ent row records with column links to child LU records
+    * */
     val existingLinksEnts: RDD[HFileRow] = joined.collect { case (key, (None, Some(oldCells))) if(key.endsWith(s"ENT~${appconf.TIME_PERIOD}"))=> HFileRow(key, oldCells) }
 
     printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
@@ -154,6 +170,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
 
     val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
     printRdd("newEnts",newEnts,"(String, HFileCell)")
+
+
+
     val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
     printRdd("newLinks",newLinks,"(String, HFileCell)")
 
@@ -161,45 +180,45 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
     val existingEntRdd: RDD[Row] = HBaseDao.readTableWithKeyFilter(confs:Configuration,appconf:AppParams, entTableName, entRegex).map(_.toEntRow)
+
     printRdd("existingEntRdd",existingEntRdd,"Row")
-    val entDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record DF
-    printDF("entDF",entDF)
+    val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
+    printDF("existingEntDF",existingEntDF)
+
+
     val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
     printRdd("luRows",luRows,"Row")
-    val luDF: DataFrame = spark.createDataFrame(luRows,luRowSchema)
-    printDF("luDF",luDF)
+
+    val ernWithPayesAndVats = luRows.collect{
+
+      case row if(row.getStringSeq("PayeRefs").isDefined) => Row(
+        row.getString("ern").get, row.getStringSeq("PayeRefs").get,
+        row.getLongSeq("VatRefs").getOrElse(null)
+      )
+
+    }
+
+    val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
+    printDF("ernWithEmployeesdata",ernWithEmployeesdata)
+
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     printDF("payeDF", payeDF)
-/*    val calculated: DataFrame = finalCalculations(luDF,payeDF,"ubrn")
-    val calc2: DataFrame = calculated.drop(calculated.columns.filterNot(c => Seq("ern","paye_employees","paye_jobs").contains(c)): _*)
 
-    val entWithEmployee: DataFrame = entDF.join(calc2,"ern").coalesce(numOfPartitions)*/
-    val entSqlRows = entDF.rdd.map(df => new GenericRowWithSchema(Array(
-                                                   Try{df.getAs[String]("ern")}.getOrElse(null),
-                                                   Try{df.getAs[String]("idbrref")}.getOrElse(null),
-                                                   Try{df.getAs[String]("name")}.getOrElse(null),
-                                                   Try{df.getAs[String]("tradingstyle")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address1")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address2")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address3")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address4")}.getOrElse(null),
-                                                   Try{df.getAs[String]("address5")}.getOrElse(null),
-                                                   Try{df.getAs[String]("postcode")}.getOrElse(null),
-                                                   Try{df.getAs[String]("legalstatus")}.getOrElse(null),
-                                                   null,
-                                                   null
-                                                   /*Try{df.getAs[Int]("paye_employees")}.map(_.toString).getOrElse(""),
-                                                   Try{df.getAs[Long]("paye_jobs")}.map(_.toString).getOrElse("")*/
-                                                 ),entRowWithEmplDataSchema))
+    val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
+    printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
+
+    val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd //ready to go to rowToEnterprise(_,ern,_)
+    printRdd("completeExistingEnts", completeExistingEnts,"Row")
 
 
-    printRdd("entSqlRows",entSqlRows,"GenericRowWithSchema")
     /**
       * add new + existing enterprises and save to hfile
       * */
+    val exsistingEntsCells: RDD[(String, HFileCell)] = completeExistingEnts.flatMap(row => rowToFullEnterprise(row,appconf))
 
-    val hfileRdd: RDD[(String, HFileCell)] = entSqlRows.flatMap(row => rowToEnterprise(row,appconf))
-    val allEnts: RDD[(String, HFileCell)] = newEnts.union(hfileRdd).coalesce(numOfPartitions)
+    //val hfileRdd: RDD[(String, HFileCell)] = existingEntDF.rdd.flatMap(row => rowToEnterprise(row,appconf))
+
+    val allEnts: RDD[(String, HFileCell)] = newEnts.union(exsistingEntsCells).coalesce(numOfPartitions)
      printRdd("allEnts",allEnts,"(String, HFileCell)")
 
 
@@ -220,7 +239,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper{
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
-    allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+  allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
  }
