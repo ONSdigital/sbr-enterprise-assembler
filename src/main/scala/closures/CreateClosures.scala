@@ -39,7 +39,7 @@ trait CreateClosures {
       s"${v._2.key}${v._2.qualifier}${v._2.kvType}"
     }).cache()
 
-    val collected = sorted.collect()
+    //val collected = sorted.collect()
     sorted.unpersist()
 
     val ready: RDD[(ImmutableBytesWritable, KeyValue)] = sorted.map(data => (new ImmutableBytesWritable(data._1.getBytes()), data._2.toKeyValue))
