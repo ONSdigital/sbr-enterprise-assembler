@@ -118,7 +118,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     // printDF("newRowsDf",newRowsDf)
 
     val pathToPaye = appconf.PATH_TO_PAYE
-    println(s"extracting paye file from path: $pathToPaye")
+    //println(s"extracting paye file from path: $pathToPaye")
 
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
