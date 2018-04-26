@@ -75,9 +75,9 @@ trait WithConversionHelper {
     Seq(
       row.getString("BusinessName").map(bn => createEnterpriseCell(ern, "name", bn, appParams)),
       row.getString("PostCode") map (pc => createEnterpriseCell(ern, "postcode", pc, appParams)),
-      row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
-      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
-      row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
+      row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams))
+      //row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
+      //row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
     ).collect { case Some(v) => v }
 
 /**/
@@ -96,9 +96,9 @@ trait WithConversionHelper {
       row.getString("address4").map(ls => createEnterpriseCell(ern, "address4", ls, appParams)),
       row.getString("address5") map (pc => createEnterpriseCell(ern, "address5", pc, appParams)),
       row.getString("postcode").map(ls => createEnterpriseCell(ern, "postcode", ls, appParams)),
-      row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
-      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
-      row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
+      row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams))
+      //row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
+      //row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
     ).collect { case Some(v) => v }
 }
 
