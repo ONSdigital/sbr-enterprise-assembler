@@ -1,5 +1,6 @@
 package closures
 
+import closures.CreateNewPeriodClosure.Record
 import dao.hbase.HBaseDao
 import dao.hbase.converter.WithConversionHelper
 import global.{AppParams, Configs}
@@ -8,15 +9,16 @@ import model.hfile
 import model.hfile.HFileCell
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import spark.RddLogging
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
+import org.apache.hadoop.hbase.client.Connection
+import spark.RddLogging
+import scala.util.Try
 
 
 
@@ -91,18 +93,18 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => {
       new GenericRowWithSchema(Array(
-        newRow.getAs[String]("BusinessName"),
-        newRow.getAs[String]("CompanyNo"),
-        newRow.getAs[String]("EmploymentBands"),
-        newRow.getAs[Long]("IndustryCode"),
-        newRow.getAs[String]("LegalStatus"),
-        newRow.getAs[Seq[String]]("PayeRefs"),
-        newRow.getAs[String]("PostCode"),
-        newRow.getAs[String]("TradingStatus"),
-        newRow.getAs[String]("Turnover"),
-        newRow.getAs[Long]("UPRN"),
-        newRow.getAs[Seq[Long]]("VatRefs"),
-        newRow.getAs[Long]("id")
+                newRow.getAs[String]("BusinessName"),
+                newRow.getAs[String]("CompanyNo"),
+                newRow.getAs[String]("EmploymentBands"),
+                Try{newRow.getAs[String]("IndustryCode").toLong }.getOrElse(null),
+                newRow.getAs[String]("LegalStatus"),
+                newRow.getAs[Seq[String]]("PayeRefs"),
+                newRow.getAs[String]("PostCode"),
+                newRow.getAs[String]("TradingStatus"),
+                newRow.getAs[String]("Turnover"),
+                newRow.getAs[Long]("UPRN"),
+                newRow.getAs[Seq[Long]]("VatRefs"),
+                newRow.getAs[Long]("id")
       ),parquetRowSchema)
 
 
@@ -176,30 +178,30 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     //val hfileRdd: RDD[(String, HFileCell)] = existingEntDF.rdd.flatMap(row => rowToEnterprise(row,appconf))
 
     val allEnts: RDD[(String, HFileCell)] = newEnts.union(exsistingEntsCells).coalesce(numOfPartitions)
-    printRdd("allEnts",allEnts,"(String, HFileCell)")
+     printRdd("allEnts",allEnts,"(String, HFileCell)")
 
 
 
-    /**
-      * add new + existing links and save to hfile
-      * */
+/**
+  * add new + existing links and save to hfile
+  * */
 
-    val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf))
+  val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf))
 
     printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
-    val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
+  val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
 
     printRdd("allLus",allLus,"(String, HFileCell)")
 
-    allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+  allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
-    allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+  allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
-  }
+ }
 
   private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
     HBaseDao.readEnterprisesWithKeyFilter(confs, appParams, regex)
