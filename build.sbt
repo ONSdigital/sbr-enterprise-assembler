@@ -84,7 +84,7 @@ lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
 lazy val addNewPeriodParams = Array("LINKS", "ons","l",
 "src/main/resources/data/temp/addperiod/links/hfile", "ENT","ons", "d",
 "src/main/resources/data/temp/addperiod/enterprise/hfile",
-"src/main/resources/data/temp/addperiod/sample.parquet",
+"src/main/resources/data/temp/addperiod/sampleCL.parquet",
 "localhost", "2181", "201804","src/main/resources/data/newperiod/newPeriodPaye.csv")
 
 
