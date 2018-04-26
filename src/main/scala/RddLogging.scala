@@ -9,7 +9,7 @@ trait RddLogging {
 
   def printRecords[T](recs:Array[T], dataStructure:String): Unit = {
     println(s" RECORDS of type:$dataStructure \n")
-    if(recs.head.isInstanceOf[Row]) {
+    if(recs.nonEmpty && recs.head.isInstanceOf[Row]) {
       val row = recs.head.asInstanceOf[Row]
       println("  Row schema:")
 
