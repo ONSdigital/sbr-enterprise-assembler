@@ -30,6 +30,7 @@ trait RddLogging {
     df.unpersist()
   }
 
+
   def printRdd[T](name:String,rdd:RDD[T],`type`:String)(implicit spark:SparkSession) = {
     rdd.cache()
     print(s"START>> check for errors rdd $name")

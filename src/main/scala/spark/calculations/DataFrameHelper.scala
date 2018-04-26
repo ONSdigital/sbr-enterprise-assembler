@@ -4,16 +4,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
-trait DataFrameHelper {
-
-  def checkDF(name:String,df:DataFrame) = {
-    println(s"START>> Info for $name df:\n")
-    df.printSchema()
-    df.cache()
-    df.collect().foreach(println)
-    df.unpersist()
-    println(s"END>> Info for $name df\n")
-  }
+trait DataFrameHelper /*with RddLogging*/{
 
   val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
 
@@ -30,7 +21,7 @@ trait DataFrameHelper {
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
-    checkDF("df joining paye and new period data",df)
+    //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val avgDf = getEmployeeCount(df, idColumnName)
@@ -45,12 +36,12 @@ trait DataFrameHelper {
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
-    checkDF("df joining paye and new period data",df)
+    //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val avgDf = getEmployeeCount(df, idColumnName)
 
-    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs").coalesce(partitionsCount)
+    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(partitionsCount).select(idColumnName,"paye_employees","paye_jobs")
     //done.printSchema()
     done
   }
@@ -60,7 +51,7 @@ trait DataFrameHelper {
       .withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
       .withColumn("payeref", explode_outer(parquetDF.col("PayeRefs")))
 
-    checkDF("flattened DataFrame", res)
+    //checkDF("flattened DataFrame", res)
     res
   }
 
@@ -70,7 +61,7 @@ trait DataFrameHelper {
       .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
       .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
       .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
-    checkDF("int Converedt DataFrame", res)
+    //checkDF("int Converedt DataFrame", res)
     res
   }
 
