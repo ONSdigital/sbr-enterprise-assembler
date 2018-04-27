@@ -163,10 +163,12 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
+    print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
+
     val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
 
-    val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd //ready to go to rowToEnterprise(_,ern,_)
+    val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
     // printRdd("completeExistingEnts", completeExistingEnts,"Row")
 
 
