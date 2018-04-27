@@ -20,13 +20,13 @@ trait DataFrameHelper /*with RddLogging*/{
     val latest = "dec_jobs"
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")//.coalesce(partitionsCount)
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val avgDf = getEmployeeCount(df, idColumnName)
 
-    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(partitionsCount)
+    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName)//.coalesce(partitionsCount)
     //done.printSchema()
     done
   }
@@ -35,15 +35,15 @@ trait DataFrameHelper /*with RddLogging*/{
     val latest = "dec_jobs"
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")//.coalesce(partitionsCount)
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val avgDf = getEmployeeCount(df, idColumnName)
 
-    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(partitionsCount).select(idColumnName,"paye_employees","paye_jobs")
+    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs")
     //done.printSchema()
-    done
+    done.coalesce(partitionsCount)
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {

@@ -122,14 +122,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
 
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
-    import org.apache.spark.sql.functions
-    val newEntTree: RDD[hfile.Tables] = /*finalCalculations(newRowsDf, payeDf)*/newRowsDf.withColumn(
-      "paye_employees",functions.lit("")
 
-    ).withColumn(
-      "paye_jobs",functions.lit("")
-
-    ).rdd.map(row => toEnterpriseRecords(row,appconf))
+    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDf).rdd.map(row => toEnterpriseRecords(row,appconf))
 
     // printRdd("newEntTree",newEntTree,"hfile.Tables")
 
@@ -169,7 +163,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
-    val ernPayeCalculatedDF: DataFrame = ernWithEmployeesdata//finalCalculationsEnt(ernWithEmployeesdata,payeDF)
+    val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
 
     val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd //ready to go to rowToEnterprise(_,ern,_)
