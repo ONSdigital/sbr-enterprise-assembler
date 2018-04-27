@@ -46,7 +46,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
     // printDF("update parquet Schema:",parquetDF)
 
-    //set period to previous to make join possible
+
     val parquetRows: RDD[Row] = parquetDF.rdd
     val linksRecords: RDD[(String, HFileCell)] = parquetRows.flatMap(row => toLinksRefreshRecords(row,appconf))
     val updatesRdd: RDD[Record] = linksRecords.groupByKey().map(v => (v._1,v._2.map(kv => KVCell[String,String](kv.qualifier,kv.value))))//get LINKS updates from input parquet
