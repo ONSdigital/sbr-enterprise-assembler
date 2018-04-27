@@ -42,8 +42,8 @@ trait DataFrameHelper /*with RddLogging*/{
     val avgDf = getEmployeeCount(df, idColumnName)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs")
-    //done.printSchema()
-    done.coalesce(partitionsCount)
+    print("finalCalculationsEnt. NUM OF PATITIONS: "+done.rdd.getNumPartitions)
+    done//.coalesce(partitionsCount)
   }
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
