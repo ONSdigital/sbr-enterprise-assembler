@@ -61,7 +61,7 @@ trait DataFrameHelper /*with RddLogging*/{
       .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
       .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
       .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
-    //checkDF("int Converedt DataFrame", res)
+    //checkDF("int Converted DataFrame", res)
     //print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:${payeFrame.rdd.getNumPartitions}, after join: ${res.rdd.getNumPartitions}")
     res
   }
@@ -77,7 +77,8 @@ trait DataFrameHelper /*with RddLogging*/{
 
     val dfQ = payeDF.join(idEmp,idColumnName)
     val res = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
-    print(s"getEmployeeCount.  NUM OF PARTITIONS WAS:$currentPartitionsCount, after join: ${res.rdd.getNumPartitions}")
+/*    print(s"getEmployeeCount.  NUM OF PARTITIONS WAS:$currentPartitionsCount, after join: ${res.rdd.getNumPartitions} \n")
+    res.show()*/
     res
   }
 
