@@ -41,7 +41,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val avgDf = getEmployeeCount(df,idColumnName).coalesce(partitionsCount)
+    val avgDf = getEmployeeCount(df,idColumnName)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs")
     //print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:$partitionsCount, after join: "+done.rdd.getNumPartitions)
@@ -69,15 +69,16 @@ trait DataFrameHelper/* extends RddLogging*/{
   }
 
   private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
+    val numOfPartitions = payeDF.rdd.getNumPartitions
     val joined = payeDF
-      .join(payeDF.groupBy("PayeRefs").sum("june_jobs"),"PayeRefs")
-      .join(payeDF.groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs")
-      .join(payeDF.groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs")
-      .join(payeDF.groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs")
+      .join(payeDF.groupBy("PayeRefs").sum("june_jobs"),"PayeRefs").coalesce(numOfPartitions)
+      .join(payeDF.groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs").coalesce(numOfPartitions)
+      .join(payeDF.groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs").coalesce(numOfPartitions)
+      .join(payeDF.groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs").coalesce(numOfPartitions)
     joined.dropDuplicates("PayeRefs")
 
-    val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
-    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees"), idColumnName)
+    val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*))).coalesce(numOfPartitions)
+    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees"), idColumnName).coalesce(numOfPartitions)
   }
 
 }
