@@ -24,7 +24,7 @@ trait DataFrameHelper /*with RddLogging*/{
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val avgDf = getEmployeeCount(df, idColumnName)
+    val avgDf = getEmployeeCount(df)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName)//.coalesce(partitionsCount)
     //done.printSchema()
@@ -39,7 +39,7 @@ trait DataFrameHelper /*with RddLogging*/{
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val avgDf = getEmployeeCount(df, idColumnName).coalesce(partitionsCount)
+    val avgDf = getEmployeeCount(df).coalesce(partitionsCount)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs")
     //print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:$partitionsCount, after join: "+done.rdd.getNumPartitions)
@@ -66,20 +66,16 @@ trait DataFrameHelper /*with RddLogging*/{
     res
   }
 
-  private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
+  private def getEmployeeCount(payeDF: DataFrame): DataFrame = {
+    val joined = payeDF
+      .join(payeDF.groupBy("PayeRefs").sum("june_jobs"),"PayeRefs")
+      .join(payeDF.groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs")
+      .join(payeDF.groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs")
+      .join(payeDF.groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs")
+    joined.dropDuplicates("PayeRefs")
 
-    val currentPartitionsCount = payeDF.rdd.getNumPartitions
-
-    val idEmp = payeDF.groupBy(idColumnName).sum("june_jobs")
-      .join(payeDF.groupBy(idColumnName).sum("sept_jobs"), idColumnName)
-      .join(payeDF.groupBy(idColumnName).sum("dec_jobs"), idColumnName)
-      .join(payeDF.groupBy(idColumnName).sum("mar_jobs"), idColumnName)
-
-    val dfQ = payeDF.join(idEmp,idColumnName)
-    val res = dfQ.withColumn("paye_employees", avg(array(cols.map(s => dfQ.apply(s)):_*)))
-/*    print(s"getEmployeeCount.  NUM OF PARTITIONS WAS:$currentPartitionsCount, after join: ${res.rdd.getNumPartitions} \n")
-    res.show()*/
-    res
+    val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
+    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy("ern").agg(sum("id_paye_employees") as "paye_employees"))
   }
 
 }
