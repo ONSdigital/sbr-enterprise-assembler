@@ -24,7 +24,7 @@ trait DataFrameHelper /*with RddLogging*/{
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val avgDf = getEmployeeCount(df)
+    val avgDf = getEmployeeCount(df, idColumnName)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName)//.coalesce(partitionsCount)
     //done.printSchema()
@@ -39,7 +39,7 @@ trait DataFrameHelper /*with RddLogging*/{
     //checkDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
-    val avgDf = getEmployeeCount(df).coalesce(partitionsCount)
+    val avgDf = getEmployeeCount(df,idColumnName).coalesce(partitionsCount)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs")
     //print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:$partitionsCount, after join: "+done.rdd.getNumPartitions)
@@ -66,7 +66,7 @@ trait DataFrameHelper /*with RddLogging*/{
     res
   }
 
-  private def getEmployeeCount(payeDF: DataFrame): DataFrame = {
+  private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
     val joined = payeDF
       .join(payeDF.groupBy("PayeRefs").sum("june_jobs"),"PayeRefs")
       .join(payeDF.groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs")
@@ -75,7 +75,7 @@ trait DataFrameHelper /*with RddLogging*/{
     joined.dropDuplicates("PayeRefs")
 
     val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
-    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy("ern").agg(sum("id_paye_employees") as "paye_employees"), "ern")
+    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees"), idColumnName)
   }
 
 }
