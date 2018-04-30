@@ -3,8 +3,9 @@ package spark.calculations
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import spark.RddLogging
 
-trait DataFrameHelper /*with RddLogging*/{
+trait DataFrameHelper/* extends RddLogging*/{
 
   val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
 
@@ -20,14 +21,15 @@ trait DataFrameHelper /*with RddLogging*/{
     val latest = "dec_jobs"
     val numOfPartitions = parquetDF.rdd.getNumPartitions
 
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")//.coalesce(partitionsCount)
-    //checkDF("df joining paye and new period data",df)
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(numOfPartitions)
+    // printDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val avgDf = getEmployeeCount(df, idColumnName)
+    // printDF("avgDf",avgDf)
 
-    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName)//.coalesce(partitionsCount)
-    //done.printSchema()
+    val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(numOfPartitions)
+    //printRddOfRows("done",done)
     done
   }
 
