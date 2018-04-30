@@ -1,6 +1,5 @@
 package closures
 
-import closures.CreateNewPeriodClosure.Record
 import dao.hbase.HBaseDao
 import dao.hbase.converter.WithConversionHelper
 import global.{AppParams, Configs}
@@ -9,6 +8,7 @@ import model.hfile
 import model.hfile.HFileCell
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -16,8 +16,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
-import org.apache.hadoop.hbase.client.Connection
-import spark.RddLogging
+
 import scala.util.Try
 
 
