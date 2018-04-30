@@ -26,7 +26,7 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
     val appArgs = appconf
 
-    val parquetRDD: RDD[hfile.Tables] = finalCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.map(row => toEnterpriseRecords(row,appArgs)).cache()
+    val parquetRDD: RDD[hfile.Tables] = finalCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.map(row => toNewEnterpriseRecords(row,appArgs)).cache()
 
         parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
           .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))

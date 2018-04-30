@@ -48,6 +48,11 @@ trait WithConversionHelper {
 
   def toEnterpriseRecords(row: Row, appParams: AppParams): Tables = {
     val ern = generateErn
+    Tables(rowToFullEnterprise(row, appParams, ern), rowToLinks(row, ern, appParams))
+  }
+
+  def toNewEnterpriseRecords(row: Row, appParams: AppParams): Tables = {
+    val ern = generateErn
     Tables(rowToEnterprise(row, ern, appParams), rowToLinks(row, ern, appParams))
   }
 
@@ -71,7 +76,7 @@ trait WithConversionHelper {
   }
 
 
-  def rowToEnterprise(row: Row, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseCell(ern, "ern", ern, appParams), createEnterpriseCell(ern, "idbrref", "9999999999", appParams)) ++
+  def rowToEnterprise(row: Row, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = Seq(createEnterpriseCell(ern, "ern", ern, appParams), createEnterpriseCell(ern, "entref", "9999999999", appParams)) ++
     Seq(
       row.getString("BusinessName").map(bn => createEnterpriseCell(ern, "name", bn, appParams)),
       row.getString("PostCode") map (pc => createEnterpriseCell(ern, "postcode", pc, appParams)),
@@ -81,25 +86,32 @@ trait WithConversionHelper {
     ).collect { case Some(v) => v }
 
 /**/
-  def rowToFullEnterprise(row: Row, appParams: AppParams): Seq[(String, HFileCell)] = {
-
-    val ern = row.getString("ern").get //must be there
+  def rowToFullEnterprise(row: Row, appParams: AppParams, ern:String): Seq[(String, HFileCell)] = {
 
     Seq(createEnterpriseCell(ern, "ern", ern, appParams)) ++
     Seq(
-      row.getString("idbrref").map(bn => createEnterpriseCell(ern, "entref", bn, appParams)),
-      row.getString("name") map (pc => createEnterpriseCell(ern, "name", pc, appParams)),
+      row.getString("entref").map(ref => createEnterpriseCell(ern, "entref", ref, appParams)),
+      row.getString("name") map (name => createEnterpriseCell(ern, "name", name, appParams)),
       row.getString("tradingstyle").map(ls => createEnterpriseCell(ern, "tradingstyle", ls, appParams)),
-      row.getString("address1") map (pc => createEnterpriseCell(ern, "address1", pc, appParams)),
-      row.getString("address2").map(ls => createEnterpriseCell(ern, "address2", ls, appParams)),
-      row.getString("address3") map (pc => createEnterpriseCell(ern, "address3", pc, appParams)),
-      row.getString("address4").map(ls => createEnterpriseCell(ern, "address4", ls, appParams)),
-      row.getString("address5") map (pc => createEnterpriseCell(ern, "address5", pc, appParams)),
-      row.getString("postcode").map(ls => createEnterpriseCell(ern, "postcode", ls, appParams)),
+      row.getString("address1") map (a1 => createEnterpriseCell(ern, "address1", a1, appParams)),
+      row.getString("address2").map(a2 => createEnterpriseCell(ern, "address2", a2, appParams)),
+      row.getString("address3") map (a3 => createEnterpriseCell(ern, "address3", a3, appParams)),
+      row.getString("address4").map(a4 => createEnterpriseCell(ern, "address4", a4, appParams)),
+      row.getString("address5") map (a5 => createEnterpriseCell(ern, "address5", a5, appParams)),
+      row.getString("postcode").map(pc => createEnterpriseCell(ern, "postcode", pc, appParams)),
+      row.getString("sic07").map(sic => createEnterpriseCell(ern, "sic07", sic, appParams)),
       row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
       row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
     ).collect { case Some(v) => v }
+}
+
+/**/
+  def rowToFullEnterprise(row: Row, appParams: AppParams): Seq[(String, HFileCell)] = {
+    val ern = row.getString("ern").get //must be there
+
+    Seq(createEnterpriseCell(ern, "ern", ern, appParams)) ++
+    rowToFullEnterprise(row,appParams,ern)
 }
 
 

@@ -41,7 +41,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
      import spark.extensions.sql._
      new GenericRowWithSchema(Array(
        getCellValue("ern"),
-       getCellValue("idbrref"),
+       getCellValue("entref"),
        getCellValue("name"),
        getCellValue("tradingstyle"),
        getCellValue("address1"),
@@ -50,7 +50,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("address4"),
        getCellValue("address5"),
        getCellValue("postcode"),
-       getCellValue("status")
+       getCellValue("sic07"),
+       getCellValue("legalstatus")
        ),entRowSchema)
    }
   

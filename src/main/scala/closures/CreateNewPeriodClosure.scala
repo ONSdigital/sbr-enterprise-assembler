@@ -14,6 +14,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import spark.RddLogging
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
 
@@ -110,7 +111,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     } }
 
 
-    // printRdd("newLUParquetRows",newLUParquetRows,"Row")
+    printRddOfRows("newLUParquetRows",newLUParquetRows)
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
@@ -122,7 +123,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
 
-    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDf).rdd.map(row => toEnterpriseRecords(row,appconf))
+    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDf).rdd.map(row => toNewEnterpriseRecords(row,appconf))
 
     // printRdd("newEntTree",newEntTree,"hfile.Tables")
 
@@ -139,22 +140,25 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
     val existingEntRdd: RDD[Row] = HBaseDao.readTableWithKeyFilter(confs:Configuration,appconf:AppParams, entTableName, entRegex).map(_.toEntRow)
 
-    // printRdd("existingEntRdd",existingEntRdd,"Row")
+    printRddOfRows("existingEntRdd",existingEntRdd)
     val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
     // printDF("existingEntDF",existingEntDF)
 
 
     val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
-    // printRdd("luRows",luRows,"Row")
+    printRddOfRows("luRows",luRows)
 
-    val ernWithPayesAndVats = luRows.collect{
+    val ernWithPayesAndVats: RDD[Row] = luRows.collect{
 
       case row if(row.getStringSeq("PayeRefs").isDefined) => Row(
-        row.getString("ern").get, row.getStringSeq("PayeRefs").get,
+        row.getString("ern").get,
+        row.getStringSeq("PayeRefs").get,
         row.getLongSeq("VatRefs").getOrElse(null)
       )
 
     }
+
+    printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
 
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
     // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
