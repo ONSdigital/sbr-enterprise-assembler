@@ -75,7 +75,7 @@ trait DataFrameHelper /*with RddLogging*/{
     joined.dropDuplicates("PayeRefs")
 
     val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
-    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy("ern").agg(sum("id_paye_employees") as "paye_employees"))
+    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy("ern").agg(sum("id_paye_employees") as "paye_employees"), "ern")
   }
 
 }
