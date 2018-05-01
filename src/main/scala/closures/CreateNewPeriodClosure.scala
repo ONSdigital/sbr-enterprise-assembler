@@ -60,7 +60,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val luRegex = ".*(ENT|LEU)~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val existingLuRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
-    // printRdd("existingLuRdd", updatesRdd,"Tuple (String,Iterable[KVCells])")
+    // printRdd("existingLuRdd", existingLuRdd,"Tuple (String,Iterable[KVCells])")
 
     val numOfPartitions = updatesRdd.getNumPartitions
 
@@ -119,7 +119,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     // printDF("newRowsDf",newRowsDf)
 
     val pathToPaye = appconf.PATH_TO_PAYE
-    //println(s"extracting paye file from path: $pathToPaye")
+    //// println(s"extracting paye file from path: $pathToPaye")
 
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
@@ -168,7 +168,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
-    //print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
+    //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
 
     val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
