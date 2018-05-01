@@ -23,7 +23,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
+object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -76,11 +76,12 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     // printRdd("updatedExistingLUs", updatedExistingLUs, "HFileRow")
 
     val newLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), None)) => HFileRow(key, newCells) }
+    printCount(newLUs,"new LUs count: ")
     /*
     * existingLinksEnts contains links rows with ent row records with column links to child LU records
     * */
     val existingLinksEnts: RDD[HFileRow] = joined.collect { case (key, (None, Some(oldCells))) if(key.endsWith(s"ENT~${appconf.TIME_PERIOD}"))=> HFileRow(key, oldCells) }
-
+    printCount(existingLinksEnts,"existing Enterprises: ")
     // printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
 
     //new Records

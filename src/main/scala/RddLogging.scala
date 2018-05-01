@@ -7,6 +7,12 @@ import scala.util.Try
 
 trait RddLogging {
 
+  def printCount[T](rdd:RDD[T], messagePrefix:String) = {
+    rdd.cache()
+    println(messagePrefix+rdd.count)
+    rdd.unpersist()
+  }
+
   def printRecords[T](recs:Array[T], dataStructure:String): Unit = {
     println(s" RECORDS of type:$dataStructure \n")
     if(recs.nonEmpty && recs.head.isInstanceOf[Row]) {
