@@ -29,7 +29,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     // printDF("avgDf",avgDf)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(numOfPartitions)
-    //printRddOfRows("done",done)
+    //// printRddOfRows("done",done)
     done
   }
 
@@ -38,13 +38,13 @@ trait DataFrameHelper/* extends RddLogging*/{
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
     val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
-    //checkDF("df joining paye and new period data",df)
+    // printDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
     val avgDf = getEmployeeCount(df,idColumnName)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).select(idColumnName,"paye_employees","paye_jobs")
-    //print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:$partitionsCount, after join: "+done.rdd.getNumPartitions)
+    // print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:$partitionsCount, after join: "+done.rdd.getNumPartitions)
     done//.coalesce(partitionsCount)
   }
 
@@ -53,7 +53,7 @@ trait DataFrameHelper/* extends RddLogging*/{
       .withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
       .withColumn("payeref", explode_outer(parquetDF.col("PayeRefs")))
 
-    //checkDF("flattened DataFrame", res)
+    // printDF("flattened DataFrame", res)
     res
   }
 
@@ -63,8 +63,8 @@ trait DataFrameHelper/* extends RddLogging*/{
       .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
       .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
       .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
-    //checkDF("int Converted DataFrame", res)
-    //print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:${payeFrame.rdd.getNumPartitions}, after join: ${res.rdd.getNumPartitions}")
+    // printDF("int Converted DataFrame", res)
+    // print(s"finalCalculationsEnt.  NUM OF PARTITIONS WAS:${payeFrame.rdd.getNumPartitions}, after join: ${res.rdd.getNumPartitions}")
     res
   }
 
