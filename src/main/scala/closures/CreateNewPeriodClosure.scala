@@ -111,14 +111,14 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     } }
 
 
-    printRddOfRows("newLUParquetRows",newLUParquetRows)
+    // printRddOfRows("newLUParquetRows",newLUParquetRows)
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
     // printDF("newRowsDf",newRowsDf)
 
     val pathToPaye = appconf.PATH_TO_PAYE
-    //println(s"extracting paye file from path: $pathToPaye")
+    //// println(s"extracting paye file from path: $pathToPaye")
 
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
@@ -140,13 +140,13 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
     val existingEntRdd: RDD[Row] = HBaseDao.readTableWithKeyFilter(confs:Configuration,appconf:AppParams, entTableName, entRegex).map(_.toEntRow)
 
-    printRddOfRows("existingEntRdd",existingEntRdd)
+    // printRddOfRows("existingEntRdd",existingEntRdd)
     val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
     // printDF("existingEntDF",existingEntDF)
 
 
     val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
-    printRddOfRows("luRows",luRows)
+    // printRddOfRows("luRows",luRows)
 
     val ernWithPayesAndVats: RDD[Row] = luRows.collect{
 
@@ -158,7 +158,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
 
     }
 
-    printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
+    // printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
 
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
     // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
@@ -166,7 +166,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
-    //print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
+    //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
 
     val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
