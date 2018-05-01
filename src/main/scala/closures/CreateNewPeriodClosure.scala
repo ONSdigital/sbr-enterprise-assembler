@@ -112,7 +112,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     } }
 
 
-    printRddOfRows("newLUParquetRows",newLUParquetRows)
+    // printRddOfRows("newLUParquetRows",newLUParquetRows)
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
