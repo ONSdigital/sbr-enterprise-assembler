@@ -8,9 +8,12 @@ import service._
 object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefreshService */with AddNewPeriodDataService {
 
   def main(args: Array[String]) {
+    println("ARGS:")
+    args.foreach(println)
+    println("="*10)
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
-    val appParams = args.take(9)++args.takeRight(2)
+    val appParams = args.take(9)++args.takeRight(3)
     //createNewPeriodParquet(AppParams(appParams))
     loadNewPeriodData(AppParams(appParams))
     //createNewPeriodParquet(AppParams(appParams))
