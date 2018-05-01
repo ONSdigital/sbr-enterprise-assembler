@@ -11,9 +11,9 @@ import spark.SparkSessionManager
 
 trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionManager{
 
-  def createNewPeriodParquet(appconf:AppParams) = withSpark{ implicit ss:SparkSession => ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)}
+  def createNewPeriodParquet(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession => ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)}
 
-  def loadNewPeriodData(appconf:AppParams) = withSpark{ implicit ss:SparkSession =>
+  def loadNewPeriodData(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
     withHbaseConnection{implicit con:Connection =>
                                  CreateNewPeriodClosure.addNewPeriodData(appconf)
                                  HBaseDao.loadLinksHFile(con,appconf)
