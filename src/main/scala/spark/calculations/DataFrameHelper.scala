@@ -21,7 +21,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     val latest = "dec_jobs"
     val numOfPartitions = parquetDF.rdd.getNumPartitions
 
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(numOfPartitions)
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="leftOuter").coalesce(numOfPartitions)
     // printDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
@@ -37,7 +37,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     val latest = "dec_jobs"
     val partitionsCount = parquetDF.rdd.getNumPartitions
 
-    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer").coalesce(partitionsCount)
+    val df = flattenDataFrame(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="leftOuter").coalesce(partitionsCount)
     // printDF("df joining paye and new period data",df)
     val sumDf = df.groupBy(idColumnName).agg(sum(latest) as "paye_jobs")
 
