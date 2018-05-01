@@ -15,7 +15,8 @@ case class AppParams(
                         PATH_TO_ENTERPRISE_HFILE:String,
                         PATH_TO_PARQUET:String,
                         TIME_PERIOD:String,
-                        PATH_TO_PAYE:String
+                        PATH_TO_PAYE:String,
+                        ENV:String
                    ){
 
   val PATH_TO_LINKS_HFILE_DELETE = PATH_TO_LINKS_HFILE+"/cleanups"
@@ -38,7 +39,8 @@ object AppParams{
                                                   args(7),
                                                   args(8),
                                                   args(9),
-                                                  args(10)
+                                                  args(10),
+                                                  args(11)
                                                 )
   
 }
