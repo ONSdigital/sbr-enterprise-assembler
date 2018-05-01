@@ -29,7 +29,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     // printDF("avgDf",avgDf)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(numOfPartitions)
-    //// printRddOfRows("done",done)
+    // printRddOfRows("done",done)
     done
   }
 
