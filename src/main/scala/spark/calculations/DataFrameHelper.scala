@@ -78,7 +78,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     joined.dropDuplicates("PayeRefs")
 
     val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*))).coalesce(numOfPartitions)
-    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees"), idColumnName).coalesce(numOfPartitions)
+    payeDF.join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees"), Seq(idColumnName), joinType = "leftOuter").coalesce(numOfPartitions)
   }
 
 }
