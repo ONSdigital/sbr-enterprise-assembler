@@ -29,7 +29,7 @@ trait DataFrameHelper/* extends RddLogging*/{
     // printDF("avgDf",avgDf)
 
     val done: Dataset[Row] = avgDf.dropDuplicates(Seq(idColumnName)).join(sumDf,idColumnName).coalesce(numOfPartitions)
-    // printRddOfRows("done",done)
+    /*printRddOfRows("done",done)*/
     done
   }
 
@@ -50,7 +50,7 @@ trait DataFrameHelper/* extends RddLogging*/{
 
   private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
     val res = parquetDF
-      .withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
+      //.withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
       .withColumn("payeref", explode_outer(parquetDF.col("PayeRefs")))
 
     // printDF("flattened DataFrame", res)
