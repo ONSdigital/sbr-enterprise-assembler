@@ -18,6 +18,9 @@ case class AppParams(
                         PATH_TO_PAYE:String,
                         ENV:String
                    ){
+  val PATH_TO_LINK_DELETE_PERIOD_HFILE = PATH_TO_LINKS_HFILE+"/delete"
+  val PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE = PATH_TO_ENTERPRISE_HFILE+"/delete"
+
 
   val PATH_TO_LINKS_HFILE_DELETE = PATH_TO_LINKS_HFILE+"/cleanups"
   val PATH_TO_LINKS_HFILE_UPDATE = PATH_TO_LINKS_HFILE + "/updates"

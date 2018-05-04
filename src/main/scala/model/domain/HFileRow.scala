@@ -90,6 +90,19 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
   }}
 
+  def toDeletePeriodHFileEntries(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] =
+        Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cells.head.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
+
+
+  def toDeleteHFile(colFamily:String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
+    val excludedColumns = Seq("p_ENT")
+    if(key.contains("~LEU~")){ cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>
+      Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)))
+    )}else{
+    val cell = cells.head
+    Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
+  }}
+
 
   def toDeleteHFileRows(colFamily:String): Iterable[(String, hfile.HFileCell)] = {
     val excludedColumns = Seq("p_ENT")
