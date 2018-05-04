@@ -5,7 +5,7 @@ import global.{AppParams, Configs}
 import service._
 
 
-object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefreshService */with AddNewPeriodDataService {
+object AssemblerMain extends DeleteDataService with EnterpriseAssemblerService /*with EnterpriseRefreshService with AddNewPeriodDataService*/ {
 
   def main(args: Array[String]) {
     println("ARGS:")
@@ -17,8 +17,9 @@ object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefresh
     println("appParams:")
     appParams.foreach(println)
     println("="*10)
+    //deletePeriod(AppParams(appParams))
     //createNewPeriodParquet(AppParams(appParams))
-    loadNewPeriodData(AppParams(appParams))
+    //loadNewPeriodData(AppParams(appParams))
     //createNewPeriodParquet(AppParams(appParams))
     //createRefreshParquet(AppParams(appParams))
     //loadRefreshFromHFiles(AppParams(appParams))
@@ -38,7 +39,7 @@ object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefresh
 
     //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))
-    //loadFromHFile(AppParams(appParams))
+    loadFromHFile(AppParams(appParams))
 
   }
 
