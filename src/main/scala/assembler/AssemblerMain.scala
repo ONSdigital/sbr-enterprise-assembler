@@ -17,6 +17,7 @@ object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefresh
     println("appParams:")
     appParams.foreach(println)
     println("="*10)
+
     //createNewPeriodParquet(AppParams(appParams))
     loadNewPeriodData(AppParams(appParams))
     //createNewPeriodParquet(AppParams(appParams))
