@@ -27,12 +27,12 @@ trait DataFrameHelper/* extends RddLogging*/{
   }
 
   def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName: String = "id") : DataFrame = {
-    val numOfPartitions = parquetDF.rdd.getNumPartitions
-    val entPaye = flattenPaye(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="outer")
+    val partitionsCount = parquetDF.rdd.getNumPartitions
+    val entPaye = flattenPaye(parquetDF).join(intConvert(payeDF), Seq("payeref"), joinType="leftOuter").coalesce(partitionsCount)
     val employees = getEmployeeCount(entPaye, idColumnName)
     val jobs = entPaye.groupBy(idColumnName).agg(sum("dec_jobs") as "paye_jobs")
 
-    val entVat = flattenVat(parquetDF).join(vatDF, Seq("vatref"), joinType="outer")
+    val entVat = flattenVat(parquetDF).join(vatDF, Seq("vatref"), joinType="leftOuter").coalesce(partitionsCount)
     val prefixDF = entVat.withColumn("vatref9", prefix(col("vatref")))
     val startDF = prefixDF.join(prefixDF.groupBy("vatref9").agg(countDistinct(idColumnName)as "unique").filter(col("vatref9").isNotNull), Seq("vatref9"))
 
@@ -41,22 +41,13 @@ trait DataFrameHelper/* extends RddLogging*/{
     val groupTurnover = getGroupTurnover(startDF, getEmployeeCount(entPaye, idColumnName), idColumnName)
 
     parquetDF
-      .join(containedTurnover,Seq(idColumnName), joinType="outer").coalesce(numOfPartitions)
-      .join(standardVatTurnover,Seq(idColumnName),joinType = "outer").coalesce(numOfPartitions)
-      .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName),joinType = "outer").coalesce(numOfPartitions)
-      .join(employees, idColumnName).coalesce(numOfPartitions)
-      .join(jobs, idColumnName).coalesce(numOfPartitions)
+      .join(containedTurnover,Seq(idColumnName), joinType="outer").coalesce(partitionsCount)
+      .join(standardVatTurnover,Seq(idColumnName),joinType = "outer").coalesce(partitionsCount)
+      .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName),joinType = "outer")
+      .join(employees, idColumnName).coalesce(partitionsCount)
+      .join(jobs, idColumnName).coalesce(partitionsCount)
       .withColumn("total_turnover", List(coalesce(col("temp_standard_vat_turnover"), lit(0)),coalesce(col("temp_contained_rep_vat_turnover"), lit(0)),coalesce(col("apportion_turnover"), lit(0))).reduce(_+_))
       .dropDuplicates(idColumnName,"apportion_turnover")
-  }
-
-  private def flattenDataFrame(parquetDF:DataFrame): DataFrame = {
-    val res = parquetDF
-      //.withColumn("vatref", explode_outer(parquetDF.col("VatRefs")))
-      .withColumn("payeref", explode_outer(parquetDF.col("PayeRefs")))
-
-    // printDF("flattened DataFrame", res)
-    res
   }
 
   private def flattenVat(parquetDF: DataFrame): DataFrame = {
@@ -81,19 +72,22 @@ trait DataFrameHelper/* extends RddLogging*/{
   }
 
   private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
-    val numOfPartitions = payeDF.rdd.getNumPartitions
+    val partitionsCount = payeDF.rdd.getNumPartitions
     val joined = payeDF
-      .join(payeDF.groupBy("PayeRefs").sum("june_jobs"),"PayeRefs").coalesce(numOfPartitions)
-      .join(payeDF.groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs").coalesce(numOfPartitions)
-      .join(payeDF.groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs").coalesce(numOfPartitions)
-      .join(payeDF.groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs").coalesce(numOfPartitions)
+      .join(payeDF.groupBy("PayeRefs").sum("june_jobs"),"PayeRefs").coalesce(partitionsCount)
+      .join(payeDF.groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs").coalesce(partitionsCount)
+      .join(payeDF.groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs").coalesce(partitionsCount)
+      .join(payeDF.groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs").coalesce(partitionsCount)
     joined.dropDuplicates("PayeRefs")
 
-    val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
+    val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*))).coalesce(partitionsCount)
 
     payeDF
-      .join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees"), Seq(idColumnName), joinType = "outer")
+      .join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName)
+        .agg(sum("id_paye_employees") as "paye_employees"), Seq(idColumnName), joinType = "outer")
       .dropDuplicates(idColumnName).select(idColumnName,"paye_employees")
+      .coalesce(partitionsCount)
+
   }
 
   private def getGroupTurnover(vatDF: DataFrame, empCount: DataFrame, idColumnName: String): DataFrame = {
