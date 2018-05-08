@@ -17,7 +17,7 @@ object AssemblerMain extends DeleteDataService with EnterpriseAssemblerService /
     println("appParams:")
     appParams.foreach(println)
     println("="*10)
-    //deletePeriod(AppParams(appParams))
+    deletePeriod(AppParams(appParams))
     //createNewPeriodParquet(AppParams(appParams))
     //loadNewPeriodData(AppParams(appParams))
     //createNewPeriodParquet(AppParams(appParams))
@@ -39,7 +39,7 @@ object AssemblerMain extends DeleteDataService with EnterpriseAssemblerService /
 
     //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))
-    loadFromHFile(AppParams(appParams))
+    //loadFromHFile(AppParams(appParams))
 
   }
 
