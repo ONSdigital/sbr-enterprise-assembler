@@ -1,7 +1,7 @@
 package global
 
 /**
-  * args sample:  LINKS ons l src/main/resources/data/links/hfile ENT ons d src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802 src/main/resources/data/smallPaye.csv
+  * args sample:  LINKS ons l src/main/resources/data/links/hfile ENT ons d src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802 src/main/resources/data/smallPaye.csv src/main/resource/data/smallVat.csv
   * args types:   linksTableName linksNameSpace linksTablefamily linksHfilePath enterpriseTableName enterpriseNameSpace enterpriseTableFamily enterpriseHFilePath parquetFilePath quorumHost quorumPort timePeriod payeCsvPath
   */
 case class AppParams(
@@ -16,6 +16,7 @@ case class AppParams(
                         PATH_TO_PARQUET:String,
                         TIME_PERIOD:String,
                         PATH_TO_PAYE:String,
+                        PATH_TO_VAT:String,
                         ENV:String
                    ){
 
@@ -40,7 +41,8 @@ object AppParams{
                                                   args(8),
                                                   args(9),
                                                   args(10),
-                                                  args(11)
+                                                  args(11),
+                                                  args(12)
                                                 )
   
 }
