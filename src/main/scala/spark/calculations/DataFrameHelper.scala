@@ -23,7 +23,7 @@ trait DataFrameHelper/* extends RddLogging*/{
 
   def adminCalculationsEnt(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "ern") : DataFrame = {
     adminCalculations(parquetDF, payeDF, vatDF, idColumnName)
-      .select(idColumnName,"paye_employees","paye_jobs","total)turnover","apportion_turnover","temp_contained_rep_vat_turnover", "temp_standard_vat_turnover")
+      .select(idColumnName,"paye_employees","paye_jobs","total_turnover","apportion_turnover","temp_contained_rep_vat_turnover", "temp_standard_vat_turnover")
   }
 
   def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName: String = "id") : DataFrame = {
