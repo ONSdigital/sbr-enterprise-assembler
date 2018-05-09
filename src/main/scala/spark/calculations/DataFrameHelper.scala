@@ -115,7 +115,7 @@ trait DataFrameHelper/* extends RddLogging*/{
       .withColumn("apportion", col("emp_prop")*col("total_rep_vat"))
 
     apportionDF
-      .select(idColumnName,"group_turnover")
+      .select(idColumnName)
       .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "apportion_turnover"),Seq(idColumnName), joinType = "outer").coalesce(numOfPartitions)
       .dropDuplicates(idColumnName)
 
