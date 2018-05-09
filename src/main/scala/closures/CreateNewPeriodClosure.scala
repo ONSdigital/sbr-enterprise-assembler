@@ -130,6 +130,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     // printRdd("newEntTree",newEntTree,"hfile.Tables")
 
+     newEntTree.cache()
+
     val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
     // printRdd("newEnts",newEnts,"(String, HFileCell)")
 
@@ -137,7 +139,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
     // printRdd("newLinks",newLinks,"(String, HFileCell)")
-
+    //newEntTree.unpersist()
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
@@ -202,6 +204,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     // printRdd("allLus",allLus,"(String, HFileCell)")
 
+
+
   allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
@@ -209,7 +213,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
   allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
- }
+
+
+  newEntTree.unpersist()
+
+  }
 
   private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
     HBaseDao.readEnterprisesWithKeyFilter(confs, appParams, regex)
