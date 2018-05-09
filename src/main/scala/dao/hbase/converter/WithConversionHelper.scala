@@ -85,8 +85,9 @@ trait WithConversionHelper {
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
       row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "apportion_turnover", apportion, appParams)),
       row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "total_turnover", total, appParams)),
-      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "temp_contained_rep_vat_turnover", contained, appParams)),
-      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "temp_standard_vat_turnover", standard, appParams))
+      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "contained_turnover", contained, appParams)),
+      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "standard_turnover", standard, appParams)),
+      row.getCalcValue("group_turnover").map(group => createEnterpriseCell(ern, "group_turnover", group, appParams))
     ).collect { case Some(v) => v }
 
 /**/
