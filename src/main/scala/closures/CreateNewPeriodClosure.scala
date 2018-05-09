@@ -179,8 +179,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
-
     val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
+    completeExistingEnts.cache()
     // printRdd("completeExistingEnts", completeExistingEnts,"Row")
 
 
@@ -217,7 +217,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
-
+  completeExistingEnts.unpersist()
   newEntTree.unpersist()
 
   }
