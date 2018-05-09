@@ -44,6 +44,7 @@ trait DataFrameHelper/* extends RddLogging*/{
       .join(containedTurnover,Seq(idColumnName), joinType="outer").coalesce(partitionsCount)
       .join(standardVatTurnover,Seq(idColumnName),joinType = "outer").coalesce(partitionsCount)
       .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName),joinType = "outer")
+      .join(groupTurnover, Seq(idColumnName), joinType = "outer")
       .join(employees, idColumnName).coalesce(partitionsCount)
       .join(jobs, idColumnName).coalesce(partitionsCount)
       .withColumn("total_turnover", List(coalesce(col("temp_standard_vat_turnover"), lit(0)),coalesce(col("temp_contained_rep_vat_turnover"), lit(0)),coalesce(col("apportion_turnover"), lit(0))).reduce(_+_))
