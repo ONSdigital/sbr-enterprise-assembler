@@ -4,6 +4,8 @@ package global
   * args sample:  LINKS ons l src/main/resources/data/links/hfile ENT ons d src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802 src/main/resources/data/smallPaye.csv
   * args types:   linksTableName linksNameSpace linksTablefamily linksHfilePath enterpriseTableName enterpriseNameSpace enterpriseTableFamily enterpriseHFilePath parquetFilePath quorumHost quorumPort timePeriod payeCsvPath
   */
+
+
 case class AppParams(
                         HBASE_LINKS_TABLE_NAME:String,
                         HBASE_LINKS_TABLE_NAMESPACE:String,
@@ -16,8 +18,8 @@ case class AppParams(
                         PATH_TO_PARQUET:String,
                         TIME_PERIOD:String,
                         PATH_TO_PAYE:String,
-                        ACTION:String,
-                        ENV:String
+                        ENV:String,
+                        ACTION:String
                    ){
   val PATH_TO_LINK_DELETE_PERIOD_HFILE = PATH_TO_LINKS_HFILE
   val PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE = PATH_TO_ENTERPRISE_HFILE

@@ -11,7 +11,7 @@ trait  SparkSessionManager {
 
     implicit val spark: SparkSession = {
       if (appconf.ENV == "cluster") SparkSession.builder().appName("enterprise assembler").getOrCreate()
-      else SparkSession.builder()./*master("local[*]").*/appName("enterprise assembler").getOrCreate()
+      else SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
     }
 
     doWithinSparkSession(spark)
