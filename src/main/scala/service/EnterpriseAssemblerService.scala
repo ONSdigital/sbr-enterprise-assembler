@@ -29,7 +29,7 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
   }
 
 
-  def loadFromParquet(appconf:AppParams){
+  def createNewPopulationFromParquet(appconf:AppParams){
     withSpark(appconf){ implicit ss:SparkSession =>
     withHbaseConnection { implicit con: Connection => loadFromCreateParquet(appconf) }
   }}

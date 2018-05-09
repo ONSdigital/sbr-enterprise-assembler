@@ -16,6 +16,7 @@ case class AppParams(
                         PATH_TO_PARQUET:String,
                         TIME_PERIOD:String,
                         PATH_TO_PAYE:String,
+                        ACTION:String,
                         ENV:String
                    ){
 
@@ -40,7 +41,8 @@ object AppParams{
                                                   args(8),
                                                   args(9),
                                                   args(10),
-                                                  args(11)
+                                                  args(11),
+                                                  args(12)
                                                 )
   
 }
