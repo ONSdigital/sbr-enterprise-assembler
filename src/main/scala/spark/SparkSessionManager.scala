@@ -5,7 +5,7 @@ import org.apache.spark.sql.SparkSession
 
 
 
-trait SparkSessionManager {
+trait  SparkSessionManager {
 
   def withSpark(appconf:AppParams)(doWithinSparkSession: SparkSession => Unit) = {
 

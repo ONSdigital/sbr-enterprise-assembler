@@ -23,7 +23,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging{
+object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -52,7 +52,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val linksRecords: RDD[(String, HFileCell)] = parquetRows.flatMap(row => toLinksRefreshRecords(row,appconf))
     val updatesRdd: RDD[Record] = linksRecords.groupByKey().map(v => (v._1,v._2.map(kv => KVCell[String,String](kv.qualifier,kv.value))))//get LINKS updates from input parquet
 
-    // printRdd("updatesRdd", updatesRdd,"Tuple (String,Iterable[KVCells])")
+ // printRdd("updatesRdd", updatesRdd,"Tuple (String,Iterable[KVCells])")
 
 
     //next 3 lines: select LU rows from hbase
@@ -60,29 +60,33 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val luRegex = ".*(ENT|LEU)~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val existingLuRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
-    // printRdd("existingLuRdd", existingLuRdd,"Tuple (String,Iterable[KVCells])")
+ // printRdd("existingLuRdd", existingLuRdd,"Tuple (String,Iterable[KVCells])")
 
     val numOfPartitions = updatesRdd.getNumPartitions
 
     val joined: RDD[(String, (Option[Cells], Option[Cells]))] = updatesRdd.fullOuterJoin(existingLuRdd, numOfPartitions)
 
-    // printRdd("links record updates rdd joined with existing LUs rdd",joined,"Tuple (String,Tuple(option[Iterable[KVCells]],option[Iterable[KVCells]])")
+ // printRdd("links record updates rdd joined with existing LUs rdd",joined,"Tuple (String,Tuple(option[Iterable[KVCells]],option[Iterable[KVCells]])")
 
     /*
     * updatedExistingLUs - lu rows with all new data and with column link to parent enterprise copied from existing record("p_ENT")
     * */
-    val updatedExistingLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), Some(oldCells))) => HFileRow(key,{newCells ++ oldCells.find(_.column=="p_ENT").map(ernCell => Seq(ernCell)).getOrElse(Seq.empty) })} // existing LUs updated with new cells
+    val updatedExistingLUs: RDD[HFileRow] = joined.collect {
+      case (key, (Some(newCells), Some(oldCells))) => HFileRow(key,{newCells ++ oldCells.find(_.column=="p_ENT").map(ernCell => Seq(ernCell)).getOrElse(Seq.empty) })
+      //case (key, (None, Some(oldCells))) if(key.endsWith(s"~ENT~${appconf.TIME_PERIOD}")) => HFileRow(key,oldCells)
 
-    // printRdd("updatedExistingLUs", updatedExistingLUs, "HFileRow")
+    } // existing LUs updated with new cells
+
+ // printRdd("updatedExistingLUs", updatedExistingLUs, "HFileRow")
 
     val newLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), None)) => HFileRow(key, newCells) }
-    printCount(newLUs,"new LUs count: ")
+ // printCount(newLUs,"new LUs count: ")
     /*
     * existingLinksEnts contains links rows with ent row records with column links to child LU records
     * */
     val existingLinksEnts: RDD[HFileRow] = joined.collect { case (key, (None, Some(oldCells))) if(key.endsWith(s"ENT~${appconf.TIME_PERIOD}"))=> HFileRow(key, oldCells) }
-    printCount(existingLinksEnts,"existing Enterprises: ")
-    // printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
+ // printCount(existingLinksEnts,"existing Enterprises: ")
+ // printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
 
     //new Records
     val newLuIds: RDD[(Long, Row)] = newLUs.filter(_.key.endsWith(s"~LEU~${appconf.TIME_PERIOD}")).collect{case HFileRow(key,_) if(key.endsWith(s"~${appconf.TIME_PERIOD}")) => (key.stripSuffix(s"~LEU~${appconf.TIME_PERIOD}").toLong,Row.empty)}
@@ -130,9 +134,12 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val vatDf = spark.read.option("header", "true").csv(pathToVat)
 
     val newEntTree: RDD[hfile.Tables] = adminCalculations(newRowsDf, payeDf, vatDf).rdd.map(row => toNewEnterpriseRecords(row,appconf))
+   
     // println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
 
     // printRdd("newEntTree",newEntTree,"hfile.Tables")
+
+     newEntTree.cache()
 
     val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
     // printRdd("newEnts",newEnts,"(String, HFileCell)")
@@ -140,8 +147,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
 
     val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
-    // printRdd("newLinks",newLinks,"(String, HFileCell)")
-
+ // printRdd("newLinks",newLinks,"(String, HFileCell)")
+    //newEntTree.unpersist()
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
@@ -153,7 +160,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
 
     val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
-    // printRddOfRows("luRows",luRows)
+ // printRddOfRows("luRows",luRows)
 
     val ernWithPayesAndVats: RDD[Row] = luRows.collect{
 
@@ -170,7 +177,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
     // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
 
-    val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    //val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
     val vatDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
@@ -179,8 +186,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     val ernPayeCalculatedDF: DataFrame = adminCalculationsEnt(ernWithEmployeesdata,payeDF, vatDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
-
     val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
+    completeExistingEnts.cache()
     // printRdd("completeExistingEnts", completeExistingEnts,"Row")
 
 
@@ -188,8 +195,6 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
       * add new + existing enterprises and save to hfile
       * */
     val exsistingEntsCells: RDD[(String, HFileCell)] = completeExistingEnts.flatMap(row => rowToFullEnterprise(row,appconf))
-
-    //val hfileRdd: RDD[(String, HFileCell)] = existingEntDF.rdd.flatMap(row => rowToEnterprise(row,appconf))
 
     val allEnts: RDD[(String, HFileCell)] = newEnts.union(exsistingEntsCells).coalesce(numOfPartitions)
      // printRdd("allEnts",allEnts,"(String, HFileCell)")
@@ -200,13 +205,16 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
   * add new + existing links and save to hfile
   * */
 
-  val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf))
+  val existingEntLinkRefs: RDD[(String, HFileCell)] = existingLinksEnts.flatMap(hfrow => hfrow.toHfileCells(appconf.HBASE_LINKS_COLUMN_FAMILY))
+  val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs)
 
-    // printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
+  //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
   val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
 
-    // printRdd("allLus",allLus,"(String, HFileCell)")
+  //printRdd("allLus",allLus,"(String, HFileCell)")
+
+
 
   allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -215,7 +223,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
   allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
- }
+
+  completeExistingEnts.unpersist()
+  newEntTree.unpersist()
+
+  }
 
   private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
     HBaseDao.readEnterprisesWithKeyFilter(confs, appParams, regex)

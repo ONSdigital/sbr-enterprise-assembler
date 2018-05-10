@@ -5,7 +5,7 @@ import global.{AppParams, Configs}
 import service._
 
 
-object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefreshService */with AddNewPeriodDataService {
+object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService{
 
   def main(args: Array[String]) {
     println("ARGS:")
@@ -13,13 +13,23 @@ object AssemblerMain extends EnterpriseAssemblerService /*with EnterpriseRefresh
     println("="*10)
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
-    val appParams = args.take(9)++args.takeRight(4)
+    val params = args.take(9)++args.takeRight(4)
     println("appParams:")
-    appParams.foreach(println)
+    params.foreach(println)
+    val appParams = AppParams(params)
     println("="*10)
 
+    appParams.ACTION match{
+
+      case "addperiod" => loadNewPeriodData(appParams)
+      case "refresh" => loadRefreshFromParquet(appParams)
+      case "create" => createNewPopulationFromParquet(appParams)
+      case "deleteperiod" => deletePeriod(appParams)
+      case arg => throw new IllegalArgumentException(s"action not recognised: $arg")
+
+    }
     //createNewPeriodParquet(AppParams(appParams))
-    loadNewPeriodData(AppParams(appParams))
+
     //createNewPeriodParquet(AppParams(appParams))
     //createRefreshParquet(AppParams(appParams))
     //loadRefreshFromHFiles(AppParams(appParams))
