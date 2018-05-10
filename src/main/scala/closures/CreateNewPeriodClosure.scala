@@ -177,7 +177,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
     // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
 
-    //val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
     val vatDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
