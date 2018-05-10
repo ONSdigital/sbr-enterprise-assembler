@@ -65,7 +65,8 @@ pipeline {
                     env.NODE_STAGE = "Package and Push Artifact"
                 }
                 sh """
-                    $SBT clean compile assembly
+		    mkdir $WORKSPACE/tmp
+                    $SBT -Djava.io.tmpdir=$WORKSPACE/tmp clean compile assembly
                 """
                 copyToHBaseNode()
                 colourText("success", 'Package.')
