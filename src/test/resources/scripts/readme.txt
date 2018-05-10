@@ -5,17 +5,11 @@ Assuming following hbase tables are created already:
 2. 'ons:LINKS' column family 'l'
 
 hbase commands to populate ENT and LINKS tables:
-  Clean up first:
-            ./hbase shell truncate 'ons:ENT'
-            ./hbase shell truncate 'ons:LINKS'
-  Then populate with new data:
-  ./hbase shell /Users/[your-user-name]/.../sbr-enterprise-assembler/src/test/resources/scripts/populate_enterprise_script
-  ./hbase shell /Users/[your-user-name]/.../sbr-enterprise-assembler/src/test/resources/scripts/populate_links_script
+./hbase shell /Users/[your-user-name]/.../sbr-enterprise-assembler/src/test/resources/scripts/completeScript
 
 
 in newPeriod.json:
 
-1.added IBM - 4
-2.PayeRef: "3333L" added to IBM-3
+1.PayeRef: "3333L" added to IBM-3
+2. New LU added: id:999000508999, "BusinessName": "NEW ENTERPRISE LU"
 
-newPeriodLUs-noChanges.json contains same data as is in hbase, it's saved just for deriving files with updates from it.

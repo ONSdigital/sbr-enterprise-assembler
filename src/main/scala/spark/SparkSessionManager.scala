@@ -1,14 +1,18 @@
 package spark
 
+import global.AppParams
 import org.apache.spark.sql.SparkSession
 
 
 
-trait SparkSessionManager {
+trait  SparkSessionManager {
 
-  def withSpark(doWithinSparkSession: SparkSession => Unit) = {
+  def withSpark(appconf:AppParams)(doWithinSparkSession: SparkSession => Unit) = {
 
-    implicit val spark: SparkSession = SparkSession.builder()/*.master("local[*]")*/.appName("enterprise assembler").getOrCreate()
+    implicit val spark: SparkSession = {
+      if (appconf.ENV == "cluster") SparkSession.builder().appName("enterprise assembler").getOrCreate()
+      else SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+    }
 
     doWithinSparkSession(spark)
 
