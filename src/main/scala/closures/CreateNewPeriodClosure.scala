@@ -23,7 +23,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging{
+object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -126,10 +126,10 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val pathToPaye = appconf.PATH_TO_PAYE
     //// println(s"extracting paye file from path: $pathToPaye")
 
-    val payeDf = spark.read.option("header", "true").csv(pathToPaye)
+    val payeDF = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
 
-    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDf).rdd.map(row => toNewEnterpriseRecords(row,appconf))
+    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDF).rdd.map(row => toNewEnterpriseRecords(row,appconf))
     // println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
 
     // printRdd("newEntTree",newEntTree,"hfile.Tables")
@@ -172,7 +172,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
     // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
 
-    val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    //val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
 
     //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
@@ -201,11 +201,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
   val existingEntLinkRefs: RDD[(String, HFileCell)] = existingLinksEnts.flatMap(hfrow => hfrow.toHfileCells(appconf.HBASE_LINKS_COLUMN_FAMILY))
   val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs)
 
-  printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
+  //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
   val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
 
-  printRdd("allLus",allLus,"(String, HFileCell)")
+  //printRdd("allLus",allLus,"(String, HFileCell)")
 
 
 
