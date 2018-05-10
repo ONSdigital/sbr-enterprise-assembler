@@ -104,6 +104,25 @@ lazy val addNewPeriodParams = Array("LINKS",
                                     "local")
 
 
+
+lazy val calculationsParams = Array("LINKS",
+                                    "ons",
+                                    "l",
+                                    "src/main/resources/data/temp/addperiod/links/hfile",
+                                    "ENT",
+                                    "ons",
+                                    "d",
+                                    "src/main/resources/data/temp/addperiod/enterprise/hfile",
+                                    "src/main/resources/data/temp/addperiod/sample.parquet",
+                                    "localhost",
+                                    "2181",
+                                    "201804",
+                                    "src/main/resources/data/smallPaye.csv",
+                                    "src/main/resources/data/smallVat.csv",
+                                    "local")
+
+
+
 lazy val runWithArgs = taskKey[Unit]("run-args")
 lazy val runRecs = taskKey[Unit]("run-args")
 lazy val runRecsRefresh = taskKey[Unit]("run-args")
@@ -111,6 +130,7 @@ lazy val runCreateRecs = taskKey[Unit]("run-args")
 lazy val runRefreshRecs = taskKey[Unit]("run-args")
 lazy val runInitialPopulationRecs = taskKey[Unit]("run-args")
 lazy val runAddPeriodRecs = taskKey[Unit]("run-args")
+lazy val runCalculationPeriodRecs = taskKey[Unit]("run-args")
 
 
 fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
@@ -120,3 +140,4 @@ fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsPara
 fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsParams: _*)
 fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodParams: _*)
 fullRunTask(runInitialPopulationRecs, Runtime, "assembler.AssemblerMain", initialPopulationParams: _*)
+fullRunTask(runCalculationPeriodRecs, Runtime, "assembler.AssemblerMain", calculationsParams: _*)
