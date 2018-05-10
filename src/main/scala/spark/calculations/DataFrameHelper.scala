@@ -42,10 +42,10 @@ trait DataFrameHelper/* extends RddLogging*/{
     val groupTurnover = getGroupTurnover(startDF, getEmployeeCount(entPaye, idColumnName), idColumnName)
 
     parquetDF
-      .join(containedTurnover,Seq(idColumnName), joinType="outer").coalesce(partitionsCount)
-      .join(standardVatTurnover,Seq(idColumnName),joinType = "outer").coalesce(partitionsCount)
-      .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName),joinType = "outer")
-      .join(groupTurnover.select(idColumnName, "group_turnover"), Seq(idColumnName), joinType = "outer")
+      .join(containedTurnover,Seq(idColumnName), joinType="leftOuter").coalesce(partitionsCount)
+      .join(standardVatTurnover,Seq(idColumnName),joinType = "leftOuter").coalesce(partitionsCount)
+      .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName),joinType = "leftOuter").coalesce(partitionsCount)
+      .join(groupTurnover.select(idColumnName, "group_turnover"), Seq(idColumnName), joinType = "leftOuter").coalesce(partitionsCount)
       .join(employees, idColumnName).coalesce(partitionsCount)
       .join(jobs, idColumnName).coalesce(partitionsCount)
       .withColumn("total_turnover", List(coalesce(col("temp_standard_vat_turnover"), lit(0)),coalesce(col("temp_contained_rep_vat_turnover"), lit(0)),coalesce(col("apportion_turnover"), lit(0))).reduce(_+_))
@@ -85,20 +85,20 @@ trait DataFrameHelper/* extends RddLogging*/{
     val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*))).coalesce(partitionsCount)
 
     payeDF
-      .join(avgDf.dropDuplicates("PayeRefs").groupBy(idColumnName)
-        .agg(sum("id_paye_employees") as "paye_employees"), Seq(idColumnName), joinType = "outer")
+      .join(avgDf.dropDuplicates("PayeRefs").coalesce(partitionsCount).groupBy(idColumnName)
+        .agg(sum("id_paye_employees") as "paye_employees"), Seq(idColumnName), joinType = "leftOuter")
       .dropDuplicates(idColumnName).select(idColumnName,"paye_employees")
-      .coalesce(partitionsCount)
 
   }
 
   private def getGroupTurnover(vatDF: DataFrame, empCount: DataFrame, idColumnName: String): DataFrame = {
-    val numOfPartitions = vatDF.rdd.getNumPartitions
+    val partitionsCount = vatDF.rdd.getNumPartitions
     val nonContained = vatDF.filter("unique > 1").withColumn("rep_vat", getRepVat(col("record_type"))).withColumn("rep_vat_turnover",col("rep_vat")*col("turnover")).dropDuplicates(idColumnName,"vatref9")
-    val repVatTurnover = nonContained.join(nonContained.groupBy("vatref9").agg(sum("rep_vat_turnover") as "total_rep_vat"), Seq("vatref9")).coalesce(numOfPartitions)
-    val vatGroupDF = repVatTurnover.join(repVatTurnover.groupBy("vatref9").agg(sum("rep_vat_turnover") as "vat_group_turnover"), Seq("vatref9"), joinType="outer").coalesce(numOfPartitions)
+    val repVatTurnover = nonContained.join(nonContained.groupBy("vatref9").agg(sum("rep_vat_turnover") as "total_rep_vat"), Seq("vatref9")).coalesce(partitionsCount)
+    val vatGroupDF = repVatTurnover.join(repVatTurnover.groupBy("vatref9").agg(sum("rep_vat_turnover") as "vat_group_turnover"), Seq("vatref9"), joinType="leftOuter").coalesce(partitionsCount)
 
-    repVatTurnover.join(vatGroupDF.groupBy(idColumnName).agg(sum("vat_group_turnover") as "group_turnover"), idColumnName).join(empCount, idColumnName).coalesce(numOfPartitions)
+    repVatTurnover.join(vatGroupDF.groupBy(idColumnName).agg(sum("vat_group_turnover") as "group_turnover"), idColumnName).coalesce(partitionsCount)
+      .join(empCount, idColumnName).coalesce(partitionsCount)
   }
 
   private def getApportionedTurnover(vatDF: DataFrame, idColumnName: String): DataFrame = {
@@ -116,7 +116,7 @@ trait DataFrameHelper/* extends RddLogging*/{
 
     apportionDF
       .select(idColumnName)
-      .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "apportion_turnover"),Seq(idColumnName), joinType = "outer").coalesce(numOfPartitions)
+      .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "apportion_turnover"),Seq(idColumnName), joinType = "leftOuter").coalesce(numOfPartitions)
       .dropDuplicates(idColumnName)
 
   }
