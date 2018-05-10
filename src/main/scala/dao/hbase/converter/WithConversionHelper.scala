@@ -5,7 +5,7 @@ import global.{AppParams, Configs}
 import model.hfile._
 import org.apache.spark.sql.Row
 
-import scala.util.Random
+import scala.util.{Random, Try}
 import spark.extensions.sql.SqlRowExtensions
 /**
   * Schema:
@@ -46,10 +46,6 @@ trait WithConversionHelper {
   val childPrefix = "c_"
   val parentPrefix = "p_"
 
-  def toEnterpriseRecords(row: Row, appParams: AppParams): Tables = {
-    val ern = generateErn
-    Tables(rowToFullEnterprise(row, appParams, ern), rowToLinks(row, ern, appParams))
-  }
 
   def toNewEnterpriseRecords(row: Row, appParams: AppParams): Tables = {
     val ern = generateErn
@@ -80,6 +76,10 @@ trait WithConversionHelper {
     Seq(
       row.getString("BusinessName").map(bn => createEnterpriseCell(ern, "name", bn, appParams)),
       row.getString("PostCode") map (pc => createEnterpriseCell(ern, "postcode", pc, appParams)),
+      {
+        val sic = Try{row.getString("IndustryCode").get}.getOrElse("")
+        Some(createEnterpriseCell(ern, "sic07", sic, appParams))
+      },
       row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
       row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
@@ -99,7 +99,10 @@ trait WithConversionHelper {
       row.getString("address4").map(a4 => createEnterpriseCell(ern, "address4", a4, appParams)),
       row.getString("address5") map (a5 => createEnterpriseCell(ern, "address5", a5, appParams)),
       row.getString("postcode").map(pc => createEnterpriseCell(ern, "postcode", pc, appParams)),
-      row.getString("sic07").map(sic => createEnterpriseCell(ern, "sic07", sic, appParams)),
+      {
+        val sic = Try{row.getString("IndustryCode").get}.getOrElse("")
+        Some(createEnterpriseCell(ern, "sic07", sic, appParams))
+      },
       row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
       row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams))
@@ -109,7 +112,6 @@ trait WithConversionHelper {
 /**/
   def rowToFullEnterprise(row: Row, appParams: AppParams): Seq[(String, HFileCell)] = {
     val ern = row.getString("ern").get //must be there
-
     Seq(createEnterpriseCell(ern, "ern", ern, appParams)) ++
     rowToFullEnterprise(row,appParams,ern)
 }

@@ -12,7 +12,7 @@ package object sql {
     .add(StructField("BusinessName", StringType,true))
     .add(StructField("CompanyNo", StringType,true))
     .add(StructField("EmploymentBands", StringType,true))
-    .add(StructField("IndustryCode", LongType,true))
+    .add(StructField("IndustryCode", StringType,true))
     .add(StructField("LegalStatus", StringType,true))
     .add(StructField("PayeRefs", ArrayType(StringType,true),true))
     .add(StructField("PostCode", StringType,true))

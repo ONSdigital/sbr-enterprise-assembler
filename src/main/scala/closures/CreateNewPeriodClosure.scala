@@ -96,13 +96,12 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val joinedParquetRows: RDD[(Long, (Row, Option[Row]))] = newLuIds.leftOuterJoin(rowMapByKey,numOfPartitions)
 
     // printRdd("joinedParquetRows",joinedParquetRows,"(Long, (Row, Option[Row]))")
-
     val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => {
       new GenericRowWithSchema(Array(
                 newRow.getAs[String]("BusinessName"),
                 newRow.getAs[String]("CompanyNo"),
                 newRow.getAs[String]("EmploymentBands"),
-                Try{newRow.getAs[String]("IndustryCode").toLong }.getOrElse(null),
+                Try{newRow.getAs[String]("IndustryCode")}.getOrElse(""),
                 newRow.getAs[String]("LegalStatus"),
                 newRow.getAs[Seq[String]]("PayeRefs"),
                 newRow.getAs[String]("PostCode"),
@@ -164,7 +163,6 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
         row.getStringSeq("PayeRefs").get,
         row.getLongSeq("VatRefs").getOrElse(null)
       )
-
     }
 
     // printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
