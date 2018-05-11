@@ -100,7 +100,7 @@ trait WithConversionHelper {
       row.getString("address5") map (a5 => createEnterpriseCell(ern, "address5", a5, appParams)),
       row.getString("postcode").map(pc => createEnterpriseCell(ern, "postcode", pc, appParams)),
       {
-        val sic = Try{row.getString("IndustryCode").get}.getOrElse("")
+        val sic = Try{row.getString("sic07").get}.getOrElse("")
         Some(createEnterpriseCell(ern, "sic07", sic, appParams))
       },
       row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
