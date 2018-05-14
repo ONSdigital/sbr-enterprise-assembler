@@ -28,17 +28,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
 
   type Cells = Iterable[KVCell[String, String]]
   type Record = (String, Cells)
-  /**
-    * copies data from Enterprise and Local Units tables into a new period data
-    **/
-  def createNewPeriodHfiles(confs: Configuration, appParams: AppParams)(implicit spark: SparkSession,connection:Connection): Unit = {
-    //do enterprise. Local units to follow
-    saveEnterpriseHFiles(confs, appParams, ".*ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+"$") //.*(~201802)$ //.*(?!~ENT~)201802$
-    saveLinksHFiles(confs, appParams, ".*(~ENT~"+{appParams.PREVIOUS_TIME_PERIOD}+")$")
-  }
 
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
+  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession) = {
 
     val confs = Configs.conf
 
@@ -218,22 +210,6 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
   completeExistingEnts.unpersist()
   newEntTree.unpersist()
 
-  }
-
-  private def saveEnterpriseHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
-    HBaseDao.readEnterprisesWithKeyFilter(confs, appParams, regex)
-      .map(row => row.copy(row.key.replace(s"~${appParams.PREVIOUS_TIME_PERIOD}",s"~${appParams.TIME_PERIOD}")))
-      .sortBy(row => s"${row.key}")
-      .flatMap(_.toPutHFileEntries(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_ENTERPRISE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], confs)
-  }
-
-  private def saveLinksHFiles(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession,connection:Connection) = {
-    HBaseDao.readLinksWithKeyFilter(confs, appParams, regex)
-      .map(row => row.copy(row.key.replace(s"~${appParams.PREVIOUS_TIME_PERIOD}",s"~${appParams.TIME_PERIOD}")))
-      .sortBy(row => s"${row.key}")
-      .flatMap(_.toPutHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], confs)
   }
 
 
