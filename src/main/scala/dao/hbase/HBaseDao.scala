@@ -88,9 +88,7 @@ object HBaseDao{
 
   def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
     val localConfCopy = confs
-    localConfCopy.set(TableInputFormat.INPUT_TABLE, tableName)
-    //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
-    withScanner(localConfCopy,regex,appParams){
+    withScanner(localConfCopy,regex,appParams,tableName){
       readKvsFromHBase
     }}
   
@@ -145,10 +143,12 @@ object HBaseDao{
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def withScanner(config:Configuration,regex:String, appParams:AppParams)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
+  def withScanner(config:Configuration,regex:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
+    config.set(TableInputFormat.INPUT_TABLE, tableName)
     setScanner(config,regex,appParams)
     val res = getResult(config)
     unsetScanner(config)
+    config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
