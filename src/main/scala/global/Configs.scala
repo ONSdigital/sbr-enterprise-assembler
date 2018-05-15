@@ -23,6 +23,8 @@ object Configs{
   Try{config.getString("hbase.kerberos.config")}.map(conf.addResource).getOrElse(logger.info("no config resource for kerberos specified"))
   Try{config.getString("hbase.path.config")}.map(conf.addResource).getOrElse {
     logger.info("no config resource for hbase specified. Default configs will be used")
+    conf.set("hbase.zookeeper.quorum", "localhost:2181")
+    conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 500)
   }
   lazy val PATH_TO_JSON = config.getString("files.json")
 

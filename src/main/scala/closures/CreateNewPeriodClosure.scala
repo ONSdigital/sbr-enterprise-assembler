@@ -23,7 +23,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with Calculations with RddLogging{
+object CreateNewPeriodClosure extends WithConversionHelper with Calculations/* with RddLogging*/{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -134,7 +134,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with Calculations wit
     printDF("newEntTree",newLuCalculated)
 
 
-     val newLus: RDD[Row] = newRowsDf.join(newRowsDf, Seq("id"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
+     val newLus: RDD[Row] = newRowsDf.join(newLuCalculated, Seq("id"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
 
      val newEntTree: RDD[Tables] =  newLus.map(row => toNewEnterpriseRecords(row,appconf))//(_.enterprises) //break into cells
     // printRdd("newEnts",newEnts,"(String, HFileCell)")

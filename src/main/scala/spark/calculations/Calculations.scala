@@ -6,7 +6,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.DataFrame
 import spark.RddLogging
 
-trait Calculations extends RddLogging {
+trait Calculations/* extends RddLogging*/ {
   val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
 
   val avg = udf((values: Seq[Integer]) => {
