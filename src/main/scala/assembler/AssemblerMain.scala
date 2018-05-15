@@ -11,7 +11,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     println("ARGS:")
     args.foreach(println)
     println("="*10)
-    Configs.conf.set("hbase.zookeeper.quorum", args(9))
+    Configs.conf.set("hbase.zookeeper.quorum", args(9)+":"+args(10))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
     val params = args.take(9)++args.takeRight(5)
     println("appParams:")
