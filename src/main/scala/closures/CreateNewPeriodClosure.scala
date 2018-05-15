@@ -127,11 +127,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with Calculations/* w
     val vatDF = spark.read.option("header",true).csv(appconf.PATH_TO_VAT)
 
     val newLuCalculationDF: DataFrame = spark.createDataFrame(newLuCalculationData,ubrnToNewLuCalculationSchema)
-    printDF("newLuCalculationDF",newLuCalculationDF)
+    //printDF("newLuCalculationDF",newLuCalculationDF)
 
     val newLuCalculated: DataFrame = adminCalculations(newLuCalculationDF, payeDF, vatDF,"id")
     println("PARTITIONS OF newLuCalculated: "+newLuCalculated.rdd.getNumPartitions)
-    printDF("newEntTree",newLuCalculated)
+    //printDF("newEntTree",newLuCalculated)
 
 
      val newLus: RDD[Row] = newRowsDf.join(newLuCalculated, Seq("id"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
