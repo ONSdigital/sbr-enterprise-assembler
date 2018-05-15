@@ -5,7 +5,7 @@ import dao.hbase.converter.WithConversionHelper
 import global.{AppParams, Configs}
 import model.domain.{HFileRow, KVCell}
 import model.hfile
-import model.hfile.HFileCell
+import model.hfile.{HFileCell, Tables}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.client.Connection
@@ -15,7 +15,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.RddLogging
-import spark.calculations.DataFrameHelper
+import spark.calculations._
 import spark.extensions.sql._
 
 import scala.util.Try
@@ -23,7 +23,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
+object CreateNewPeriodClosure extends WithConversionHelper with Calculations with RddLogging{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -114,24 +114,33 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
 
     // printDF("newRowsDf",newRowsDf)
 
-    val pathToPaye = appconf.PATH_TO_PAYE
-    //// println(s"extracting paye file from path: $pathToPaye")
+    val newLuCalculationData: RDD[Row] = newLUParquetRows.collect{
 
-    val payeDF = spark.read.option("header", "true").csv(pathToPaye)
-    // printDF("payeDf",payeDf)
+      case row if(row.getStringSeq("PayeRefs").isDefined) => Row(
+        row.getString("id").get,
+        row.getStringSeq("PayeRefs").get,
+        row.getLongSeq("VatRefs").getOrElse(null)
+      )
+    }
 
-    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDF).rdd.map(row => toNewEnterpriseRecords(row,appconf))
-    // println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
+    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val vatDF = spark.read.option("header",true).csv(appconf.PATH_TO_VAT)
 
-    // printRdd("newEntTree",newEntTree,"hfile.Tables")
+    val newLuCalculationDF: DataFrame = spark.createDataFrame(newLuCalculationData,ubrnToNewLuCalculationSchema)
+    printDF("newLuCalculationDF",newLuCalculationDF)
 
+    val newLuCalculated: DataFrame = adminCalculations(newLuCalculationDF, payeDF, vatDF,"id")
+    println("PARTITIONS OF newLuCalculated: "+newLuCalculated.rdd.getNumPartitions)
+    printDF("newEntTree",newLuCalculated)
+
+
+     val newLus: RDD[Row] = newRowsDf.join(newRowsDf, Seq("id"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
+
+     val newEntTree: RDD[Tables] =  newLus.map(row => toNewEnterpriseRecords(row,appconf))//(_.enterprises) //break into cells
+    // printRdd("newEnts",newEnts,"(String, HFileCell)")
      newEntTree.cache()
 
-    val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
-    // printRdd("newEnts",newEnts,"(String, HFileCell)")
-
-
-
+    val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises)
     val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
  // printRdd("newLinks",newLinks,"(String, HFileCell)")
     //newEntTree.unpersist()
@@ -167,7 +176,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
 
     //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
 
-    val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
+    val ernPayeCalculatedDF: DataFrame = adminCalculations(ernWithEmployeesdata,payeDF,vatDF,"ern")
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
     val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
     completeExistingEnts.cache()

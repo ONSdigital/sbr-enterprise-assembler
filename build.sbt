@@ -100,6 +100,7 @@ lazy val addNewPeriodParams = Array("LINKS",
                                     "2181",
                                     "201804",
                                     "src/main/resources/data/newperiod/newPeriodPaye.csv",
+                                    "src/main/resources/data/newperiod/newPeriodVat.csv",
                                     "local","addperiod")
 
 

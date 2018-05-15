@@ -36,6 +36,12 @@ package object sql {
     .add(StructField("VatRefs", ArrayType(LongType,true),true))
 
 
+  val ubrnToNewLuCalculationSchema = new StructType()
+    .add(StructField("id", StringType,true))
+    .add(StructField("PayeRefs", ArrayType(StringType,true),true))
+    .add(StructField("VatRefs", ArrayType(LongType,true),true))
+
+
 
   val entRowSchema = new StructType()
     .add(StructField("ern", StringType,false))
