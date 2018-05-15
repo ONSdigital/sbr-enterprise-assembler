@@ -138,7 +138,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
-    val existingEntRdd: RDD[Row] = HBaseDao.readTableWithKeyFilter(confs:Configuration,appconf:AppParams, entTableName, entRegex).map(_.toEntRow)
+    val existingEntRdd: RDD[Row] = HBaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex).map(_.toEntRow)
 
     // printRddOfRows("existingEntRdd",existingEntRdd)
     val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
