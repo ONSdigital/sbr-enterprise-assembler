@@ -30,7 +30,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
       case arg => throw new IllegalArgumentException(s"action not recognised: $arg")
 
     }
-    //createNewPeriodParquet(AppParams(appParams))
+    //createNewPeriodParquet(appParams)
 
     //createNewPeriodParquet(AppParams(appParams))
     //createRefreshParquet(AppParams(appParams))
