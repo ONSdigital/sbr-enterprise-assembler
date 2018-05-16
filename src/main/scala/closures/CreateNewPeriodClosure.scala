@@ -112,7 +112,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
-    // printDF("newRowsDf",newRowsDf)
+    printDF("newRowsDf",newRowsDf)
 
     val pathToPaye = appconf.PATH_TO_PAYE
     //// println(s"extracting paye file from path: $pathToPaye")
@@ -184,9 +184,9 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
 
 
 
-/**
-  * add new + existing links and save to hfile
-  * */
+   /**
+   * add new + existing links and save to hfile
+   * */
 
   val existingEntLinkRefs: RDD[(String, HFileCell)] = existingLinksEnts.flatMap(hfrow => hfrow.toHfileCells(appconf.HBASE_LINKS_COLUMN_FAMILY))
   val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs)
