@@ -19,6 +19,7 @@ object Configs{
 
   val conf: Configuration = HBaseConfiguration.create()
   conf.setInt("hbase.client.scanner.timeout.period", 120000)
+  conf.setInt("hbase.client.operation.timeout", 300000)
   Try{config.getString("hadoop.security.authentication")}.map(conf.addResource).getOrElse(conf.set("hadoop.security.authentication","kerberos"))
   Try{config.getString("hbase.security.authentication")}.map(conf.addResource).getOrElse(conf.set("hbase.security.authentication","kerberos"))
   Try{config.getString("hbase.kerberos.config")}.map(conf.addResource).getOrElse(logger.info("no config resource for kerberos specified"))
