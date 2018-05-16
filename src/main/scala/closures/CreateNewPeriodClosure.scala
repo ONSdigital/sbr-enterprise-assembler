@@ -23,7 +23,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
+object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -128,7 +128,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
      newEntTree.cache()
 
     val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
-    // printRdd("newEnts",newEnts,"(String, HFileCell)")
+    printRdd("newEnts",newEnts,"(String, HFileCell)")
 
 
 
@@ -180,7 +180,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val exsistingEntsCells: RDD[(String, HFileCell)] = completeExistingEnts.flatMap(row => rowToFullEnterprise(row,appconf))
 
     val allEnts: RDD[(String, HFileCell)] = newEnts.union(exsistingEntsCells).coalesce(numOfPartitions)
-     // printRdd("allEnts",allEnts,"(String, HFileCell)")
+    printRdd("allEnts",allEnts,"(String, HFileCell)")
 
 
 
