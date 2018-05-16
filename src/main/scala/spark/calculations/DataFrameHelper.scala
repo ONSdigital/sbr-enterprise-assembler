@@ -27,11 +27,12 @@
     def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "id") : DataFrame = {
       val numOfPartitions = parquetDF.rdd.getNumPartitions
 
-      val entPaye = flattenPaye(parquetDF).join(intConvert(payeDF), Seq("payeref"), "outer")
+      val partionedDF = parquetDF.repartition(numOfPartitions)
+      val entPaye = flattenPaye(partionedDF).join(intConvert(payeDF), Seq("payeref"), "outer")
       val employees = getEmployeeCount(entPaye, idColumnName)
       val jobs = entPaye.groupBy(idColumnName).agg(sum("dec_jobs") as "paye_jobs")
 
-      val entVat = flattenVat(parquetDF).join(vatDF, Seq("vatref"), "outer")
+      val entVat = flattenVat(partionedDF).join(vatDF, Seq("vatref"), "outer")
       val prefixDF = entVat.withColumn("vatref9", prefix(col("vatref")))
       val startDF = prefixDF.join(prefixDF.groupBy("vatref9").agg(countDistinct(idColumnName)as "unique").filter(col("vatref9").isNotNull), Seq("vatref9"))
 
@@ -39,8 +40,7 @@
       val standardVatTurnover = getStandardTurnover(startDF, idColumnName)
       val groupTurnover = getGroupTurnover(startDF, getEmployeeCount(entPaye, idColumnName), idColumnName)
 
-      parquetDF
-        .repartition(col(idColumnName))
+      partionedDF
         .join(containedTurnover,Seq(idColumnName), "outer")
         .join(standardVatTurnover,Seq(idColumnName), "outer")
         .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName), "outer")
@@ -76,7 +76,7 @@
     private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
       val numOfPartitions = payeDF.rdd.getNumPartitions
       val joined = payeDF
-        .repartition(col("PayeRefs"))
+        .repartition(numOfPartitions)
         .join(broadcast(payeDF).groupBy("PayeRefs").sum("june_jobs"),"PayeRefs")
         .join(broadcast(payeDF).groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs")
         .join(broadcast(payeDF).groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs")
@@ -100,6 +100,7 @@
         .dropDuplicates(idColumnName,"vatref9")
 
       val repVatTurnover = nonContained
+          .repartition(numOfPartitions)
           .join(nonContained.groupBy("vatref9").agg(sum("rep_vat_turnover") as "total_rep_vat"), Seq("vatref9"), "outer")
           .coalesce(numOfPartitions)
 
@@ -108,7 +109,6 @@
           .coalesce(numOfPartitions)
 
       repVatTurnover
-        .repartition(col(idColumnName))
         .join(vatGroupDF.groupBy(idColumnName).agg(sum("vat_group_turnover") as "group_turnover"), idColumnName)
         .join(empCount, idColumnName)
         .coalesce(numOfPartitions)
