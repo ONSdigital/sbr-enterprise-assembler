@@ -50,7 +50,7 @@ trait RddLogging {
   def printRdd[T](name:String,rdd:RDD[T],`type`:String)(implicit spark:SparkSession) = {
     rdd.cache()
     print(s"START>> check for errors rdd $name")
-    printRecords(rdd.collect(),`type`)
+    printRecords(rdd.take(20),`type`)
     print(s"FINISHED>> checking $name \n")
     rdd.unpersist()
   }
