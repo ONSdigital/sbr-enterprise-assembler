@@ -47,6 +47,7 @@ lazy val myParameters = Array("LINKS", "ons","l",
    "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
+  "src/main/resources/data/smallVat.csv",
   "local","create")
 
 lazy val initialPopulationParams = Array("LINKS", "ons","l",
@@ -54,6 +55,7 @@ lazy val initialPopulationParams = Array("LINKS", "ons","l",
    "src/main/resources/data/original/enterprise/hfile",
   "src/main/resources/data/original/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/original/originalPaye.csv",
+  "src/main/resources/data/original/originalVat.csv",
   "local","create")
 
 
@@ -62,6 +64,7 @@ lazy val recsParams = Array("LINKS", "ons","l",
    "src/main/resources/data/temp/3recs/enterprise/hfile",
   "src/main/resources/data/temp/3recs/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
+  "src/main/resources/data/smallPaye.csv",
   "local","create")
 
 lazy val recsParamsRefresh = Array("LINKS", "ons","l",
@@ -69,6 +72,7 @@ lazy val recsParamsRefresh = Array("LINKS", "ons","l",
    "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
   "src/main/resources/data/temp/3recsRefresh/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
+  "src/main/resources/data/smallPaye.csv",
   "local","refresh")
 
 lazy val createRecordsParams = Array("unit_links", "sbr_dev_db","l",
@@ -76,6 +80,7 @@ lazy val createRecordsParams = Array("unit_links", "sbr_dev_db","l",
    "src/main/resources/data/temp/cr/enterprise/hfile",
   "src/main/resources/data/temp/cr/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
+  "src/main/resources/data/smallPaye.csv",
   "local","create")
 
 
@@ -84,7 +89,8 @@ lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
 "src/main/resources/data/temp/refresh/enterprise/hfile",
 "src/main/resources/data/temp/refresh/sample.parquet",
 "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
-  "local","refresh")
+"src/main/resources/data/smallPaye.csv",
+"local","refresh")
 
 
 lazy val addNewPeriodParams = Array("LINKS",
@@ -100,6 +106,7 @@ lazy val addNewPeriodParams = Array("LINKS",
                                     "2181",
                                     "201804",
                                     "src/main/resources/data/newperiod/newPeriodPaye.csv",
+                                    "src/main/resources/data/smallPaye.csv",
                                     "local","addperiod")
 
 
@@ -120,6 +127,22 @@ lazy val deletePeriodParams = Array("LINKS",
                                     "local","deleteperiod")
 
 
+lazy val calculationsParams = Array("LINKS",
+                                    "ons",
+                                    "l",
+                                    "src/main/resources/data/temp/addperiod/links/hfile",
+                                    "ENT",
+                                    "ons",
+                                    "d",
+                                    "src/main/resources/data/temp/addperiod/enterprise/hfile",
+                                    "src/main/resources/data/temp/addperiod/sample.parquet",
+                                    "localhost",
+                                    "2181",
+                                    "201804",
+                                    "src/main/resources/data/smallPaye.csv",
+                                    "src/main/resources/data/smallVat.csv",
+                                    "local")
+
 
 
 lazy val runWithArgs = taskKey[Unit]("run-args")
@@ -129,6 +152,7 @@ lazy val runCreateRecs = taskKey[Unit]("run-args")
 lazy val runRefreshRecs = taskKey[Unit]("run-args")
 lazy val runInitialPopulationRecs = taskKey[Unit]("run-args")
 lazy val runAddPeriodRecs = taskKey[Unit]("run-args")
+lazy val runCalculationPeriodRecs = taskKey[Unit]("run-args")
 lazy val runDeletePeriod = taskKey[Unit]("run-args")
 
 
@@ -139,4 +163,5 @@ fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsPara
 fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsParams: _*)
 fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodParams: _*)
 fullRunTask(runInitialPopulationRecs, Runtime, "assembler.AssemblerMain", initialPopulationParams: _*)
+fullRunTask(runCalculationPeriodRecs, Runtime, "assembler.AssemblerMain", calculationsParams: _*)
 fullRunTask(runDeletePeriod, Runtime, "assembler.AssemblerMain", deletePeriodParams: _*)

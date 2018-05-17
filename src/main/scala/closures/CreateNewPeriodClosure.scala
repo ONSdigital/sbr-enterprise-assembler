@@ -117,10 +117,15 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val pathToPaye = appconf.PATH_TO_PAYE
     //// println(s"extracting paye file from path: $pathToPaye")
 
-    val payeDF = spark.read.option("header", "true").csv(pathToPaye)
+    val pathToVat = appconf.PATH_TO_VAT
+
+    val payeDf = spark.read.option("header", "true").csv(pathToPaye)
     // printDF("payeDf",payeDf)
 
-    val newEntTree: RDD[hfile.Tables] = finalCalculations(newRowsDf, payeDF).rdd.map(row => toNewEnterpriseRecords(row,appconf))
+    val vatDf = spark.read.option("header", "true").csv(pathToVat)
+
+    val newEntTree: RDD[hfile.Tables] = adminCalculations(newRowsDf, payeDf, vatDf).rdd.map(row => toNewEnterpriseRecords(row,appconf))
+   
     // println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
 
     // printRdd("newEntTree",newEntTree,"hfile.Tables")
@@ -162,12 +167,14 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
     // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
 
-    //val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     // printDF("payeDF", payeDF)
+
+    val vatDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
     //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
 
-    val ernPayeCalculatedDF: DataFrame = finalCalculationsEnt(ernWithEmployeesdata,payeDF)
+    val ernPayeCalculatedDF: DataFrame = adminCalculationsEnt(ernWithEmployeesdata,payeDF, vatDF)
     // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
     val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
     completeExistingEnts.cache()

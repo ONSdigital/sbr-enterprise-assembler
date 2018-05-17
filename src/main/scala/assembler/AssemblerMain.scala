@@ -13,11 +13,12 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     println("="*10)
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
-    val params = args.take(9)++args.takeRight(4)
+    val params = args.take(9)++args.takeRight(5)
     println("appParams:")
     params.foreach(println)
     val appParams = AppParams(params)
     println("="*10)
+    
     appParams.ACTION match{
 
       case "addperiod" => loadNewPeriodData(appParams)
@@ -27,7 +28,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
       case arg => throw new IllegalArgumentException(s"action not recognised: $arg")
 
     }
-    //createNewPeriodParquet(AppParams(appParams))
+    //createNewPeriodParquet(appParams)
 
     //createNewPeriodParquet(AppParams(appParams))
     //createRefreshParquet(AppParams(appParams))
