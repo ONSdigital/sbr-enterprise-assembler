@@ -18,9 +18,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     params.foreach(println)
     val appParams = AppParams(params)
     println("="*10)
-
-    //createNewPeriodParquet(AppParams(params))
-
+    
     appParams.ACTION match{
 
       case "addperiod" => loadNewPeriodData(appParams)

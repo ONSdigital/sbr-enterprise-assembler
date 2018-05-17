@@ -81,7 +81,6 @@ trait WithConversionHelper {
         Some(createEnterpriseCell(ern, "sic07", sic, appParams))
       },
       row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
-      row.getCalcValue("IndustryCode").map(sic => createEnterpriseCell(ern, "sic07", sic, appParams)),
       row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
       row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "apportion_turnover", apportion, appParams)),
