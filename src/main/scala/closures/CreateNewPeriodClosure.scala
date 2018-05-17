@@ -93,7 +93,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with Calculations/* w
                 newRow.getAs[String]("BusinessName"),
                 newRow.getAs[String]("CompanyNo"),
                 newRow.getAs[String]("EmploymentBands"),
-                Try{newRow.getAs[String]("IndustryCode")}.getOrElse(""),
+                Try{newRow.getAs[Long]("IndustryCode").toString}.getOrElse(""),
                 newRow.getAs[String]("LegalStatus"),
                 newRow.getAs[Seq[String]]("PayeRefs"),
                 newRow.getAs[String]("PostCode"),
