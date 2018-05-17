@@ -165,28 +165,33 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     // printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
 
     val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
-    // printDF("ernWithEmployeesdata",ernWithEmployeesdata)
+    //printDF("ernWithEmployeesdata",ernWithEmployeesdata)
 
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
-    // printDF("payeDF", payeDF)
+    //printDF("payeDF", payeDF)
 
     val vatDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
-
+    //printDF("vatDF", vatDF)
     //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
 
-    val ernPayeCalculatedDF: DataFrame = adminCalculationsEnt(ernWithEmployeesdata,payeDF, vatDF)
-    // printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
-    val completeExistingEnts: RDD[Row] = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter").rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
+    val ernPayeCalculatedDF: DataFrame = adminCalculationsEnt(ernWithEmployeesdata,payeDF, vatDF,"ern")
+    //printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
+    val completeExistingEnts: DataFrame = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter")//.rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
     completeExistingEnts.cache()
-    // printRdd("completeExistingEnts", completeExistingEnts,"Row")
+    //printDF("existingEntDF", existingEntDF)
+    //printDF("completeExistingEnts", completeExistingEnts)
 
 
     /**
       * add new + existing enterprises and save to hfile
       * */
-    val exsistingEntsCells: RDD[(String, HFileCell)] = completeExistingEnts.flatMap(row => rowToFullEnterprise(row,appconf))
-
-    val allEnts: RDD[(String, HFileCell)] = newEnts.union(exsistingEntsCells).coalesce(numOfPartitions)
+    val existingEntsCells: RDD[(String, HFileCell)] = {
+      val ss = completeExistingEnts.sparkSession
+      import ss.implicits._
+      completeExistingEnts.map(row => rowToFullEnterprise(row,appconf)).flatMap(identity).rdd
+    }
+    //printRdd("existingEntsCells", existingEntsCells, "(String,HFileCell)")
+    val allEnts: RDD[(String, HFileCell)] = newEnts.union(existingEntsCells)
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
 
@@ -209,6 +214,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
   allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
   allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))

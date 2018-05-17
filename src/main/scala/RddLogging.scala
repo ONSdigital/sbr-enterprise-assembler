@@ -31,7 +31,7 @@ trait RddLogging {
     println("printing DF, START>>")
     println(s"$name Schema:\n")
     df.printSchema()
-    df.show(20)
+    df.show()
 /*    df.cache()
     val collected: Array[Row] = df.collect()
     printRecords(collected,s"$name DataFrame converted to RDD[Row]")*/
@@ -39,10 +39,12 @@ trait RddLogging {
     //df.unpersist()
   }
 
+
+
   def printRddOfRows(name:String,rdd:RDD[Row])(implicit spark:SparkSession) = {
     rdd.cache()
     print(s"START>> check for errors rdd $name")
-    printRecords(Array(rdd.take(20)),"Row")
+    printRecords(rdd.collect(),"Row")
     print(s"FINISHED>> checking $name \n")
     rdd.unpersist()
   }
@@ -50,7 +52,7 @@ trait RddLogging {
   def printRdd[T](name:String,rdd:RDD[T],`type`:String)(implicit spark:SparkSession) = {
     rdd.cache()
     print(s"START>> check for errors rdd $name")
-    printRecords(rdd.take(20),`type`)
+    printRecords(rdd.collect(),`type`)
     print(s"FINISHED>> checking $name \n")
     rdd.unpersist()
   }

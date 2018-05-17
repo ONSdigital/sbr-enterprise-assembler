@@ -1,8 +1,13 @@
 package assembler
 
 
+import java.io.InputStream
+import java.net.URL
+
 import global.{AppParams, Configs}
 import service._
+
+import scala.reflect.io.File
 
 
 object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService{
@@ -50,7 +55,14 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))
     //loadFromHFile(AppParams(appParams))
+    if(appParams.ENV=="local") {
+      val entHFile =  File(appParams.PATH_TO_ENTERPRISE_HFILE)
+      entHFile.deleteRecursively()
+      val linksHFile =  File(appParams.PATH_TO_LINKS_HFILE)
+      linksHFile.deleteRecursively()
+      println("HFiles deleted")
 
+    }
   }
 
 }
