@@ -25,11 +25,13 @@ trait RddLogging {
     recs.foreach(record => println(s"  ${record.toString()}"))
   }
 
+
+
   def printDF(name:String, df:DataFrame) = {
     println("printing DF, START>>")
     println(s"$name Schema:\n")
     df.printSchema()
-    df.show()
+    df.show(20)
 /*    df.cache()
     val collected: Array[Row] = df.collect()
     printRecords(collected,s"$name DataFrame converted to RDD[Row]")*/
@@ -40,7 +42,7 @@ trait RddLogging {
   def printRddOfRows(name:String,rdd:RDD[Row])(implicit spark:SparkSession) = {
     rdd.cache()
     print(s"START>> check for errors rdd $name")
-    printRecords(rdd.collect(),"Row")
+    printRecords(Array(rdd.take(20)),"Row")
     print(s"FINISHED>> checking $name \n")
     rdd.unpersist()
   }
@@ -48,7 +50,7 @@ trait RddLogging {
   def printRdd[T](name:String,rdd:RDD[T],`type`:String)(implicit spark:SparkSession) = {
     rdd.cache()
     print(s"START>> check for errors rdd $name")
-    printRecords(rdd.collect(),`type`)
+    printRecords(rdd.take(20),`type`)
     print(s"FINISHED>> checking $name \n")
     rdd.unpersist()
   }
