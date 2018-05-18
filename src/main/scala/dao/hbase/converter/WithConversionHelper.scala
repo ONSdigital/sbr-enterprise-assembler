@@ -80,14 +80,14 @@ trait WithConversionHelper {
         val sic = Try{row.getString("IndustryCode").get}.getOrElse("")
         Some(createEnterpriseCell(ern, "sic07", sic, appParams))
       },
-      row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
-      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
+      row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legal_status", ls, appParams)),
+      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
-      row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "apportion_turnover", apportion, appParams)),
-      row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "total_turnover", total, appParams)),
-      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "contained_turnover", contained, appParams)),
-      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "standard_turnover", standard, appParams)),
-      row.getCalcValue("group_turnover").map(group => createEnterpriseCell(ern, "group_turnover", group, appParams))
+      row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+      row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appParams)),
+      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+      row.getCalcValue("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
     ).collect { case Some(v) => v }
 
 /**/
@@ -97,7 +97,7 @@ trait WithConversionHelper {
     Seq(
       row.getString("entref").map(ref => createEnterpriseCell(ern, "entref", ref, appParams)),
       row.getString("name") map (name => createEnterpriseCell(ern, "name", name, appParams)),
-      row.getString("tradingstyle").map(ls => createEnterpriseCell(ern, "tradingstyle", ls, appParams)),
+      row.getString("tradingstyle").map(ls => createEnterpriseCell(ern, "trading_style", ls, appParams)),
       row.getString("address1") map (a1 => createEnterpriseCell(ern, "address1", a1, appParams)),
       row.getString("address2").map(a2 => createEnterpriseCell(ern, "address2", a2, appParams)),
       row.getString("address3") map (a3 => createEnterpriseCell(ern, "address3", a3, appParams)),
@@ -108,14 +108,14 @@ trait WithConversionHelper {
         val sic = Try{row.getString("sic07").get}.getOrElse("")
         Some(createEnterpriseCell(ern, "sic07", sic, appParams))
       },
-      row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legalstatus", ls, appParams)),
-      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_employees", employees, appParams)),
+      row.getString("legalstatus").map(ls => createEnterpriseCell(ern, "legal_status", ls, appParams)),
+      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
       row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
-      row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "apportion_turnover", apportion, appParams)),
-      row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "total_turnover", total, appParams)),
-      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "contained_turnover", contained, appParams)),
-      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "standard_turnover", standard, appParams)),
-      row.getCalcValue("group_turnover").map(group => createEnterpriseCell(ern, "group_turnover", group, appParams))
+      row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+      row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appParams)),
+      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+      row.getCalcValue("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
     ).collect { case Some(v) => v }
 }
 
