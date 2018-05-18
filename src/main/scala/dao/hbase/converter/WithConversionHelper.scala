@@ -46,34 +46,42 @@ trait WithConversionHelper {
   val childPrefix = "c_"
   val parentPrefix = "p_"
 
-  def toEnterpriseRecords(row: Row, appParams: AppParams): Tables = {
+
+  def toEnterpriseRecordsWithLou(row: Row, appParams: AppParams): Tables = {
     val ern = generateUniqueKey
     Tables(rowToEnterprise(row, ern, appParams), rowToLinks(row, ern, appParams), toLocalUnits(row, ern, appParams))
   }
 
   def toLocalUnits(row: Row, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
 
-      val lurn = generateUniqueKey
+    val lurn = generateUniqueKey
 
-      Seq(
-        createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
-        createLocalUnitCell(lurn,ern, "ern", ern, appParams),
-        createLocalUnitCell(lurn,ern, "address1", Try{row.getAs[String]("address1")}.getOrElse(""), appParams),
-        createLocalUnitCell(lurn,ern, "postcode", Try{row.getAs[String]("PostCode")}.getOrElse(""), appParams),
-        createLocalUnitCell(lurn,ern, "sic07", Try{row.getAs[String]("sic07")}.getOrElse(""), appParams)
-      ) ++ Seq(
-        Try{row.getAs[String]("luref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
-        Try{row.getAs[String]("entref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
-        Try{row.getAs[String]("BusinessName")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
-        Try{row.getAs[String]("TradingStatus")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
-        Try{row.getAs[String]("address2")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
-        Try{row.getAs[String]("address3")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
-        Try{row.getAs[String]("address4")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
-        Try{row.getAs[String]("LegalStatus")}.toOption.map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams)),
-        row.getCalcValue("paye_employees").map(employees => createLocalUnitCell(lurn,ern, "employees", employees, appParams))
-      ).collect { case Some(v) => v }
-}
+    Seq(
+      createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
+      createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "address1", Try{row.getAs[String]("address1")}.getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "postcode", Try{row.getAs[String]("PostCode")}.getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "sic07", Try{row.getAs[String]("sic07")}.getOrElse(""), appParams)
+    ) ++ Seq(
+      Try{row.getAs[String]("luref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
+      Try{row.getAs[String]("entref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
+      Try{row.getAs[String]("BusinessName")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
+      Try{row.getAs[String]("TradingStatus")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
+      Try{row.getAs[String]("address2")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
+      Try{row.getAs[String]("address3")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
+      Try{row.getAs[String]("address4")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+      Try{row.getAs[String]("LegalStatus")}.toOption.map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams)),
+      row.getCalcValue("paye_employees").map(employees => createLocalUnitCell(lurn,ern, "employees", employees, appParams))
+    ).collect { case Some(v) => v }
+  }
 
+
+
+
+  def toEnterpriseRecords(row:Row, appParams:AppParams): Tables = {
+    val ern = generateUniqueKey
+    Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
+  }
 
   def toLinksRefreshRecords(row:Row, appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row)

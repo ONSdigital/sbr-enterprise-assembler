@@ -2,7 +2,7 @@ package closures
 
 import dao.hbase.HBaseDao
 import dao.parquet.ParquetDAO
-import dao.parquet.ParquetDAO.finalCalculations
+import dao.parquet.ParquetDAO.adminCalculations
 import global.Configs.conf
 import global.{AppParams, Configs}
 import model.domain.HFileRow
@@ -22,23 +22,23 @@ trait RefreshClosures {
 
 
 
-  def readDeleteData(appconf:AppParams)(implicit ss:SparkSession){//.*(?!~ENT~)201802$
+  def readDeleteData(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){//.*(?!~ENT~)201802$
     val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.readDeleteData(appconf,regex)
   }
 
 
-  def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession){
+  def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
     val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.saveDeleteLinksToHFile(appconf,regex)
   }
 
   def createLinksRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = ParquetDAO.createRefreshLinksHFile(appconf)
 
-  def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = {
+  def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession,connection:Connection) = {
     val localConfCopy = conf
     val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
-    val lus: RDD[HFileRow] = HBaseDao.readWithKeyFilter(localConfCopy,appconf,regex) //read LUs from links
+    val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfCopy,appconf,regex) //read LUs from links
 
     val rows: RDD[Row] = lus.map(row => Row(row.getId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
 
@@ -52,8 +52,11 @@ trait RefreshClosures {
 
     val fullLUs = refreshDF.join(erns,"id")
 
+    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
+
     //get cells for jobs and employees - the only updateable columns in enterprise table
-    val entsRDD: RDD[(String, hfile.HFileCell)] = finalCalculations(fullLUs, spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.flatMap(row => Seq(
+    val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculations(fullLUs, payeDF, vatDF).rdd.flatMap(row => Seq(
       ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
       ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
     ))

@@ -14,6 +14,7 @@ package object hfile {
       val deleteType = Seq(KeyValue.Type.DeleteFamily.ordinal(), KeyValue.Type.Delete.ordinal(), KeyValue.Type.DeleteColumn.ordinal(), KeyValue.Type.DeleteFamilyVersion.ordinal())
       if(deleteType.contains(kvType))  new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes,timestamp,KeyValue.Type.values().find(_.ordinal()==kvType).get)
       else new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
+
     }
     def toDeleteKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)
   }

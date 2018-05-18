@@ -7,15 +7,14 @@ import org.apache.hadoop.hbase.Cell
   */
 
 case class KVCell[K,V](column:K, value:V){
-  override def toString = {
+
+  def toPrintString = {
     val col = this.column
     val value = this.value
     val newLine = '\n'
 
     newLine+
     col.toString+": "+value.toString
-
-
   }
 }
 

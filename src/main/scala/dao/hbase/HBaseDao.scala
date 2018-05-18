@@ -34,9 +34,9 @@ object HBaseDao{
     loadLousHFile
   }
 
-  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
-    val data: RDD[HFileRow] = readWithKeyFilter(localConfCopy,appParams,regex)
+    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     val rows: Array[HFileRow] = data.take(5)
     rows.map(_.toString).foreach(row => print(
       "="*10+
@@ -45,24 +45,54 @@ object HBaseDao{
     ))
   }
 
-  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
+  def saveDeletePeriodLinksToHFile(appParams:AppParams)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
-    val data = readWithKeyFilter(localConfCopy,appParams,regex)
+    val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
+    val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
+    data.sortBy(row => s"${row.key}")
+      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINK_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
+  }
+
+
+  def saveDeletePeriodEnterpriseToHFile(appParams:AppParams)(implicit spark:SparkSession,connection:Connection): Unit = {
+    val localConfCopy = conf
+    val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
+    val data = readEnterprisesWithKeyFilter(localConfCopy,appParams,regex)
+    data.sortBy(row => s"${row.key}")
+      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY))
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
+  }
+
+
+  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
+    val localConfCopy = conf
+    val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeleteHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
       .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_HFILE_DELETE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
   }
 
-  def readWithKeyFilter(configs:Configuration,appParams:AppParams,regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
 
     val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
-    configs.set(TableInputFormat.INPUT_TABLE, tableName)
-    //val regex = "72~LEU~"+{appParams.TIME_PERIOD}+"$"
-    withScanner(configs,regex,appParams){
-      readKvsFromHBase
-    }
-   }
+    readTableWithKeyFilter(confs, appParams, tableName, regex)
 
+  }
+
+  def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+
+    val tableName = s"${appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appParams.HBASE_ENTERPRISE_TABLE_NAME}"
+    readTableWithKeyFilter(confs, appParams, tableName, regex)
+
+  }
+
+  def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
+    val localConfCopy = confs
+    withScanner(localConfCopy,regex,appParams,tableName){
+      readKvsFromHBase
+    }}
+  
   def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
@@ -106,6 +136,16 @@ object HBaseDao{
   }
 
 
+  private def wrapReadTransaction(tableName:String)(action: String => RDD[HFileRow])(implicit connection:Connection):RDD[HFileRow] = {
+    val table: Table = connection.getTable(TableName.valueOf(tableName))
+    val admin = connection.getAdmin
+    setJob(table)
+    val res = action(tableName)
+    table.close
+    res
+  }
+
+
   private def setJob(table:Table)(implicit connection:Connection){
     val job = Job.getInstance(connection.getConfiguration)
     job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
@@ -113,10 +153,12 @@ object HBaseDao{
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
-  def withScanner(config:Configuration,regex:String, appParams:AppParams)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
+  def withScanner(config:Configuration,regex:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
+    config.set(TableInputFormat.INPUT_TABLE, tableName)
     setScanner(config,regex,appParams)
     val res = getResult(config)
     unsetScanner(config)
+    config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
