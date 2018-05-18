@@ -5,7 +5,7 @@ import global.{AppParams, Configs}
 import model.hfile._
 import org.apache.spark.sql.Row
 
-import scala.util.Random
+import scala.util.{Random, Try}
 import spark.extensions.sql.SqlRowExtensions
 /**
   * Schema:
@@ -58,18 +58,18 @@ trait WithConversionHelper {
       Seq(
         createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
         createLocalUnitCell(lurn,ern, "ern", ern, appParams),
-        createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
-        createLocalUnitCell(lurn,ern, "postcode", row.getString("PostCode").getOrElse(""), appParams),
-        createLocalUnitCell(lurn,ern, "sic07", row.getString("sic07").getOrElse(""), appParams)
+        createLocalUnitCell(lurn,ern, "address1", Try{row.getAs[String]("address1")}.getOrElse(""), appParams),
+        createLocalUnitCell(lurn,ern, "postcode", Try{row.getAs[String]("PostCode")}.getOrElse(""), appParams),
+        createLocalUnitCell(lurn,ern, "sic07", Try{row.getAs[String]("sic07")}.getOrElse(""), appParams)
       ) ++ Seq(
-        row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
-        row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
-        row.getString("BusinessName").map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
-        row.getString("TradingStatus").map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
-        row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
-        row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
-        row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
-        row.getString("LegalStatus").map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams)),
+        Try{row.getAs[String]("luref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
+        Try{row.getAs[String]("entref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
+        Try{row.getAs[String]("BusinessName")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
+        Try{row.getAs[String]("TradingStatus")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
+        Try{row.getAs[String]("address2")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
+        Try{row.getAs[String]("address3")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
+        Try{row.getAs[String]("address4")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+        Try{row.getAs[String]("LegalStatus")}.toOption.map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams)),
         row.getCalcValue("paye_employees").map(employees => createLocalUnitCell(lurn,ern, "employees", employees, appParams))
       ).collect { case Some(v) => v }
 }

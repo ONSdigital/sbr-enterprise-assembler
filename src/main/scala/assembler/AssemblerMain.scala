@@ -8,9 +8,9 @@ import service._
 object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService{
 
   def main(args: Array[String]) {
-    Configs.conf.set("hbase.zookeeper.quorum", args(9))
-    Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
-    val appParams = args.take(9)++args.takeRight(2)
+    Configs.conf.set("hbase.zookeeper.quorum", args(13))
+    Configs.conf.set("hbase.zookeeper.property.clientPort", args(14))
+    val appParams = args.take(13)++args.takeRight(2)
     //createRefreshParquet(AppParams(appParams))
     //loadRefreshFromHFiles(AppParams(appParams))
     //loadRefresh(AppParams(appParams))
