@@ -26,7 +26,10 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
     val appArgs = appconf
 
-    val parquetRDD: RDD[hfile.Tables] = finalCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.map(row => toNewEnterpriseRecords(row,appArgs)).cache()
+    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
+
+    val parquetRDD: RDD[hfile.Tables] = adminCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), payeDF, vatDF).rdd.map(row => toNewEnterpriseRecords(row,appArgs)).cache()
 
         parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
           .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -81,8 +84,11 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
             val fullLUs = refreshDF.join(erns,"id")
 
+            val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+            val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
+
             //get cells for jobs and employees - the only updateable columns in enterprise table
-            val entsRDD: RDD[(String, hfile.HFileCell)] = finalCalculations(fullLUs, spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)).rdd.flatMap(row => Seq(
+            val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculations(fullLUs, payeDF, vatDF).rdd.flatMap(row => Seq(
               ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
               ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
             ))

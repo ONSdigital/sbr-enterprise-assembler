@@ -4,6 +4,8 @@ package assembler
 import global.{AppParams, Configs}
 import service._
 
+import scala.reflect.io.File
+
 
 object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService{
 
@@ -13,11 +15,12 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     println("="*10)
     Configs.conf.set("hbase.zookeeper.quorum", args(9))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(10))
-    val params = args.take(9)++args.takeRight(4)
+    val params = args.take(9)++args.takeRight(5)
     println("appParams:")
     params.foreach(println)
     val appParams = AppParams(params)
     println("="*10)
+    
     appParams.ACTION match{
 
       case "addperiod" => loadNewPeriodData(appParams)
@@ -27,7 +30,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
       case arg => throw new IllegalArgumentException(s"action not recognised: $arg")
 
     }
-    //createNewPeriodParquet(AppParams(appParams))
+    //createNewPeriodParquet(appParams)
 
     //createNewPeriodParquet(AppParams(appParams))
     //createRefreshParquet(AppParams(appParams))
@@ -49,7 +52,14 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))
     //loadFromHFile(AppParams(appParams))
+    if(appParams.ENV=="local") {
+      val entHFile =  File(appParams.PATH_TO_ENTERPRISE_HFILE)
+      entHFile.deleteRecursively()
+      val linksHFile =  File(appParams.PATH_TO_LINKS_HFILE)
+      linksHFile.deleteRecursively()
+      println("HFiles deleted")
 
+    }
   }
 
 }

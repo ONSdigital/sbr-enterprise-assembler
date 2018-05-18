@@ -25,6 +25,8 @@ trait RddLogging {
     recs.foreach(record => println(s"  ${record.toString()}"))
   }
 
+
+
   def printDF(name:String, df:DataFrame) = {
     println("printing DF, START>>")
     println(s"$name Schema:\n")
@@ -36,6 +38,8 @@ trait RddLogging {
     println("printing DF, END>>")
     //df.unpersist()
   }
+
+
 
   def printRddOfRows(name:String,rdd:RDD[Row])(implicit spark:SparkSession) = {
     rdd.cache()
