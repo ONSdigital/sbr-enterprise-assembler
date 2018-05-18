@@ -6,15 +6,12 @@ import global.{AppParams, Configs}
 import model.domain.{HFileRow, KVCell}
 import model.hfile
 import model.hfile.HFileCell
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import spark.RddLogging
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
 
@@ -23,7 +20,7 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging{
+object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
 
 
   type Cells = Iterable[KVCell[String, String]]
@@ -65,7 +62,6 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper 
     * */
     val updatedExistingLUs: RDD[HFileRow] = joined.collect {
       case (key, (Some(newCells), Some(oldCells))) => HFileRow(key,{newCells ++ oldCells.find(_.column=="p_ENT").map(ernCell => Seq(ernCell)).getOrElse(Seq.empty) })
-      //case (key, (None, Some(oldCells))) if(key.endsWith(s"~ENT~${appconf.TIME_PERIOD}")) => HFileRow(key,oldCells)
 
     } // existing LUs updated with new cells
 
