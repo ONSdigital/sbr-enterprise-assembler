@@ -7,12 +7,21 @@
   trait DataFrameHelper {
 
     val cols = Seq("sum(june_jobs)","sum(sept_jobs)","sum(dec_jobs)","sum(mar_jobs)")
+    val totalCols = Seq("temp_standard_vat_turnover","temp_contained_rep_vat_turnover","apportion_turnover")
 
     val avg = udf((values: Seq[Integer]) => {
       val notNullValues = values.filter(_ != null).map(_.toInt)
       notNullValues.length match {
         case 0 => None
         case s => Some(notNullValues.sum/notNullValues.length)
+      }
+    })
+
+    val total = udf((values: Seq[Integer]) => {
+      val notNullValues = values.filter(_ != null).map(_.toInt)
+      notNullValues.length match {
+        case 0 => None
+        case s => Some(notNullValues.sum)
       }
     })
 
@@ -40,15 +49,17 @@
       val standardVatTurnover = getStandardTurnover(startDF, idColumnName)
       val groupTurnover = getGroupTurnover(startDF, getEmployeeCount(entPaye, idColumnName), idColumnName)
 
-      partionedDF
+      val df = partionedDF
         .join(containedTurnover,Seq(idColumnName), "outer")
         .join(standardVatTurnover,Seq(idColumnName), "outer")
         .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName), "outer")
         .join(employees, idColumnName)
         .join(jobs, idColumnName)
-        .withColumn("total_turnover", List(coalesce(col("temp_standard_vat_turnover"), lit(0)),coalesce(col("temp_contained_rep_vat_turnover"), lit(0)),coalesce(col("apportion_turnover"), lit(0))).reduce(_+_))
+        //.withColumn("total_turnover", List(coalesce(col("temp_standard_vat_turnover"), lit(0)),coalesce(col("temp_contained_rep_vat_turnover"), lit(0)),coalesce(col("apportion_turnover"), lit(0))).reduce(_+_))
         .coalesce(numOfPartitions)
         .dropDuplicates(idColumnName,"apportion_turnover")
+
+      df.withColumn("total_turnover", total(array(totalCols.map(s => df.apply(s)):_*)))
     }
 
     private def flattenVat(parquetDF: DataFrame): DataFrame = {
