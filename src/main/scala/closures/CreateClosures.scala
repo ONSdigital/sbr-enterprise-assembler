@@ -26,7 +26,7 @@ trait CreateClosures {
 
   def createSingleRefreshHFile(appconf: AppParams)(implicit ss: SparkSession) = {
     val localConfigs = Configs.conf
-    val cleanRecs: RDD[(String, hfile.HFileCell)] = HBaseDao.readWithKeyFilter(localConfigs,appconf, ".*(?<!~ENT~" + {
+    val cleanRecs: RDD[(String, hfile.HFileCell)] = HBaseDao.readLinksWithKeyFilter(localConfigs,appconf, ".*(?<!~ENT~" + {
       appconf.TIME_PERIOD
     } + ")$").flatMap(_.toDeleteHFileRows(appconf.HBASE_LINKS_COLUMN_FAMILY)).sortBy(v => {
       s"${v._2.key}${v._2.qualifier}"
@@ -41,7 +41,7 @@ trait CreateClosures {
       s"${v._2.key}${v._2.qualifier}${v._2.kvType}"
     }).cache()
 
-    val collected = sorted.collect()
+    //val collected = sorted.collect()
     sorted.unpersist()
 
     val ready: RDD[(ImmutableBytesWritable, KeyValue)] = sorted.map(data => (new ImmutableBytesWritable(data._1.getBytes()), data._2.toKeyValue))

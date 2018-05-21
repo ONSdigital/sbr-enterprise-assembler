@@ -76,14 +76,19 @@ lazy val recsParamsRefresh = Array("LINKS", "ons","l",
   "src/main/resources/data/smallPaye.csv",
   "local","refresh")
 
-lazy val createRecordsParams = Array("unit_links", "sbr_dev_db","l",
-  "src/main/resources/data/temp/cr/links/hfile", "enterprise","sbr_dev_db", "d",
-   "src/main/resources/data/temp/cr/enterprise/hfile",
-  "LOU","ons", "d","src/main/resources/data/temp/cr/local-unit/hfile",
-  "src/main/resources/data/temp/cr/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
-  "src/main/resources/data/smallPaye.csv",
-  "local","create")
+
+
+
+
+lazy val createRecordsParams = Array(
+                                    "LINKS", "ons","l","src/main/resources/data/temp/3recsRefresh/links/hfile",
+                                    "ENT","ons", "d", "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
+                                    "LOU","ons","d","src/main/resources/data/temp/3recsRefresh/local-unit/hfile",
+                                    "src/main/resources/data/temp/3recsRefresh/sample.parquet",
+                                    "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
+                                    "src/main/resources/data/smallPaye.csv",
+                                    "local","create"
+                                  )
 
 
 lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",

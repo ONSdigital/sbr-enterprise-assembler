@@ -10,16 +10,16 @@ import scala.reflect.io.File
 object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService{
 
   def main(args: Array[String]) {
-    println("ARGS:")
-    args.foreach(println)
-    println("="*10)
+    //println("ARGS:")
+    //args.foreach(println)
+    //println("="*10)
     Configs.conf.set("hbase.zookeeper.quorum", args(13))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(14))
-    val params = args.take(9)++args.takeRight(5)
-    println("appParams:")
+    val params = args.take(13)++args.takeRight(5)
+/*    println("appParams:")
     params.foreach(println)
+    println("="*10)*/
     val appParams = AppParams(params)
-    println("="*10)
 
     appParams.ACTION match{
 
@@ -32,7 +32,6 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     }
     //createNewPeriodParquet(appParams)
 
-    //createNewPeriodParquet(AppParams(appParams))
     //createRefreshParquet(AppParams(appParams))
     //loadRefreshFromHFiles(AppParams(appParams))
     //loadRefresh(AppParams(appParams))

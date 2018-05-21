@@ -76,6 +76,8 @@ package object sql {
 
     def getLong(field:String): Option[Long] = getValue[Long](field)
 
+    def getInteger(field:String): Option[Int] = getValue[Int](field)
+
     def getStringSeq(field:String): Option[Seq[String]] = getSeq(field,Some((s:String) => s.trim.nonEmpty))
 
     def getLongSeq(field:String): Option[Seq[Long]] = getSeq[Long](field)
