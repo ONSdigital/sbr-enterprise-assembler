@@ -172,3 +172,8 @@ fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodPa
 fullRunTask(runInitialPopulationRecs, Runtime, "assembler.AssemblerMain", initialPopulationParams: _*)
 fullRunTask(runCalculationPeriodRecs, Runtime, "assembler.AssemblerMain", calculationsParams: _*)
 fullRunTask(runDeletePeriod, Runtime, "assembler.AssemblerMain", deletePeriodParams: _*)
+
+/*
+current app args for addNewPeriod:
+LINKS ons l src/main/resources/data/temp/addperiod/links/hfile ENT ons d src/main/resources/data/temp/addperiod/enterprise/hfile LOU ons d src/main/resources/data/temp/addperiod/local-unit/hfile src/main/resources/data/temp/addperiod/sample.parquet localhost 2181 201804 src/main/resources/data/newperiod/newPeriodPaye.csv src/main/resources/data/newperiod/newPeriodVat.csv local addperiod
+*/
