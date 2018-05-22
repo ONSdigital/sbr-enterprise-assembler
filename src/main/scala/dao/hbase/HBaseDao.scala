@@ -68,7 +68,7 @@ object HBaseDao{
 
   def saveDeleteLouToHFile(appParams:AppParams)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
-    val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
+    val regex = ".*~("+{appParams.TIME_PERIOD}+")~*."
     val data = readLouWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LOCALUNITS_COLUMN_FAMILY))
