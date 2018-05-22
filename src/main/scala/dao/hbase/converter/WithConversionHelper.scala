@@ -62,7 +62,7 @@ trait WithConversionHelper {
       createLocalUnitCell(lurn,ern, "address1", Try{row.getAs[String]("address1")}.getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "postcode", Try{row.getAs[String]("PostCode")}.getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "sic07", Try{row.getAs[String]("sic07")}.getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "employees", row.getLong("paye_employees").map(_.toString).getOrElse("0"), appParams)
+      createLocalUnitCell(lurn,ern, "employees", Try{row.getAs[String]("paye_employees")}.map(_.toString).getOrElse("0"), appParams)
     ) ++ Seq(
       Try{row.getAs[String]("luref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       Try{row.getAs[String]("entref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
