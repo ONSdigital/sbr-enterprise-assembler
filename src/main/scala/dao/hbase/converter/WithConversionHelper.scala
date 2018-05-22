@@ -59,10 +59,10 @@ trait WithConversionHelper {
     Seq(
       createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
       createLocalUnitCell(lurn,ern, "ern", ern, appParams),
-      createLocalUnitCell(lurn,ern, "address1", Try{row.getAs[String]("address1")}.getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "postcode", Try{row.getAs[String]("PostCode")}.getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "sic07", Try{row.getAs[String]("sic07")}.getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "employees", Try{row.getAs[String]("employees")}.map(_.toString).getOrElse("0"), appParams)
+      createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "postcode", row.getString("PosCode").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "sic07", row.getString("sic07").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "employees", row.getString("employees").map(_.toString).getOrElse("0"), appParams)
     ) ++ Seq(
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
