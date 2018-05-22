@@ -121,5 +121,5 @@ package object sql {
         }}
     }
 
-   }
+
 }
