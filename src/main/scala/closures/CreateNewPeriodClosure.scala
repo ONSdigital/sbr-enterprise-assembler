@@ -230,13 +230,8 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
   }
 
   def saveAllLocalUnits(newLous:RDD[(String, HFileCell)],appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
-    val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
-    //next 3 lines: select LOU rows from hbase
-    val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
-    val luRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
-    val existingLouRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
+    val existingLous = getExistingLocalUnits(appconf, confs)
 
-    val existingLous = existingLouRdd.flatMap(rec => rec._2.map(cell => (rec._1,HFileCell(rec._1,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY,cell.column,cell.value))))
     val allLous = existingLous.union(newLous)
     allLous.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
