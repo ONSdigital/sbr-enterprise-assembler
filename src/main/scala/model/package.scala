@@ -20,6 +20,10 @@ package object hfile {
           case npe: NullPointerException => {
             println(s"KEY: $key, qualifier: $qualifier value: ${if (value==null) "null" else value.toString()}")
             throw npe
+            }
+          case e: Throwable => {
+            println(s"KEY: $key, qualifier: $qualifier value: ${if (value==null) "null" else value.toString()}")
+            throw e
           }
         }
       }
