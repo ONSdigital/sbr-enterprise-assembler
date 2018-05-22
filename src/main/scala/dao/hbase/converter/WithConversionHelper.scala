@@ -64,17 +64,16 @@ trait WithConversionHelper {
       createLocalUnitCell(lurn,ern, "sic07", Try{row.getAs[String]("sic07")}.getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "employees", Try{row.getAs[String]("paye_employees")}.map(_.toString).getOrElse("0"), appParams)
     ) ++ Seq(
-      Try{row.getAs[String]("luref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
-      Try{row.getAs[String]("entref")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
-      Try{row.getAs[String]("BusinessName")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
-      Try{row.getAs[String]("TradingStatus")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
-      Try{row.getAs[String]("address2")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
-      Try{row.getAs[String]("address3")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
-      Try{row.getAs[String]("address4")}.toOption.map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
-      Try{row.getAs[String]("LegalStatus")}.toOption.map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams))
+      row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
+      row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
+      row.getString("BusinessName").map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
+      row.getString("TradingStatus").map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
+      row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
+      row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
+      row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+      row.getString("LegalStatus").map(ls => createLocalUnitCell(lurn,ern, "legalstatus", ls, appParams))
     ).collect { case Some(v) => v }
   }
-
 
 
 
@@ -210,7 +209,7 @@ trait WithConversionHelper {
 
   def createEnterpriseCell(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
-  def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
+  def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_LOCALUNITS_COLUMN_FAMILY,column,value)
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
