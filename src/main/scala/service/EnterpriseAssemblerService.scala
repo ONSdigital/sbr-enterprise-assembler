@@ -23,7 +23,7 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
   def loadFromJson(appconf:AppParams) = {  withSpark(appconf) { implicit ss: SparkSession =>
 
                                              ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)
-                                             ParquetDAO.parquetToHFile(ss, appconf)
+                                             ParquetDAO.parquetCreateNewToHFile(ss, appconf)
                                            }
     withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
   }
