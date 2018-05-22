@@ -10,6 +10,7 @@ object DeleteClosures {
   def deleteDataForPeriod(appconf:AppParams)(implicit ss:SparkSession,connection:Connection): Unit ={
     createDeleteLinksHFile(appconf)
     createDeleteEnterpriseHFile(appconf)
+    createDeleteLouHFile(appconf)
   }
 
   def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
@@ -18,5 +19,11 @@ object DeleteClosures {
   def createDeleteEnterpriseHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
     HBaseDao.saveDeletePeriodEnterpriseToHFile(appconf)
   }
+
+    def createDeleteLouHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
+    HBaseDao.saveDeleteLouToHFile(appconf)
+  }
+
+
 
 }
