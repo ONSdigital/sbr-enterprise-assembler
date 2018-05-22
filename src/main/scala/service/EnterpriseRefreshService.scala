@@ -32,7 +32,4 @@ trait EnterpriseRefreshService extends HBaseConnectionManager with SparkSessionM
     }
   }
 
-
-
-
 }
