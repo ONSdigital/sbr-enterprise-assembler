@@ -31,6 +31,8 @@ package object hfile {
     }
     def toDeleteKeyValue = new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)
   }
+
+
   object HFileCell{
     def apply(kv:KeyValue) = new HFileCell(
                                             Bytes.toString(kv.getKey),
