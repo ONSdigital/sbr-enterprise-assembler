@@ -1,5 +1,6 @@
 truncate 'ons:ENT'
 truncate 'ons:LINKS'
+truncate 'ons:LOU'
 
 
 put 'ons:LOU', '990000002~201803', 'd:lurn', '200000099'
