@@ -10,9 +10,10 @@ import spark.SparkSessionManager
 trait DeleteDataService extends HBaseConnectionManager with SparkSessionManager{
 
   def deletePeriod(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
-    withHbaseConnection{implicit con:Connection =>
       DeleteClosures.deleteDataForPeriod(appconf)
-      HBaseDao.loadHFiles(con,appconf)
+
+      withHbaseConnection{implicit con:Connection =>HBaseDao.loadHFiles(con,appconf)
+
     }
   }
 }
