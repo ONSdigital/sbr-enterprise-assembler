@@ -49,7 +49,10 @@ trait WithConversionHelper {
 
   def toNewEnterpriseRecordsWithLou(row: Row, appParams: AppParams): Tables = {
     val ern = generateUniqueKey
-    Tables(rowToEnterprise(row, ern, appParams), rowToLinks(row, ern, appParams), toLocalUnits(row, ern, appParams))
+    val ents = rowToEnterprise(row, ern, appParams)
+    val links = rowToLinks(row, ern, appParams)
+    val lous = toLocalUnits(row, ern, appParams)
+    Tables(ents, links, lous)
   }
 
   def toLocalUnits(row: Row, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
@@ -67,7 +70,7 @@ trait WithConversionHelper {
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
       row.getString("BusinessName").map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
-      row.getString("TradingStatus").map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
+      row.getString("tradingstyle").map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
       row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
       row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
       row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
@@ -127,7 +130,7 @@ trait WithConversionHelper {
     Seq(
       row.getString("entref").map(ref => createEnterpriseCell(ern, "entref", ref, appParams)),
       row.getString("name") map (name => createEnterpriseCell(ern, "name", name, appParams)),
-      row.getString("tradingstyle").map(ls => createEnterpriseCell(ern, "trading_style", ls, appParams)),
+      row.getString("tradingstyle").map(ls => createEnterpriseCell(ern, "tradingstyle", ls, appParams)),
       row.getString("address1") map (a1 => createEnterpriseCell(ern, "address1", a1, appParams)),
       row.getString("address2").map(a2 => createEnterpriseCell(ern, "address2", a2, appParams)),
       row.getString("address3") map (a3 => createEnterpriseCell(ern, "address3", a3, appParams)),
