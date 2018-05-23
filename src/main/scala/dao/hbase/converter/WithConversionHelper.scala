@@ -216,7 +216,7 @@ trait WithConversionHelper {
   private def generateUniqueKey = Random.alphanumeric.take(18).mkString
 
   private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = {
-    s"${ern.reverse}~$lurn~${appParams.TIME_PERIOD}"
+    s"${ern.reverse}~${appParams.TIME_PERIOD}~$lurn"
   }
 
   private def generateEntKey(ern:String,appParams:AppParams) = {

@@ -15,6 +15,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     //println("="*10)
     Configs.conf.set("hbase.zookeeper.quorum", args(13))
     Configs.conf.set("hbase.zookeeper.property.clientPort", args(14))
+    Configs.conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 500)
     val params = args.take(13)++args.takeRight(5)
 /*    println("appParams:")
     params.foreach(println)
@@ -51,7 +52,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))
     //loadFromHFile(AppParams(appParams))
-/*    if(appParams.ENV=="local") {
+    if(appParams.ENV=="local") {
       val entHFile =  File(appParams.PATH_TO_ENTERPRISE_HFILE)
       entHFile.deleteRecursively()
       val linksHFile =  File(appParams.PATH_TO_LINKS_HFILE)
@@ -61,7 +62,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
 
       println("HFiles deleted")
 
-    }*/
+    }
   }
 
 }
