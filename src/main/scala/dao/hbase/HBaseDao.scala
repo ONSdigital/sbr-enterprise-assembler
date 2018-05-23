@@ -45,17 +45,17 @@ object HBaseDao{
     ))
   }
 
-  def saveDeletePeriodLinksToHFile(appParams:AppParams)(implicit spark:SparkSession,connection:Connection): Unit = {
+  def saveDeletePeriodLinksToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
-    val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
+    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
       .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINK_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
   }
 
 
-  def saveDeletePeriodEnterpriseToHFile(appParams:AppParams)(implicit spark:SparkSession,connection:Connection): Unit = {
+  def saveDeletePeriodEnterpriseToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
     val data = readEnterprisesWithKeyFilter(localConfCopy,appParams,regex)
@@ -66,7 +66,7 @@ object HBaseDao{
 
 
 
-  def saveDeleteLouToHFile(appParams:AppParams)(implicit spark:SparkSession,connection:Connection): Unit = {
+  def saveDeleteLouToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val regex = ".*~("+{appParams.TIME_PERIOD}+")~*."
     val data = readLouWithKeyFilter(localConfCopy,appParams,regex)
@@ -76,7 +76,7 @@ object HBaseDao{
   }
 
 
-  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
+  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     data.sortBy(row => s"${row.key}")
