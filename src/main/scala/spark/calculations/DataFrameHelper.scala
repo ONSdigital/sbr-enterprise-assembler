@@ -147,7 +147,7 @@
       apportionDF
         .select(idColumnName,"group_turnover")
         .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "sum_apportion"),Seq(idColumnName), "outer")
-        .withColumn("apportion_turnover",round(col("apportion_turnover"),0).cast(IntegerType))
+        .withColumn("apportion_turnover",round(col("sum_apportion"),0).cast(IntegerType))
         .coalesce(numOfPartitions)
         .dropDuplicates(idColumnName)
   }
