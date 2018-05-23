@@ -31,8 +31,18 @@ object HBaseDao{
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
-    loadLousDeleteHFile
+    loadLousHFile
   }
+
+
+  def loadDeleteHFiles(implicit connection:Connection,appParams:AppParams) = {
+    loadDeleteLinksHFile
+    loadDeleteEnterprisesHFile
+    loadDeleteLousHFile
+  }
+
+
+
 
   def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
@@ -113,7 +123,7 @@ object HBaseDao{
     withScanner(localConfCopy,regex,appParams,tableName){
       readKvsFromHBase
     }}
-  
+
   def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
@@ -126,11 +136,18 @@ object HBaseDao{
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE_DELETE), admin,table,regionLocator)
   }
 
-  def loadLousDeleteHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LOCALUNITS_TABLE_NAME,Some(appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadDeleteLousHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LOCALUNITS_TABLE_NAME,Some(appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_DELETE_PERIOD_HFILE), admin,table,regionLocator)
   }
+
+  def loadDeleteEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_ENTERPRISE_TABLE_NAME,Some(appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE)){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE), admin,table,regionLocator)
+  }
+
 
   def loadLinksHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)

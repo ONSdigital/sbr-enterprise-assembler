@@ -20,13 +20,14 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
   }
 
 
-  def loadFromJson(appconf:AppParams) = {  withSpark(appconf) { implicit ss: SparkSession =>
+  def loadNewPopulationFromJson(appconf:AppParams) = withSpark(appconf) { implicit ss: SparkSession =>
 
-                                             ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
-                                             ParquetDao.parquetCreateNewToHFile(ss, appconf)
+                                                                 ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
+    withHbaseConnection { implicit con: Connection => loadFromCreateParquet(appconf)(ss, con)}
+
                                            }
-    withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
-  }
+
+
 
 
   def createNewPopulationFromParquet(appconf:AppParams){

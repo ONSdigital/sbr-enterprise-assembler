@@ -7,7 +7,7 @@ import org.apache.spark.sql.SparkSession
 
 object DeleteClosures {
 
-  def deleteDataForPeriod(appconf:AppParams)(implicit ss:SparkSession): Unit ={
+  def createDeleteDataForPeriodHfiles(appconf:AppParams)(implicit ss:SparkSession): Unit ={
     createDeleteLinksHFile(appconf)
     createDeleteEnterpriseHFile(appconf)
     createDeleteLouHFile(appconf)
