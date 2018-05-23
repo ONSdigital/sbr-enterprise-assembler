@@ -240,11 +240,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
   }
 
   def getExistingLocalUnits(appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
-    val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
+    //val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
     //next 3 lines: select LOU rows from hbase
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
-    val luRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
-    val existingLouRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
+    val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
+    val existingLouRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
     val louRowCells: RDD[(String, HFileCell)] = existingLouRdd.flatMap(rec => rec._2.map(cell => (rec._1,HFileCell(rec._1,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY,cell.column,cell.value))))
     louRowCells
