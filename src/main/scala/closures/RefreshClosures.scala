@@ -1,8 +1,8 @@
 package closures
 
 import dao.hbase.HBaseDao
-import dao.parquet.ParquetDAO
-import dao.parquet.ParquetDAO.adminCalculations
+import dao.parquet.ParquetDao
+import dao.parquet.ParquetDao.adminCalculations
 import global.Configs.conf
 import global.{AppParams, Configs}
 import model.domain.HFileRow
@@ -33,7 +33,7 @@ trait RefreshClosures {
     HBaseDao.saveDeleteLinksToHFile(appconf,regex)
   }
 
-  def createLinksRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = ParquetDAO.createRefreshLinksHFile(appconf)
+  def createLinksRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = ParquetDao.createRefreshLinksHFile(appconf)
 
   def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession,connection:Connection) = {
     val localConfCopy = conf
@@ -57,8 +57,8 @@ trait RefreshClosures {
 
     //get cells for jobs and employees - the only updateable columns in enterprise table
     val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculations(fullLUs, payeDF, vatDF).rdd.flatMap(row => Seq(
-      ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
-      ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
+      ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
+      ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
     ))
 
     entsRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}").map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))

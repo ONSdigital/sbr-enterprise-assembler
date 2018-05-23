@@ -34,7 +34,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   override def beforeAll() = {
 
     implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-    ParquetDAO.jsonToParquet(jsonFilePath)(spark,appConfs)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark,appConfs)
     spark.close()
 
     conf.set("hbase.zookeeper.quorum", "localhost")
@@ -56,7 +56,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      ParquetDAO.parquetCreateNewToHFile(spark,appConfs)
+      ParquetDao.parquetCreateNewToHFile(spark,appConfs)
 
       val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList.sortBy(_.ern)
       val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
@@ -75,7 +75,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
 
-      ParquetDAO.parquetCreateNewToHFile(spark,appConfs)
+      ParquetDao.parquetCreateNewToHFile(spark,appConfs)
 
       def replaceDynamicEntIdWithStatic(entLinks:Seq[HFileRow]) = {
         val erns = entLinks.collect{ case row if(row.key.contains("~ENT~")) => }

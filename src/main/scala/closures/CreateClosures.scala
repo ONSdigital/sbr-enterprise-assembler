@@ -1,7 +1,7 @@
 package closures
 
 import dao.hbase.HBaseDao
-import dao.parquet.ParquetDAO
+import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
@@ -17,7 +17,7 @@ import org.apache.spark.sql.SparkSession
 trait CreateClosures {
 
   def loadFromCreateParquet(appconf:AppParams)(implicit ss:SparkSession,con: Connection){
-    ParquetDAO.parquetCreateNewToHFile(ss,appconf)
+    ParquetDao.parquetCreateNewToHFile(ss,appconf)
     HBaseDao.loadHFiles(con,appconf)
   }
 
@@ -30,7 +30,7 @@ trait CreateClosures {
       s"${v._2.key}${v._2.qualifier}"
     })
 
-    val updateRecs: RDD[(String, hfile.HFileCell)] = ss.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => ParquetDAO.toLinksRefreshRecords(row, appconf)).sortBy(v => {
+    val updateRecs: RDD[(String, hfile.HFileCell)] = ss.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => ParquetDao.toLinksRefreshRecords(row, appconf)).sortBy(v => {
       s"${v._2.key}${v._2.qualifier}"
     })
 

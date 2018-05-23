@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql.SqlRowExtensions
 
-object ParquetDAO extends WithConversionHelper with DataFrameHelper{
+object ParquetDao extends WithConversionHelper with DataFrameHelper{
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -95,8 +95,8 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
             //get cells for jobs and employees - the only updateable columns in enterprise table
             val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculations(fullLUs, payeDF, vatDF).rdd.flatMap(row => Seq(
-              ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
-              ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
+              ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
+              ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
             ))
 
             entsRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}").map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))

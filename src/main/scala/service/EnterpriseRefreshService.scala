@@ -4,7 +4,7 @@ package service
 
 import dao.hbase.HBaseConnectionManager
 import closures.RefreshClosures
-import dao.parquet.ParquetDAO
+import dao.parquet.ParquetDao
 import global.AppParams
 import global.Configs.PATH_TO_JSON
 import org.apache.hadoop.hbase.client.Connection
@@ -16,7 +16,7 @@ import spark.SparkSessionManager
   */
 trait EnterpriseRefreshService extends HBaseConnectionManager with SparkSessionManager with RefreshClosures{
 
-  def createRefreshParquet(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession => ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)}
+  def createRefreshParquet(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession => ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)}
 
   def loadRefreshFromParquet(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession => withHbaseConnection{ implicit con:Connection =>
        createDeleteLinksHFile(appconf)
