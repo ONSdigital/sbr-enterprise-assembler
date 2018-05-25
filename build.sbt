@@ -146,7 +146,8 @@ lazy val calculationsParams = Array("LINKS",
                                     "201804",
                                     "src/main/resources/data/smallPaye.csv",
                                     "src/main/resources/data/smallVat.csv",
-                                    "local")
+                                    "local"
+                                )
 
 
 
@@ -161,13 +162,9 @@ lazy val runCalculationPeriodRecs = taskKey[Unit]("run-args")
 lazy val runDeletePeriod = taskKey[Unit]("run-args")
 
 
-fullRunTask(runWithArgs, Runtime, "assembler.AssemblerMain", myParameters: _*)
-fullRunTask(runRecs, Runtime, "assembler.AssemblerMain", recsParams: _*)
-fullRunTask(runRecsRefresh, Runtime, "assembler.AssemblerMain", recsParamsRefresh: _*)
 fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsParams: _*)
 fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsParams: _*)
 fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodParams: _*)
-fullRunTask(runInitialPopulationRecs, Runtime, "assembler.AssemblerMain", initialPopulationParams: _*)
 fullRunTask(runCalculationPeriodRecs, Runtime, "assembler.AssemblerMain", calculationsParams: _*)
 fullRunTask(runDeletePeriod, Runtime, "assembler.AssemblerMain", deletePeriodParams: _*)
 
@@ -176,6 +173,6 @@ current app args for addNewPeriod:
 LINKS ons l src/main/resources/data/newperiod/links/hfile ENT ons d src/main/resources/data/newperiod/enterprise/hfile LOU ons d src/main/resources/data/newperiod/local-unit/hfile src/main/resources/data/newperiod/sample.parquet localhost 2181 201804 src/main/resources/data/newperiod/newPeriodPaye.csv src/main/resources/data/newperiod/newPeriodVat.csv local addperiod
 */
 
-/*currebt app params for create:
+/*current app params for create:
 * LINKS ons l src/main/resources/data/create/links/hfile ENT ons d src/main/resources/data/create/enterprise/hfile LOU ons d src/main/resources/data/create/local-unit/hfile src/main/resources/data/create/sample.parquet localhost 2181 201802 src/main/resources/data/create/smallPaye.csv main/resources/data/create/smallVat.csv local create
 * */
