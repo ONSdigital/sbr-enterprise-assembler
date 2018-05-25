@@ -38,6 +38,7 @@ trait WithConversionHelper {
   import Configs._
 
   val legalUnit = "LEU"
+  val localUnit = "LOU"
   val enterprise = "ENT"
   val companiesHouse = "CH"
   val vatValue = "VAT"
@@ -49,15 +50,14 @@ trait WithConversionHelper {
 
   def toNewEnterpriseRecordsWithLou(row: Row, appParams: AppParams): Tables = {
     val ern = generateUniqueKey
+    val lurn = generateUniqueKey
     val ents = rowToEnterprise(row, ern, appParams)
-    val links = rowToLinks(row, ern, appParams)
-    val lous = toLocalUnits(row, ern, appParams)
+    val links = rowToNewLinks(row, lurn,ern, appParams)
+    val lous = toLocalUnits(row, lurn, ern, appParams)
     Tables(ents, links, lous)
   }
 
-  def toLocalUnits(row: Row, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
-
-    val lurn = generateUniqueKey
+  def toLocalUnits(row: Row, lurn:String, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
 
     Seq(
       createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
@@ -159,12 +159,18 @@ trait WithConversionHelper {
     rowToFullEnterprise(row,appParams,ern)
 }
 
-
-
   private def rowToLinks(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row,"id")
     val keyStr = generateLinkKey(ern,enterprise,appParams)
     createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit,appParams)+:rowToLegalUnitLinks(row,ern,appParams)
+  }
+
+  private def rowToNewLinks(row:Row,lurn:String, ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
+    val ubrn = getId(row,"id")
+    val keyStr = generateLinkKey(ern,enterprise,appParams)
+    Seq(createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit,appParams),createLinksRecord(keyStr,s"$childPrefix$lurn",localUnit,appParams))++
+      rowToLegalUnitLinks(row,ern,appParams)++
+      rowToLocalUnitLinks(row,lurn,ern,appParams)
   }
 
   def rowToLegalUnitLinks(row:Row, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = rowToLegalUnitLinks("id",ern,row,appParams)
@@ -179,6 +185,12 @@ trait WithConversionHelper {
     val luKey = generateLinkKey(ubrn,legalUnit,appParams)
     val ern = row.getString("ern").get //must be present
     createLinksRecord(luKey,s"$parentPrefix$enterprise",ern,appParams) +: (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
+  }
+
+
+  def rowToLocalUnitLinks(row:Row,lurn:String, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
+    val loKey = generateLocalUnitLinksKey(lurn,appParams)
+    Seq(createLinksRecord(loKey,s"$parentPrefix$enterprise",ern,appParams))
   }
 
 
@@ -220,6 +232,10 @@ trait WithConversionHelper {
 
   private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = {
     s"${ern.reverse}~${appParams.TIME_PERIOD}~$lurn"
+  }
+
+  private def generateLocalUnitLinksKey(lurn:String,appParams:AppParams) = {
+    s"$lurn~$localUnit~${appParams.TIME_PERIOD}"
   }
 
   private def generateEntKey(ern:String,appParams:AppParams) = {
