@@ -31,7 +31,7 @@ trait RefreshClosures extends WithConversionHelper with DataFrameHelper{
 
 
   def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
-    val regex = ".*(?<!ENT)~"+{appconf.TIME_PERIOD}+"$"
+    val regex = ".*(?<!(ENT|LOU))~"+{appconf.TIME_PERIOD}+"$"
     HBaseDao.saveDeleteLinksToHFile(appconf,regex)
   }
 

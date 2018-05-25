@@ -31,7 +31,7 @@ object HBaseDao{
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
-    loadLousHFile
+    loadLousDeletePeriodHFile
   }
 
 
@@ -166,6 +166,12 @@ object HBaseDao{
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_HFILE), admin,table,regionLocator)
+  }
+
+  def loadLousDeletePeriodHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LOCALUNITS_TABLE_NAME,Some(appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE)){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_DELETE_PERIOD_HFILE), admin,table,regionLocator)
   }
 
 

@@ -55,7 +55,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     val louRegex = ".*~LOU~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val existingLous: RDD[Record]  = HBaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, louRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
-    printRdd("existingLous", existingLous,"Tuple (String,Iterable[KVCells])")
+    //printRdd("existingLous", existingLous,"Tuple (String,Iterable[KVCells])")
 
     val numOfPartitions = updatesRdd.getNumPartitions
 
@@ -206,7 +206,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
   val existingLousCells: RDD[(String, HFileCell)] = existingLous.flatMap(row => row._2.map(cell => (row._1,HFileCell(row._1, appconf.HBASE_LINKS_COLUMN_FAMILY, cell.column, cell.value))))
   val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs).union(existingLousCells)
 
-  printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
+  //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
   val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
 
