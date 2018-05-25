@@ -42,7 +42,7 @@ assemblyMergeStrategy in assembly := {
 
 mainClass in (Compile,run) := Some("assembler.AssemblerMain")
 
-lazy val myParameters = Array("LINKS", "ons","l",
+/*lazy val myParameters = Array("LINKS", "ons","l",
   "src/main/resources/data/links/hfile", "ENT","ons", "d",
    "src/main/resources/data/enterprise/hfile",
   "src/main/resources/data/sample.parquet",
@@ -74,20 +74,21 @@ lazy val recsParamsRefresh = Array("LINKS", "ons","l",
   "src/main/resources/data/temp/3recsRefresh/sample.parquet",
   "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
   "src/main/resources/data/smallPaye.csv",
-  "local","refresh")
-
-
-
+  "local","refresh")*/
 
 
 lazy val createRecordsParams = Array(
-                                    "LINKS", "ons","l","src/main/resources/data/temp/3recsRefresh/links/hfile",
-                                    "ENT","ons", "d", "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
-                                    "LOU","ons","d","src/main/resources/data/temp/3recsRefresh/local-unit/hfile",
-                                    "src/main/resources/data/temp/3recsRefresh/sample.parquet",
-                                    "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
-                                    "src/main/resources/data/smallPaye.csv",
-                                    "local","create"
+                                    "LINKS", "ons","l","src/main/resources/data/create/links/hfile",
+                                    "ENT","ons", "d", "src/main/resources/data/create/enterprise/hfile",
+                                    "LOU","ons","d","src/main/resources/data/create/local-unit/hfile",
+                                    "src/main/resources/data/create/sample.parquet",
+                                    "localhost",
+                                    "2181",
+                                    "201803",
+                                    "src/main/resources/data/create/smallPaye.csv",
+                                    "src/main/resources/data/create/smallVat.csv",
+                                    "local",
+                                    "create"
                                   )
 
 
@@ -101,10 +102,10 @@ lazy val refreshRecordsParams = Array("unit_links", "sbr_dev_db","l",
 
 
 lazy val addNewPeriodParams = Array(
-                                  "LINKS", "ons", "l", "src/main/resources/data/temp/addperiod/links/hfile",
-                                  "ENT", "ons", "d", "src/main/resources/data/temp/addperiod/enterprise/hfile",
-                                  "LOU", "ons", "d", "src/main/resources/data/temp/addperiod/local-unit/hfile",
-                                  "src/main/resources/data/temp/addperiod/sample.parquet",
+                                  "LINKS", "ons", "l", "src/main/resources/data/newperiod/links/hfile",
+                                  "ENT", "ons", "d", "src/main/resources/data/newperiod/enterprise/hfile",
+                                  "LOU", "ons", "d", "src/main/resources/data/newperiod/local-unit/hfile",
+                                  "src/main/resources/data/newperiod/sample.parquet",
                                   "localhost",
                                   "2181",
                                   "201804",
@@ -117,9 +118,9 @@ lazy val addNewPeriodParams = Array(
 
 
 lazy val deletePeriodParams = Array(
-                                  "LINKS", "ons", "l", "src/main/resources/data/temp/addperiod/links/hfile",
-                                  "ENT", "ons", "d", "src/main/resources/data/temp/addperiod/enterprise/hfile",
-                                  "LOU", "ons", "d", "src/main/resources/data/temp/addperiod/local-unit/hfile",
+                                  "LINKS", "ons", "l", "src/main/resources/data/temp/deleteperiod/links/hfile",
+                                  "ENT", "ons", "d", "src/main/resources/data/temp/deleteperiod/enterprise/hfile",
+                                  "LOU", "ons", "d", "src/main/resources/data/temp/deleteperiod/local-unit/hfile",
                                   "",
                                   "localhost",
                                   "2181",
@@ -172,5 +173,9 @@ fullRunTask(runDeletePeriod, Runtime, "assembler.AssemblerMain", deletePeriodPar
 
 /*
 current app args for addNewPeriod:
-LINKS ons l src/main/resources/data/temp/addperiod/links/hfile ENT ons d src/main/resources/data/temp/addperiod/enterprise/hfile LOU ons d src/main/resources/data/temp/addperiod/local-unit/hfile src/main/resources/data/temp/addperiod/sample.parquet localhost 2181 201804 src/main/resources/data/newperiod/newPeriodPaye.csv src/main/resources/data/newperiod/newPeriodVat.csv local addperiod
+LINKS ons l src/main/resources/data/newperiod/links/hfile ENT ons d src/main/resources/data/newperiod/enterprise/hfile LOU ons d src/main/resources/data/newperiod/local-unit/hfile src/main/resources/data/newperiod/sample.parquet localhost 2181 201804 src/main/resources/data/newperiod/newPeriodPaye.csv src/main/resources/data/newperiod/newPeriodVat.csv local addperiod
 */
+
+/*currebt app params for create:
+* LINKS ons l src/main/resources/data/create/links/hfile ENT ons d src/main/resources/data/create/enterprise/hfile LOU ons d src/main/resources/data/create/local-unit/hfile src/main/resources/data/create/sample.parquet localhost 2181 201802 src/main/resources/data/create/smallPaye.csv main/resources/data/create/smallVat.csv local create
+* */
