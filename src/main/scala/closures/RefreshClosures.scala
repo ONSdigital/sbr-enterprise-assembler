@@ -1,6 +1,7 @@
 package closures
 
 import dao.hbase.HBaseDao
+import dao.hbase.converter.WithConversionHelper
 import dao.parquet.ParquetDao
 import dao.parquet.ParquetDao.adminCalculations
 import global.Configs.conf
@@ -12,13 +13,14 @@ import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import spark.calculations.DataFrameHelper
 import spark.extensions.sql.SqlRowExtensions
 /**
   *
   */
-trait RefreshClosures {
+trait RefreshClosures extends WithConversionHelper with DataFrameHelper{
 
 
 
@@ -49,17 +51,26 @@ trait RefreshClosures {
     val erns = spark.createDataFrame(rows,schema)
 
     val refreshDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
-
-    val fullLUs = refreshDF.join(erns,"id")
+  /**
+   * DF BI data with ern for each LU
+   * */
+    val fullLUs: DataFrame = refreshDF.join(erns,"id")
 
     val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
     //get cells for jobs and employees - the only updateable columns in enterprise table
-    val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculations(fullLUs, payeDF, vatDF).rdd.flatMap(row => Seq(
-      ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
-      ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
-    ))
+    val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculationsEnt(fullLUs, payeDF, vatDF).rdd.flatMap(row => {
+      val ern = row.getString("ern").get
+      Seq(
+      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "payeemployees", employees, appconf)),
+      row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "payejobs", jobs, appconf)),
+      row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appconf)),
+      row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appconf)),
+      row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appconf)),
+      row.getCalcValue("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appconf)),
+      row.getCalcValue("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appconf))
+    ).collect { case Some(v) => v }})
 
     entsRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}").map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
