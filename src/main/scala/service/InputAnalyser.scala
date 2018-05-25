@@ -7,29 +7,30 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import spark.SparkSessionManager
+import spark.{RddLogging, SparkSessionManager}
 import spark.extensions.sql.parquetRowSchema
 
-case class IsolatedEntitiesReport(orphanCount:Int, orphanKeys:Seq[String])
 
-case class DataReport(entCount:Int, linksCount:Int, lus_Count:Int, childlessEnts:IsolatedEntitiesReport, lusOrphans:IsolatedEntitiesReport, losOrphans:IsolatedEntitiesReport)
 
-object InputAnalyser extends SparkSessionManager{
+case class DataReport(entCount:Long, lusCount:Long, losCount:Long, childlessEntErns:Seq[String], lusOrphans:Seq[(String,(String,String))], losOrphans:Seq[(String,(String,String))])
 
-  def getData(appconf:AppParams) = withSpark(appconf) { implicit spark: SparkSession =>
+object InputAnalyser extends SparkSessionManager with RddLogging{
+
+  def getData(appconf:AppParams):DataReport =  {
+    implicit val spark: SparkSession = {
+      if (appconf.ENV == "cluster") SparkSession.builder().appName("enterprise assembler").getOrCreate()
+      else SparkSession.builder().master("local[8]").appName("enterprise assembler").getOrCreate()
+    }
 
     val entRdd: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(Configs.conf,appconf, ".*~"+{appconf.TIME_PERIOD}+"$")
     entRdd.cache()
-
-    val linksRdd: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(Configs.conf,appconf, ".*~"+{appconf.TIME_PERIOD}+"$")
-    linksRdd.cache()
+    printRdd("enterprises",entRdd,"HFileRow")
+    val lusRdd: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(Configs.conf,appconf, ".*~LEU~"+{appconf.TIME_PERIOD}+"$")
+                                                        .collect{ case row if(row.cells.find(_.column == "p_ENT").isDefined) => row }
+    printRdd("LEU",lusRdd,"HFileRow")
 
     val losRdd: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(Configs.conf,appconf, ".*~"+{appconf.TIME_PERIOD}+"~.*")
-    losRdd.cache()
-
-    val lusRdd: RDD[HFileRow] = linksRdd.collect{ case row if(row.cells.find(_.column == "p_ENT").isDefined) => row }
-    lusRdd.cache()
-
+    printRdd("LOU",losRdd,"HFileRow")
 
     val entErns = entRdd.map(row => row.key.split("~").head.reverse)
     entErns.cache()
@@ -43,16 +44,19 @@ object InputAnalyser extends SparkSessionManager{
     val orphanLos: RDD[(String, (String, String))] = getOrphanLos(losRdd,loIntersection)
     val entsWithoutLus = entErns.subtract(luIntersection)
 
+    val entCount = entRdd.count()
+
     entRdd.unpersist()
-    linksRdd.unpersist()
 
+    val res = DataReport(entCount,lusRdd.count(),losRdd.count(),Seq.empty, orphanLus.collect(),orphanLos.collect())
 
-
+    spark.stop()
+    res
   }
 
   def getOrphanLus(lus:RDD[HFileRow], orphanLuErns:RDD[String])(implicit spark: SparkSession) = {
-    val orphanLuErnsRows: RDD[(String,String)] = orphanLuErns.map(ern => (ern,ern))
-    val luRows: RDD[(String, (String, String))] = lus.map(row => (row.getCellValue("p_ENT"),(row.key.split("~").head , row.key)))
+    val orphanLuErnsRows: RDD[(String,String)] = orphanLuErns.map(ern => (ern,ern)) //create tuple of 2 duplicate erns
+    val luRows: RDD[(String, (String, String))] = lus.map(row => (row.getCellValue("p_ENT"),(row.key.split("~").head , row.key))) //tuple(ern,(ubrn,row key))
     val joined: RDD[(String, ((String, String), Option[String]))] = luRows.leftOuterJoin(orphanLuErnsRows)
     val orphanLuUbrn = joined.collect { case (ern, ((ubrn,key), None)) => (ern, (ubrn,key)) }
     orphanLuUbrn
@@ -63,8 +67,8 @@ object InputAnalyser extends SparkSessionManager{
     val orphanLoErnsRows: RDD[(String,String)] = orphanLoErns.map(ern => (ern,ern))
     val loRows: RDD[(String, (String, String))] = los.map(row => (row.getCellValue("ern"),(row.key.split("~").last , row.key)))
     val joined: RDD[(String, ((String, String), Option[String]))] = loRows.leftOuterJoin(orphanLoErnsRows)
-    val orphanLoUbrn = joined.collect { case (ern, ((ubrn,key), None)) => (ern, (ubrn,key)) }
-    orphanLoUbrn
+    val orphanLoLurn = joined.collect { case (ern, ((lurn,key), None)) => (ern, (lurn,key)) }
+      orphanLoLurn
 
   }
 
