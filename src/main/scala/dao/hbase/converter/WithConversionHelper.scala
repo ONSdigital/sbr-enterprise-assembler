@@ -114,8 +114,8 @@ trait WithConversionHelper {
         Some(createEnterpriseCell(ern, "sic07", sic, appParams))
       },
       row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legal_status", ls, appParams)),
-      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
-      row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
+      row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "payeemployees", employees, appParams)),
+      row.getCalcValue("paye_jobs").map(jobs => createEnterpriseCell(ern, "payejobs", jobs, appParams)),
       row.getCalcValue("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
       row.getCalcValue("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
       row.getCalcValue("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appParams)),
