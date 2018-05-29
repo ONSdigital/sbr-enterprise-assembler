@@ -14,23 +14,19 @@ import spark.extensions.sql.parquetRowSchema
 
 case class DataReport(entCount:Long, lusCount:Long, losCount:Long, childlessEntErns:Seq[String], lusOrphans:Seq[(String,(String,String))], losOrphans:Seq[(String,(String,String))])
 
-object InputAnalyser extends SparkSessionManager with RddLogging{
+object InputAnalyser extends RddLogging{
 
-  def getData(appconf:AppParams):DataReport =  {
-    implicit val spark: SparkSession = {
-      if (appconf.ENV == "cluster") SparkSession.builder().appName("enterprise assembler").getOrCreate()
-      else SparkSession.builder().master("local[8]").appName("enterprise assembler").getOrCreate()
-    }
+  def getData(appconf:AppParams)(implicit spark: SparkSession):DataReport =  {
 
     val entRdd: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(Configs.conf,appconf, ".*~"+{appconf.TIME_PERIOD}+"$")
     entRdd.cache()
-    printRdd("enterprises",entRdd,"HFileRow")
+    //printRdd("enterprises",entRdd,"HFileRow")
     val lusRdd: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(Configs.conf,appconf, ".*~LEU~"+{appconf.TIME_PERIOD}+"$")
                                                         .collect{ case row if(row.cells.find(_.column == "p_ENT").isDefined) => row }
-    printRdd("LEU",lusRdd,"HFileRow")
+    //printRdd("LEU",lusRdd,"HFileRow")
 
     val losRdd: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(Configs.conf,appconf, ".*~"+{appconf.TIME_PERIOD}+"~.*")
-    printRdd("LOU",losRdd,"HFileRow")
+    //printRdd("LOU",losRdd,"HFileRow")
 
     val entErns = entRdd.map(row => row.key.split("~").head.reverse)
     entErns.cache()
