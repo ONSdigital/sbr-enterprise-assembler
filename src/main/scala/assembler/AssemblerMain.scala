@@ -7,7 +7,7 @@ import service._
 import scala.reflect.io.File
 
 
-object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService{
+object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService with DataIntegrityReportService{
 
   def main(args: Array[String]) {
     //println("ARGS:")
@@ -28,6 +28,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
       case "refresh" => loadRefreshFromParquet(appParams)
       case "create" => createNewPopulationFromParquet(appParams)
       case "deleteperiod" => deletePeriod(appParams)
+      case "data-integrity-report" => printReport(appParams)
       case arg => throw new IllegalArgumentException(s"action not recognised: $arg")
 
     }
@@ -48,7 +49,7 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
     as result refreshed enterprise has employment calculations:
      change from 8 - 10 && 2 - 4 change to 8-10 and 0 - 0
     */
-
+    //InputAnalyser.getData(AppParams(appParams))
     //loadFromParquet(AppParams(appParams))
     //loadFromJson(AppParams(appParams))
     //loadFromHFile(AppParams(appParams))
