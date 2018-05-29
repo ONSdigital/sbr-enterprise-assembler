@@ -35,23 +35,28 @@ object InputAnalyser extends SparkSessionManager with RddLogging{
     val entErns = entRdd.map(row => row.key.split("~").head.reverse)
     entErns.cache()
 
-    val luErns = lusRdd.map(row => row.cells.find(_.column == "p_ENT").get.value)
+    val luErns: RDD[String] = lusRdd.map(row => row.cells.find(_.column == "p_ENT").get.value)
     val loErns: RDD[String] = losRdd.map(row => row.cells.find(_.column == "ern").get.value)
 
     val luIntersection: RDD[String] = entErns.intersection(luErns.distinct())
     val loIntersection: RDD[String] = entErns.intersection(loErns.distinct())
     val orphanLus: RDD[(String, (String, String))] = getOrphanLus(lusRdd,luIntersection)
     val orphanLos: RDD[(String, (String, String))] = getOrphanLos(losRdd,loIntersection)
-    val entsWithoutLus = entErns.subtract(luIntersection)
-
+    val childlessEnts = getChildlessEnts(entErns,luErns,loErns)
     val entCount = entRdd.count()
 
     entRdd.unpersist()
 
-    val res = DataReport(entCount,lusRdd.count(),losRdd.count(),Seq.empty, orphanLus.collect(),orphanLos.collect())
+    val res = DataReport(entCount,lusRdd.count(),losRdd.count(),childlessEnts.collect(), orphanLus.collect(),orphanLos.collect())
 
     spark.stop()
     res
+  }
+
+  def getChildlessEnts(entErns:RDD[String],luErns:RDD[String],loErns:RDD[String]) = {
+    val luLessEnts = entErns.subtract(luErns)
+    val loLessEnts = entErns.subtract(loErns)
+    loLessEnts.intersection(loLessEnts)
   }
 
   def getOrphanLus(lus:RDD[HFileRow], orphanLuErns:RDD[String])(implicit spark: SparkSession) = {
