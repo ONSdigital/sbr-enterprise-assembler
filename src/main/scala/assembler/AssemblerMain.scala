@@ -1,6 +1,7 @@
 package assembler
 
 
+import global.Configs.conf
 import global.{AppParams, Configs}
 import service._
 
@@ -28,7 +29,10 @@ object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshSe
       case "refresh" => loadRefreshFromParquet(appParams)
       case "create" => createNewPopulationFromParquet(appParams)
       case "deleteperiod" => deletePeriod(appParams)
-      case "data-integrity-report" => printReport(appParams)
+      case "data-integrity-report" => {
+        conf.setInt("spark.sql.broadcastTimeout", 2400)
+        printReport(appParams)
+      }
       case arg => throw new IllegalArgumentException(s"action not recognised: $arg")
 
     }

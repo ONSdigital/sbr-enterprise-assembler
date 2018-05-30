@@ -46,14 +46,20 @@ trait DataIntegrityReportService extends SparkSessionManager{
     println(s"CHILDLESS ENTERPRISES COUNT: $childlessEntsCount")
     println(s"ORPHAN LEGAL UNITS COUNT: $orphanLusCount")
     println(s"ORPHAN LOCAL UNITS COUNT: $orphanLosCount")
-    println("CHILDLESS ENTERPRISE ERNs:")
-    report.childlessEntErns.foreach(println)
-    println("   ORPHAN LEGAL UNITs:")
-    println("    --------------------------------------------------------")
-    printCollection(report.lusOrphans,"|    ERN    |     UBRN     |           ROW KEY          |",printableSize)
-    println("   ORPHAN LOCAL UNITs:")
-    println("    --------------------------------------------------------")
-    printCollection(report.losOrphans,"|    ERN    |     LURN     |           ROW KEY          |",printableSize)
+    if(report.childlessEntErns.nonEmpty) {
+      println("CHILDLESS ENTERPRISE ERNs:")
+      report.childlessEntErns.foreach(println)
+    }
+    if(report.lusOrphans.nonEmpty) {
+      println("   ORPHAN LEGAL UNITs:")
+      println("    --------------------------------------------------------")
+      printCollection(report.lusOrphans,"|    ERN    |     UBRN     |           ROW KEY          |",printableSize)
+    }
+    if(report.losOrphans.nonEmpty) {
+      println("   ORPHAN LOCAL UNITs:")
+      println("    --------------------------------------------------------")
+      printCollection(report.losOrphans, "|    ERN    |     LURN     |           ROW KEY          |", printableSize)
+    }
 
   }
 }
