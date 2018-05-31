@@ -12,14 +12,14 @@ import spark.extensions.sql.parquetRowSchema
 
 
 
-case class DataReport(entCount:Long, lusCount:Long, losCount:Long, childlessEntErns:Seq[String], lusOrphans:Seq[(String,(String,String))], losOrphans:Seq[(String,(String,String))])
+case class DataReport(entCount:Long, lusCount:Long, losCount:Long, childlessEntErns:Seq[String], entsWithBrokenkeys:Seq[(String, String)],lusOrphans:Seq[(String,(String,String))], losOrphans:Seq[(String,(String,String))])
 
 object InputAnalyser extends RddLogging{
 
   def getData(appconf:AppParams)(implicit spark: SparkSession):DataReport =  {
 
     val entRdd: RDD[HFileRow] = getRepartionedRdd(HBaseDao.readEnterprisesWithKeyFilter(Configs.conf,appconf, ".*~"+{appconf.TIME_PERIOD}+"$"))
-
+    entRdd.cache()
 
 
 
@@ -34,9 +34,10 @@ object InputAnalyser extends RddLogging{
 
     //printRdd("LOU",losRdd,"HFileRow")
 
-    val entErns = entRdd.map(row => row.key.split("~").head.reverse)
+    val entErns = entRdd.map(row => row.cells.find(_.column=="ern").get.value)
     //entErns.cache()
-
+    val entsWithKeyDiscrepancies: RDD[(String, String)] = entRdd.collect{case row if(row.key.split("~").head.reverse != row.cells.find(_.column=="ern").get.value) => (row.key,row.cells.find(_.column=="ern").get.value)}
+    //printRdd("entsWithKeyDiscrepancies",entRdd,"(String,String)")
     val entCount = entRdd.count()
 
     val luErns: RDD[String] = getRepartionedRdd(lusRdd.map(row => row.cells.find(_.column == "p_ENT").get.value).distinct())
@@ -49,9 +50,9 @@ object InputAnalyser extends RddLogging{
     val childlessEnts = getChildlessEnts(entErns,luErns,loErns)
 
 
-    val res = DataReport(entCount,lusRdd.count(),losRdd.count(),childlessEnts.collect(), orphanLus.collect(),orphanLos.collect())
+    val res = DataReport(entCount,lusRdd.count(),losRdd.count(),childlessEnts.collect(), entsWithKeyDiscrepancies.collect(),orphanLus.collect(),orphanLos.collect())
 
-    //entErns.unpersist()
+    entRdd.unpersist()
     //spark.stop()
     res
   }
