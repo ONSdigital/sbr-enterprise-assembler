@@ -35,7 +35,7 @@ object InputAnalyser extends RddLogging{
     //printRdd("LOU",losRdd,"HFileRow")
 
     val entErns = entRdd.map(row => row.key.split("~").head.reverse)
-    entErns.cache()
+    //entErns.cache()
 
     val entCount = entRdd.count()
 
@@ -51,8 +51,8 @@ object InputAnalyser extends RddLogging{
 
     val res = DataReport(entCount,lusRdd.count(),losRdd.count(),childlessEnts.collect(), orphanLus.collect(),orphanLos.collect())
 
-    entErns.unpersist()
-    spark.stop()
+    //entErns.unpersist()
+    //spark.stop()
     res
   }
 
