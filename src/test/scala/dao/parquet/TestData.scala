@@ -15,31 +15,32 @@ trait TestData {
   def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
-      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
+      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_,_,_,_,_,_,_) => ern}.head
 
       Seq(
-        Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("8"),Some("10")),
-        Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("4"), Some("")),
-        Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("2"),Some("4")),
-        Enterprise(getKeyByName("NBD CONTRACTS LIMITED") ,Some("9999999999"),Some("NBD CONTRACTS LIMITED"),Some("UT10 7BS"),Some("5"),Some("5"),Some("2")),
-        Enterprise(getKeyByName("PURPLE SKY FUTURES LTD") ,Some("9999999999"),Some("PURPLE SKY FUTURES LTD"),Some("HG33 4OY"),Some("7"),Some(""),Some("")),
-        Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some(""),Some("")),
-        Enterprise(getKeyByName("RALPH GROUP LIMITED") ,Some("9999999999"),Some("RALPH GROUP LIMITED"),Some("SI83 9RT"),Some("6"),Some(""),Some("")),
-        Enterprise(getKeyByName("BCM TRADING LIMITED") ,Some("9999999999"),Some("BCM TRADING LIMITED"),Some("RM91 8SJ"),Some("1"),Some("6"),Some("8")),
-        Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some(""),Some("")),
-        Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some(""),Some(""))
+        Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("70176"),Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
+        Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("90125"),Some("4"), Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("90481"),Some("2"),Some("4"),None,None,None,None,None),
+        Enterprise(getKeyByName("NBD CONTRACTS LIMITED") ,Some("9999999999"),Some("NBD CONTRACTS LIMITED"),Some("UT10 7BS"),Some("5"),Some("10111"),Some("5"),Some("2"),None,None,None,None,None),
+        Enterprise(getKeyByName("PURPLE SKY FUTURES LTD") ,Some("9999999999"),Some("PURPLE SKY FUTURES LTD"),Some("HG33 4OY"),Some("7"),Some("20222"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some("00742"),None,None,None,Some("85"),Some("85"),None,None),
+        Enterprise(getKeyByName("RALPH GROUP LIMITED") ,Some("9999999999"),Some("RALPH GROUP LIMITED"),Some("SI83 9RT"),Some("6"),Some("30333"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("BCM TRADING LIMITED") ,Some("9999999999"),Some("BCM TRADING LIMITED"),Some("RM91 8SJ"),Some("1"),Some("40444"),Some("6"),Some("8"),None,None,None,None,None),
+        Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some("50555"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some("60666"),Some(""),None,None,None,None,None,None)
     )
   }
 
   def testEnterprises3Recs(ents:Seq[Enterprise] ) = {
 
     def getKeyByName(name:String): String =
-      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
+      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_,_,_,_,_,_,_) => ern}.head
 
     Seq(
-      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("8"),Some("10")),
-      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some(""),Some("")),
-      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("2"),Some("4"))
+      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("70176"),Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
+      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some("00742"),None,None,None,Some("85"),Some("85"),None,None),
+      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("90481"),Some("2"),Some("4"),None,None,None,None,None)
+
     )
   }
 
@@ -97,6 +98,10 @@ trait TestData {
 
 
   val testLinkRows3Recs = List(
+    HFileRow("testEnterpriseId-33333~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-33333"))),
+    HFileRow("testEnterpriseId-22222~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-22222"))),
+    HFileRow("testEnterpriseId-11111~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-11111"))),
+
     HFileRow("testEnterpriseId-22222",List(KVCell("c_15931638","LEU"))),
     HFileRow("21840175~LEU~201802",List(KVCell("c_10000","VAT"),KVCell("c_20000","VAT"),  KVCell("p_ENT","testEnterpriseId-11111"))),
     HFileRow("testEnterpriseId-11111",List(KVCell("c_21840175","LEU"))),

@@ -22,6 +22,16 @@ trait HFileTestUtils {
 
         })}
 
+    val lurnsDictionary: Seq[(String, String)] = {
+      val lurns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case KVCell("p_ENT",value) => value}}}.flatten.zipWithIndex
+
+     lurns.map(lurnTup => {
+        val (ern,index) = lurnTup
+        (ern,"testLocalUnitId-"+({index+1}.toString*5))
+
+        })}
+
+
     //replace erns in rows:
     rows.map {  case row  => if (ernsDictionary.find(_._1 == row.key.slice(0, 18)).isDefined) {
                                   val ern = ernsDictionary.find(_._1 == row.key.slice(0, 18))

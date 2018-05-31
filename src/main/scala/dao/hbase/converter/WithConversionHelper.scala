@@ -227,7 +227,7 @@ trait WithConversionHelper {
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
-  private def generateUniqueKey = Random.alphanumeric.take(18).mkString
+  def generateUniqueKey = Random.alphanumeric.take(18).mkString
 
   private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = {
     s"${ern.reverse}~${appParams.TIME_PERIOD}~$lurn"
