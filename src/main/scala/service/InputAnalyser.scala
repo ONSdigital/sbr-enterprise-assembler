@@ -35,7 +35,7 @@ object InputAnalyser extends RddLogging{
     //printRdd("LOU",losRdd,"HFileRow")
 
     val entErns = entRdd.map(row => row.cells.find(_.column=="ern").get.value)
-    //entErns.cache()
+    entErns.cache()
     val entsWithKeyDiscrepancies: RDD[(String, String)] = entRdd.collect{case row if(row.key.split("~").head.reverse != row.cells.find(_.column=="ern").get.value) => (row.key,row.cells.find(_.column=="ern").get.value)}
     //printRdd("entsWithKeyDiscrepancies",entRdd,"(String,String)")
     val entCount = entRdd.count()
@@ -52,6 +52,7 @@ object InputAnalyser extends RddLogging{
 
     val res = DataReport(entCount,lusRdd.count(),losRdd.count(),childlessEnts.collect(), entsWithKeyDiscrepancies.collect(),orphanLus.collect(),orphanLos.collect())
 
+    entErns.unpersist()
     entRdd.unpersist()
     //spark.stop()
     res
