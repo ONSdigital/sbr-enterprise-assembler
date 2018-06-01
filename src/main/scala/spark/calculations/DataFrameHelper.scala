@@ -41,7 +41,7 @@
       val employees = getEmployeeCount(entPaye, idColumnName)
       val jobs = entPaye.groupBy(idColumnName).agg(sum("dec_jobs") as "paye_jobs")
 
-      val entVat = flattenVat(partionedDF).join(vatDF, Seq("vatref"), "outer")
+      val entVat = flattenVat(partionedDF).join(vatConvert(vatDF), Seq("vatref"), "outer")
       val prefixDF = entVat.withColumn("vatref9", prefix(col("vatref")))
       val startDF = prefixDF.join(prefixDF.groupBy("vatref9").agg(countDistinct(idColumnName)as "unique").filter(col("vatref9").isNotNull), Seq("vatref9"))
 
@@ -55,7 +55,6 @@
         .join(getApportionedTurnover(groupTurnover, idColumnName), Seq(idColumnName), "outer")
         .join(employees, idColumnName)
         .join(jobs, idColumnName)
-        //.withColumn("total_turnover", List(coalesce(col("temp_standard_vat_turnover"), lit(0)),coalesce(col("temp_contained_rep_vat_turnover"), lit(0)),coalesce(col("apportion_turnover"), lit(0))).reduce(_+_))
         .coalesce(numOfPartitions)
         .dropDuplicates(idColumnName,"apportion_turnover")
 
@@ -78,6 +77,10 @@
         .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
         .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
         .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
+    }
+
+    private def vatConvert(vatFrame: DataFrame): DataFrame = {
+      vatFrame.withColumn("turnover", vatFrame("turnover").cast(IntegerType))
     }
 
     private def getContainedTurnover(vatDF: DataFrame, idColumnName: String): DataFrame = vatDF.filter("unique == 1 and record_type == 1").groupBy(idColumnName).agg(sum("turnover") as "temp_contained_rep_vat_turnover")
@@ -143,7 +146,8 @@
 
       apportionDF
         .select(idColumnName,"group_turnover")
-        .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "apportion_turnover"),Seq(idColumnName), "outer")
+        .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "sum_apportion"),Seq(idColumnName), "outer")
+        .withColumn("apportion_turnover",round(col("sum_apportion"),0).cast(IntegerType))
         .coalesce(numOfPartitions)
         .dropDuplicates(idColumnName)
   }

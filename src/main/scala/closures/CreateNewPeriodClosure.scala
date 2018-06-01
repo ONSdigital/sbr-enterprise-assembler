@@ -157,7 +157,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
 
     val ernWithPayesAndVats: RDD[Row] = luRows.collect{
 
-      case row if(row.getStringSeq("PayeRefs").isDefined || row.getStringSeq("VatRefs").isDefined) => Row(
+      case row if(row.getStringSeq("PayeRefs").isDefined || row.getLongSeq("VatRefs").isDefined) => Row(
         row.getString("ern").get,
         row.getStringSeq("PayeRefs").getOrElse(null),
         row.getLongSeq("VatRefs").getOrElse(null)

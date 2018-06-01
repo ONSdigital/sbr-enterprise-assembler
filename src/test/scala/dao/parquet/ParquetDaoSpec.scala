@@ -20,14 +20,21 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   val jsonFilePath = "src/test/resources/data/3recs.json"
   val linkHfilePath = "src/test/resources/data/links"
   val entHfilePath = "src/test/resources/data/enterprise"
+  val louHfilePath = "src/test/resources/data/lou"
   val parquetHfilePath = "src/test/resources/data/sample.parquet"
   val payeFilePath = "src/test/resources/data/smallPaye.csv"
+  val vatFilePath = "src/test/resources/data/smallVat.csv"
 
   val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
       "ENT", "ons", "d",entHfilePath,
-      parquetHfilePath,"201802",payeFilePath
+      "LOU", "ons", "d",louHfilePath,
+      parquetHfilePath,
+      "201802",payeFilePath,
+      vatFilePath,
+      "local",
+      "addperiod"
     )))
 
 

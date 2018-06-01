@@ -42,40 +42,6 @@ assemblyMergeStrategy in assembly := {
 
 mainClass in (Compile,run) := Some("assembler.AssemblerMain")
 
-/*lazy val myParameters = Array("LINKS", "ons","l",
-  "src/main/resources/data/links/hfile", "ENT","ons", "d",
-   "src/main/resources/data/enterprise/hfile",
-  "src/main/resources/data/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
-  "src/main/resources/data/smallVat.csv",
-  "local","create")
-
-lazy val initialPopulationParams = Array("LINKS", "ons","l",
-  "src/main/resources/data/original/links/hfile", "ENT","ons", "d",
-   "src/main/resources/data/original/enterprise/hfile",
-  "src/main/resources/data/original/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/original/originalPaye.csv",
-  "src/main/resources/data/original/originalVat.csv",
-  "local","create")
-
-
-lazy val recsParams = Array("LINKS", "ons","l",
-  "src/main/resources/data/temp/3recs/links/hfile", "ENT","ons", "d",
-   "src/main/resources/data/temp/3recs/enterprise/hfile",
-  "src/main/resources/data/temp/3recs/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
-  "src/main/resources/data/smallPaye.csv",
-  "local","create")
-
-lazy val recsParamsRefresh = Array("LINKS", "ons","l",
-  "src/main/resources/data/temp/3recsRefresh/links/hfile", "ENT","ons", "d",
-   "src/main/resources/data/temp/3recsRefresh/enterprise/hfile",
-   "src/main/resources/data/temp/3recsRefresh/local-unit/hfile",
-  "src/main/resources/data/temp/3recsRefresh/sample.parquet",
-  "localhost", "2181", "201802","src/main/resources/data/smallPaye.csv",
-  "src/main/resources/data/smallPaye.csv",
-  "local","refresh")*/
-
 
 lazy val createRecordsParams = Array(
                                     "LINKS", "ons","l","src/main/resources/data/create/links/hfile",
