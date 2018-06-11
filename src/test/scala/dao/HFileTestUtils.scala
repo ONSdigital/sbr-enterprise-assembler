@@ -65,7 +65,7 @@ trait HFileTestUtils {
 
 
      //replace erns in rows:
-     val res: Set[HFileRow] = rows.map { case row => {
+     rows.map { case row => {
        val staticKey = getId(row.key)//.flatMap(id => replaceInKey(id))
        if (staticKey.isDefined) {
          val updatedCells = row.cells.map{case cell@KVCell(col,value) => {
@@ -84,7 +84,7 @@ trait HFileTestUtils {
      }
      }.toSet
 
-     return res
+
 
    }
 
