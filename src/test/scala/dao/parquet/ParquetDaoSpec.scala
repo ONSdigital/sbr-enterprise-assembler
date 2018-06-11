@@ -1,17 +1,13 @@
 package dao.parquet
 
-import java.io.Externalizable
-
 import dao.HFileTestUtils
 import global.AppParams
-import model.domain.{Enterprise, HFileRow, KVCell}
+import model.domain.{Enterprise, HFileRow}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
 
-import scala.collection.mutable
 import scala.reflect.io.File
-import scala.util.Random
 /**
   *
   */
@@ -45,11 +41,11 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
   override def beforeAll() = {
 
-/*    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-    spark.stop()*/
+    spark.stop()
 
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -57,17 +53,17 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   }
 
   override def afterAll() = {
-/*    File(parquetHfilePath).deleteRecursively()
+    File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()*/
+    File(louHfilePath).deleteRecursively()
   }
 
-    override def afterEach() = {
-/*      File(linkHfilePath).deleteRecursively()
+/*    override def afterEach() = {
+      File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
-      File(louHfilePath).deleteRecursively()*/
-    }
+      File(louHfilePath).deleteRecursively()
+    }*/
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
