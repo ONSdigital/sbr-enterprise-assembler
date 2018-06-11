@@ -1,6 +1,6 @@
 package dao.parquet
 
-import model.domain.{Enterprise, KVCell, HFileRow}
+import model.domain.{Enterprise, HFileRow, KVCell, LocalUnit}
 
 /**
   *
@@ -44,7 +44,15 @@ trait TestData {
     )
   }
 
+  def testLocalUnits3Recs(lous:Seq[LocalUnit] ) = {
+/*entref:Option[String],	name:String,	tradingstyle:Option[String],
+                     address1:String,	address2:Option[String],	address3:Option[String],address4:Option[String],address5:Option[String],
+                     postcode:String,sic07:String,employees:String*/
+    def getKeyByName(name:String): String =
+      lous.collect{case LocalUnit(lurn,_,ern,_,name,_,address1,_,_,_,_,postcode,sic07,employees) => lurn}.head
 
+    Seq[LocalUnit]()
+  }
 
   def testLinkRowsSmallWithNullValues(entLinks:Seq[HFileRow]) = List(
                 HFileRow("27280354~CH~201802",List(KVCell("p_LEU","10544190"))),

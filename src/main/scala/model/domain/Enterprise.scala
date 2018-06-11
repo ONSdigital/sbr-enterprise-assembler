@@ -16,7 +16,7 @@ case class Enterprise(ern:String, idbrref:Option[String], businessName:Option[St
 
 object Enterprise{
 
-  def apply(row:util.NavigableMap[Array[Byte],Array[Byte]]) = {
+/*  def apply(row:util.NavigableMap[Array[Byte],Array[Byte]]) = {
 
     def getValue(key:String) = Try{new String(row.get(key.getBytes))}.toOption
 
@@ -35,7 +35,7 @@ object Enterprise{
       getValue("std_turnover"),
       getValue("grp_turnover")
     )
-  }
+  }*/
 
   def apply(entry:(String, Iterable[(String, String)])) = buildFromHFileDataMap(entry)
 

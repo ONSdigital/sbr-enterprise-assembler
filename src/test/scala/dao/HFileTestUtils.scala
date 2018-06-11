@@ -2,6 +2,8 @@ package dao
 
 
 
+import java.io
+
 import model.domain._
 
 import scala.util.Try
@@ -10,7 +12,7 @@ import scala.util.Try
   */
 trait HFileTestUtils {
 
-   def assignStaticErns(rows:Seq[HFileRow]): Set[HFileRow] = {
+   def assignStaticLinkIds(rows:Seq[HFileRow]): Set[HFileRow] = {
 
 
     //dictionary mapping actual erns to static
@@ -88,6 +90,55 @@ trait HFileTestUtils {
 
    }
 
+
+   def assignStaticLousLurns(rows:Seq[HFileRow]): Set[HFileRow] = {
+     //dictionary mapping actual erns to static
+     val ernsDictionary: Seq[(String, String)] = {
+
+       val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="ern").isDefined) => {row.cells.collect{case KVCell("ern",value) => value}}}.flatten.zipWithIndex
+
+       erns.map(ernTup => {
+         val (ern,index) = ernTup
+         (ern,"testEnterpriseId-"+({index+1}.toString*5))
+
+       })}
+
+
+
+     val lurnsDictionary: Seq[(String, String)] = {
+       val lurns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="lurn").isDefined) => {row.cells.collect{case KVCell("lurn",value) => value}}}.flatten.zipWithIndex
+
+       lurns.map(lurnTup => {
+         val (lurn,index) = lurnTup
+         (lurn,"testLocalUnitId-"+({index+1}.toString*5))
+
+       })}
+
+
+     rows.map(row => {
+       val ids = row.key.split("~")
+       val keyErnReversed = ids(0)
+       val keyErn: String = keyErnReversed.reverse
+       val keyLurn: String = ids(2)
+       val staticErnKey = ernsDictionary.find(_._1==keyErn).map(_._2)
+       val staticLurnKey = lurnsDictionary.find(_._1==keyLurn).map(_._2)
+       val staticErnReversedKey = staticErnKey.map(_.reverse)
+       val rowKey = staticErnReversedKey.flatMap(ern => staticLurnKey.map(lurn => s"$ern~201802~$lurn")).getOrElse(row.key)
+       val cells: Iterable[KVCell[String, String]] = row.cells.flatMap{case cell@KVCell(col, value) => {
+         staticErnKey.flatMap(ern => staticLurnKey.map(lurn => {
+           if(col=="ern") KVCell(col,ern)
+           else if(col=="lurn") KVCell(col,lurn)
+           else cell
+       }))
+
+
+       }}
+
+       HFileRow(rowKey,cells)
+
+     }).toSet
+
+   }
 
 
 
