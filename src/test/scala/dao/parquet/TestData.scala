@@ -98,14 +98,15 @@ trait TestData {
 
 
   val testLinkRows3Recs = List(
-    HFileRow("testEnterpriseId-33333~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-33333"))),
-    HFileRow("testEnterpriseId-22222~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-22222"))),
-    HFileRow("testEnterpriseId-11111~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-11111"))),
 
-    HFileRow("testEnterpriseId-22222",List(KVCell("c_15931638","LEU"))),
-    HFileRow("21840175~LEU~201802",List(KVCell("c_10000","VAT"),KVCell("c_20000","VAT"),  KVCell("p_ENT","testEnterpriseId-11111"))),
-    HFileRow("testEnterpriseId-11111",List(KVCell("c_21840175","LEU"))),
-    HFileRow("testEnterpriseId-33333",List(KVCell("c_28919372","LEU"))),
+   HFileRow("testLocalUnitId-11111~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-22222"))),
+   HFileRow("testLocalUnitId-22222~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-11111"))),
+   HFileRow("testLocalUnitId-33333~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-33333"))),
+
+    HFileRow("testEnterpriseId-22222~ENT~201802",List(KVCell("c_15931638","LEU"), KVCell("testLocalUnitId-11111","LOU"))),
+    HFileRow("21840175~LEU~201802",List(KVCell("c_10000","VAT"),KVCell("c_20000","VAT"), KVCell("p_ENT","testEnterpriseId-11111"))),
+    HFileRow("testEnterpriseId-11111~ENT~201802",List(KVCell("c_21840175","LEU"), KVCell("testLocalUnitId-22222","LOU"))),
+    HFileRow("testEnterpriseId-33333~ENT~201802",List(KVCell("c_28919372","LEU"), KVCell("testLocalUnitId-33333","LOU"))),
     HFileRow("15931638~LEU~201802",List(KVCell("c_10002","VAT"), KVCell("c_12345W","PAYE"), KVCell("c_ERT12","PAYE"), KVCell("c_SZ124306","CH"), KVCell("p_ENT","testEnterpriseId-22222"))),
     HFileRow("28919372~LEU~201802",List(KVCell("c_20002","PAYE"), KVCell("c_30003","PAYE") , KVCell("p_ENT","testEnterpriseId-33333"))),
     HFileRow("12345W~PAYE~201802",List(KVCell("p_LEU","15931638"))),

@@ -45,11 +45,11 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
   override def beforeAll() = {
 
-    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+/*    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-    spark.stop()
+    spark.stop()*/
 
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -57,18 +57,17 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   }
 
   override def afterAll() = {
-    File(parquetHfilePath).deleteRecursively()
+/*    File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()
+    File(louHfilePath).deleteRecursively()*/
   }
 
     override def afterEach() = {
-      File(linkHfilePath).deleteRecursively()
+/*      File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
-      File(louHfilePath).deleteRecursively()
+      File(louHfilePath).deleteRecursively()*/
     }
-
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -90,37 +89,26 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
 
 
-/*  "assembler" should {
+  "assembler" should {
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
       val confs = appConfs
-      val dao = MockParquetDao
-      dao.parquetCreateNewToHFile(spark,confs)
+      //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
 
-      def replaceDynamicEntIdWithStatic(entLinks:Seq[HFileRow]) = {
-        val erns = entLinks.collect{ case row if(row.key.contains("~ENT~")) => }
-      }
 
-      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)//.map(entity => entity.copy(entity.key,entity.cells.sortBy(_.column)))
-      val erns: Seq[(String, Int)] = actual.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case KVCell("p_ENT",value) => value}}}.flatten.zipWithIndex
-      val ernsDictionary: Seq[(String, String)] = erns.map(ernTup => {
-        val (ern,index) = ernTup
-        (ern,{
-          "testEnterpriseId-"+({index+1}.toString*5)
-        })
+      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)
 
-      })
 
       //replace dynamically generated erns with static in actual:
-      val actualUpdated = assignStaticKeys(actual)
+      val actualUpdated = assignStaticErns(actual)
       val expected = testLinkRows3Recs.toSet
       actualUpdated shouldBe expected
 
 
       spark.close()
     }
-  }*/
+  }
 
 
   /*    "test content of hfile" should {
