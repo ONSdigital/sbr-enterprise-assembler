@@ -16,20 +16,20 @@ import org.slf4j.LoggerFactory
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql.SqlRowExtensions
 
-object ParquetDAO extends WithConversionHelper with DataFrameHelper{
+object ParquetDao extends WithConversionHelper with DataFrameHelper{
 
   val logger = LoggerFactory.getLogger(getClass)
 
   def jsonToParquet(jsonFilePath:String)(implicit spark:SparkSession,appconf:AppParams) = spark.read.json(jsonFilePath).write.parquet(appconf.PATH_TO_PARQUET)
 
-  def parquetToHFile(implicit spark:SparkSession,appconf:AppParams){
+  def parquetCreateNewToHFile(implicit spark:SparkSession, appconf:AppParams){
 
     val appArgs = appconf
 
     val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
-    val parquetRDD: RDD[hfile.Tables] = adminCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), payeDF, vatDF).rdd.map(row => toNewEnterpriseRecords(row,appArgs)).cache()
+    val parquetRDD: RDD[hfile.Tables] = adminCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), payeDF, vatDF).rdd.map(row => toNewEnterpriseRecordsWithLou(row,appArgs)).cache()
 
         parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
           .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -38,6 +38,12 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
         parquetRDD.flatMap(_.enterprises).sortBy(t => s"${t._2.key}${t._2.qualifier}")
           .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
               .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+         parquetRDD.flatMap(_.localUnits).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+          .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+              .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+
 
         parquetRDD.unpersist()
   }
@@ -89,8 +95,8 @@ object ParquetDAO extends WithConversionHelper with DataFrameHelper{
 
             //get cells for jobs and employees - the only updateable columns in enterprise table
             val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculations(fullLUs, payeDF, vatDF).rdd.flatMap(row => Seq(
-              ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
-              ParquetDAO.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
+              ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_employees",row.getCalcValue("paye_employees").get,appconf),
+              ParquetDao.createEnterpriseCell(row.getString("ern").get,"paye_jobs",row.getCalcValue("paye_jobs").get,appconf)
             ))
 
             entsRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}").map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))

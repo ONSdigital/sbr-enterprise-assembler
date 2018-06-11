@@ -20,21 +20,28 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
   val jsonFilePath = "src/test/resources/data/3recs.json"
   val linkHfilePath = "src/test/resources/data/links"
   val entHfilePath = "src/test/resources/data/enterprise"
+  val louHfilePath = "src/test/resources/data/lou"
   val parquetHfilePath = "src/test/resources/data/sample.parquet"
   val payeFilePath = "src/test/resources/data/smallPaye.csv"
+  val vatFilePath = "src/test/resources/data/smallVat.csv"
 
   val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
       "ENT", "ons", "d",entHfilePath,
-      parquetHfilePath,"201802",payeFilePath
+      "LOU", "ons", "d",louHfilePath,
+      parquetHfilePath,
+      "201802",payeFilePath,
+      vatFilePath,
+      "local",
+      "addperiod"
     )))
 
 
   override def beforeAll() = {
 
     implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-    ParquetDAO.jsonToParquet(jsonFilePath)(spark,appConfs)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark,appConfs)
     spark.close()
 
     conf.set("hbase.zookeeper.quorum", "localhost")
@@ -56,7 +63,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      ParquetDAO.parquetToHFile(spark,appConfs)
+      ParquetDao.parquetCreateNewToHFile(spark,appConfs)
 
       val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList.sortBy(_.ern)
       val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
@@ -75,7 +82,7 @@ class ParquetDaoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll w
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
 
-      ParquetDAO.parquetToHFile(spark,appConfs)
+      ParquetDao.parquetCreateNewToHFile(spark,appConfs)
 
       def replaceDynamicEntIdWithStatic(entLinks:Seq[HFileRow]) = {
         val erns = entLinks.collect{ case row if(row.key.contains("~ENT~")) => }

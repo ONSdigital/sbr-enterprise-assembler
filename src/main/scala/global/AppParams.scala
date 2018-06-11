@@ -11,10 +11,17 @@ case class AppParams(
                         HBASE_LINKS_TABLE_NAMESPACE:String,
                         HBASE_LINKS_COLUMN_FAMILY:String,
                         PATH_TO_LINKS_HFILE:String,
+
                         HBASE_ENTERPRISE_TABLE_NAME:String,
                         HBASE_ENTERPRISE_TABLE_NAMESPACE:String,
                         HBASE_ENTERPRISE_COLUMN_FAMILY:String,
                         PATH_TO_ENTERPRISE_HFILE:String,
+
+                        HBASE_LOCALUNITS_TABLE_NAME:String,
+                        HBASE_LOCALUNITS_TABLE_NAMESPACE:String,
+                        HBASE_LOCALUNITS_COLUMN_FAMILY:String,
+                        PATH_TO_LOCALUNITS_HFILE:String,
+
                         PATH_TO_PARQUET:String,
                         TIME_PERIOD:String,
                         PATH_TO_PAYE:String,
@@ -26,6 +33,7 @@ case class AppParams(
   val PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE = PATH_TO_ENTERPRISE_HFILE
 
 
+  val PATH_TO_LOCALUNITS_DELETE_PERIOD_HFILE = PATH_TO_LOCALUNITS_HFILE+"/cleanups"
   val PATH_TO_LINKS_HFILE_DELETE = PATH_TO_LINKS_HFILE+"/cleanups"
   val PATH_TO_LINKS_HFILE_UPDATE = PATH_TO_LINKS_HFILE + "/updates"
   val PREVIOUS_TIME_PERIOD = (TIME_PERIOD.toInt - 1).toString //temp
@@ -49,6 +57,11 @@ object AppParams{
                                                   args(10),
                                                   args(11),
                                                   args(12),
-                                                  args(13)
+                                                  args(13),
+                                                  args(14),
+                                                  args(15),
+                                                  args(16),
+                                                  args(17)
                                                 )
+  
 }

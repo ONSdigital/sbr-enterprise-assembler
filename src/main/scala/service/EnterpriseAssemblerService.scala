@@ -1,7 +1,7 @@
 package service
 
 import dao.hbase.{HBaseConnectionManager, HBaseDao}
-import dao.parquet.ParquetDAO
+import dao.parquet.ParquetDao
 import closures.CreateClosures
 import global.AppParams
 import org.apache.hadoop.hbase.client.Connection
@@ -16,17 +16,18 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
 
   def createParquetFromJson(appconf:AppParams) = withSpark(appconf) { implicit ss: SparkSession =>
 
-    ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)
+    ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
   }
 
 
-  def loadFromJson(appconf:AppParams) = {  withSpark(appconf) { implicit ss: SparkSession =>
+  def loadNewPopulationFromJson(appconf:AppParams) = withSpark(appconf) { implicit ss: SparkSession =>
 
-                                             ParquetDAO.jsonToParquet(PATH_TO_JSON)(ss, appconf)
-                                             ParquetDAO.parquetToHFile(ss, appconf)
+                                                                 ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
+    withHbaseConnection { implicit con: Connection => loadFromCreateParquet(appconf)(ss, con)}
+
                                            }
-    withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
-  }
+
+
 
 
   def createNewPopulationFromParquet(appconf:AppParams){
