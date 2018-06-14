@@ -44,14 +44,68 @@ trait TestData {
     )
   }
 
-  def testLocalUnits3Recs(lous:Seq[LocalUnit] ) = {
-/*entref:Option[String],	name:String,	tradingstyle:Option[String],
+  def testLocalUnits3Recs(ents:Seq[LocalUnit] ) = {
+/*lurn:String,	luref:Option[String],	ern:String, entref:Option[String],	name:String,	tradingstyle:Option[String],
                      address1:String,	address2:Option[String],	address3:Option[String],address4:Option[String],address5:Option[String],
                      postcode:String,sic07:String,employees:String*/
-    def getKeyByName(name:String): String =
-      lous.collect{case LocalUnit(lurn,_,ern,_,name,_,address1,_,_,_,_,postcode,sic07,employees) => lurn}.head
 
-    Seq[LocalUnit]()
+    def getIdsByName(name:String): (String,String) =
+      ents.collect{case LocalUnit(lurn, _, ern,_,name_,_,_,_,_,_,_,_,_,_) => (lurn,ern)}.head
+
+    Seq[LocalUnit](
+      new LocalUnit(
+        lurn="testLocalUnitId-11111",
+        luref=None,
+        ern="testEnterpriseId-11111",
+        entref = None,
+        name = "5TH PROPERTY TRADING LIMITED",
+        tradingstyle = None,
+        address1 = "",
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = "HQ92 3GV",
+        sic07 = "90481",
+        employees = "0"
+      ),
+      new LocalUnit(
+        lurn="testLocalUnitId-22222",
+        luref=None,
+        ern="testEnterpriseId-22222",
+        entref = None,
+        name = "ACCLAIMED HOMES LIMITED",
+        tradingstyle = None,
+        address1 = "",
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = "LB07 6UT",
+        sic07 = "00742",
+        employees = "0"
+      ),
+      new LocalUnit(
+        /*HFileRow(33333-dIesirpretnEtset~201802~testLocalUnitId-33333,List(KVCell(address1,), KVCell(employees,0), KVCell(ern,testEnterpriseId-33333), KVCell(lurn,testLocalUnitId-33333), KVCell(name,MERCATURA INVESTMENTS LIMITED), KVCell(postcode,FS20 3OS), KVCell(sic07,70176)))*/
+        lurn="testLocalUnitId-33333",
+        luref=None,
+        ern="testEnterpriseId-33333",
+        entref = None,
+        name = "MERCATURA INVESTMENTS LIMITED",
+        tradingstyle = None,
+        address1 = "",
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = "FS20 3OS",
+        sic07 = "70176",
+        employees = "0"
+      )
+
+      /*HFileRow(11111-dIesirpretnEtset~201802~testLocalUnitId-11111,List(KVCell(address1,), KVCell(employees,0), KVCell(ern,testEnterpriseId-11111), KVCell(lurn,testLocalUnitId-11111), KVCell(name,5TH PROPERTY TRADING LIMITED), KVCell(postcode,HQ92 3GV), KVCell(sic07,90481)))*/
+
+    )
   }
 
   def testLinkRowsSmallWithNullValues(entLinks:Seq[HFileRow]) = List(
@@ -104,6 +158,61 @@ trait TestData {
                 HFileRow("20006~PAYE~201802",List(KVCell("p_LEU","38557538")))
              ).sortBy(_.key)
 
+
+  val testLocalUnitsRows3Recs = List(
+    new LocalUnit(
+      lurn="testLocalUnitId-11111",
+      luref=None,
+      ern="testEnterpriseId-11111",
+      entref = None,
+      name = "5TH PROPERTY TRADING LIMITED",
+      tradingstyle = None,
+      address1 = "",
+      address2 = None,
+      address3 = None,
+      address4 = None,
+      address5 = None,
+      postcode = "HQ92 3GV",
+      sic07 = "90481",
+      employees = "0"
+    ),
+    new LocalUnit(
+      lurn="testLocalUnitId-22222",
+      luref=None,
+      ern="testEnterpriseId-22222",
+      entref = None,
+      name = "ACCLAIMED HOMES LIMITED",
+      tradingstyle = None,
+      address1 = "",
+      address2 = None,
+      address3 = None,
+      address4 = None,
+      address5 = None,
+      postcode = "LB07 6UT",
+      sic07 = "00742",
+      employees = "0"
+    ),
+
+    new LocalUnit(
+      /*HFileRow(33333-dIesirpretnEtset~201802~testLocalUnitId-33333,List(KVCell(address1,), KVCell(employees,0), KVCell(ern,testEnterpriseId-33333), KVCell(lurn,testLocalUnitId-33333), KVCell(name,MERCATURA INVESTMENTS LIMITED), KVCell(postcode,FS20 3OS), KVCell(sic07,70176)))*/
+      lurn="testLocalUnitId-33333",
+      luref=None,
+      ern="testEnterpriseId-33333",
+      entref = None,
+      name = "MERCATURA INVESTMENTS LIMITED",
+      tradingstyle = None,
+      address1 = "",
+      address2 = None,
+      address3 = None,
+      address4 = None,
+      address5 = None,
+      postcode = "FS20 3OS",
+      sic07 = "70176",
+      employees = "0"
+    )
+
+
+  )
 
   val testLinkRows3Recs = List(
 

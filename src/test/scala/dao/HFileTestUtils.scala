@@ -95,7 +95,7 @@ trait HFileTestUtils {
      //dictionary mapping actual erns to static
      val ernsDictionary: Seq[(String, String)] = {
 
-       val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="ern").isDefined) => {row.cells.collect{case KVCell("ern",value) => value}}}.flatten.zipWithIndex
+       val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="ern").isDefined) => {row.cells.find(_.column=="ern").get.value}}.zipWithIndex
 
        erns.map(ernTup => {
          val (ern,index) = ernTup
@@ -141,7 +141,26 @@ trait HFileTestUtils {
    }
 
 
+  def assignStaticIds(lous:Seq[LocalUnit]) = {
 
+    val idsDictionary: Seq[(String, (String, String))] = {
+
+      val ids: Seq[((String, String),Int)] = lous.map(lou => (lou.lurn,lou.ern)).zipWithIndex
+
+      ids.map(idTup => {
+        val ((lurn, ern),index) = idTup
+        (lurn,("testLocalUnitId-"+({index+1}.toString*5),"testEnterpriseId-"+({index+1}.toString*5)))
+
+      })}
+
+    lous.map(lou => {
+
+      val (lurn,ern) = idsDictionary.find(_._1==lou.lurn).get._2
+      lou.copy(lurn=lurn,ern=ern)
+
+    })
+
+  }
 
 
 }
