@@ -1,6 +1,6 @@
 package dao.parquet
 
-import model.domain.{Enterprise, KVCell, HFileRow}
+import model.domain.{Enterprise, HFileRow, KVCell, LocalUnit}
 
 /**
   *
@@ -15,35 +15,98 @@ trait TestData {
   def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
-      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
+      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_,_,_,_,_,_,_) => ern}.head
 
       Seq(
-        Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("8"),Some("10")),
-        Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("4"), Some("")),
-        Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("2"),Some("4")),
-        Enterprise(getKeyByName("NBD CONTRACTS LIMITED") ,Some("9999999999"),Some("NBD CONTRACTS LIMITED"),Some("UT10 7BS"),Some("5"),Some("5"),Some("2")),
-        Enterprise(getKeyByName("PURPLE SKY FUTURES LTD") ,Some("9999999999"),Some("PURPLE SKY FUTURES LTD"),Some("HG33 4OY"),Some("7"),Some(""),Some("")),
-        Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some(""),Some("")),
-        Enterprise(getKeyByName("RALPH GROUP LIMITED") ,Some("9999999999"),Some("RALPH GROUP LIMITED"),Some("SI83 9RT"),Some("6"),Some(""),Some("")),
-        Enterprise(getKeyByName("BCM TRADING LIMITED") ,Some("9999999999"),Some("BCM TRADING LIMITED"),Some("RM91 8SJ"),Some("1"),Some("6"),Some("8")),
-        Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some(""),Some("")),
-        Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some(""),Some(""))
+        Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("70176"),Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
+        Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("90125"),Some("4"), Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("90481"),Some("2"),Some("4"),None,None,None,None,None),
+        Enterprise(getKeyByName("NBD CONTRACTS LIMITED") ,Some("9999999999"),Some("NBD CONTRACTS LIMITED"),Some("UT10 7BS"),Some("5"),Some("10111"),Some("5"),Some("2"),None,None,None,None,None),
+        Enterprise(getKeyByName("PURPLE SKY FUTURES LTD") ,Some("9999999999"),Some("PURPLE SKY FUTURES LTD"),Some("HG33 4OY"),Some("7"),Some("20222"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some("00742"),None,None,None,Some("85"),Some("85"),None,None),
+        Enterprise(getKeyByName("RALPH GROUP LIMITED") ,Some("9999999999"),Some("RALPH GROUP LIMITED"),Some("SI83 9RT"),Some("6"),Some("30333"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("BCM TRADING LIMITED") ,Some("9999999999"),Some("BCM TRADING LIMITED"),Some("RM91 8SJ"),Some("1"),Some("40444"),Some("6"),Some("8"),None,None,None,None,None),
+        Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some("50555"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some("60666"),Some(""),None,None,None,None,None,None)
     )
   }
 
   def testEnterprises3Recs(ents:Seq[Enterprise] ) = {
 
     def getKeyByName(name:String): String =
-      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_) => ern}.head
+      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_,_,_,_,_,_,_) => ern}.head
 
     Seq(
-      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("8"),Some("10")),
-      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some(""),Some("")),
-      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("2"),Some("4"))
+      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("70176"),Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
+      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some("00742"),None,None,None,Some("85"),Some("85"),None,None),
+      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("90481"),Some("2"),Some("4"),None,None,None,None,None)
+
     )
   }
 
+  def testLocalUnits3Recs(ents:Seq[LocalUnit] ) = {
+/*lurn:String,	luref:Option[String],	ern:String, entref:Option[String],	name:String,	tradingstyle:Option[String],
+                     address1:String,	address2:Option[String],	address3:Option[String],address4:Option[String],address5:Option[String],
+                     postcode:String,sic07:String,employees:String*/
 
+    def getIdsByName(name:String): (String,String) =
+      ents.collect{case LocalUnit(lurn, _, ern,_,name_,_,_,_,_,_,_,_,_,_) => (lurn,ern)}.head
+
+    Seq[LocalUnit](
+      new LocalUnit(
+        lurn="testLocalUnitId-11111",
+        luref=None,
+        ern="testEnterpriseId-11111",
+        entref = None,
+        name = "5TH PROPERTY TRADING LIMITED",
+        tradingstyle = None,
+        address1 = "",
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = "HQ92 3GV",
+        sic07 = "90481",
+        employees = "0"
+      ),
+      new LocalUnit(
+        lurn="testLocalUnitId-22222",
+        luref=None,
+        ern="testEnterpriseId-22222",
+        entref = None,
+        name = "ACCLAIMED HOMES LIMITED",
+        tradingstyle = None,
+        address1 = "",
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = "LB07 6UT",
+        sic07 = "00742",
+        employees = "0"
+      ),
+      new LocalUnit(
+        /*HFileRow(33333-dIesirpretnEtset~201802~testLocalUnitId-33333,List(KVCell(address1,), KVCell(employees,0), KVCell(ern,testEnterpriseId-33333), KVCell(lurn,testLocalUnitId-33333), KVCell(name,MERCATURA INVESTMENTS LIMITED), KVCell(postcode,FS20 3OS), KVCell(sic07,70176)))*/
+        lurn="testLocalUnitId-33333",
+        luref=None,
+        ern="testEnterpriseId-33333",
+        entref = None,
+        name = "MERCATURA INVESTMENTS LIMITED",
+        tradingstyle = None,
+        address1 = "",
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = "FS20 3OS",
+        sic07 = "70176",
+        employees = "0"
+      )
+
+      /*HFileRow(11111-dIesirpretnEtset~201802~testLocalUnitId-11111,List(KVCell(address1,), KVCell(employees,0), KVCell(ern,testEnterpriseId-11111), KVCell(lurn,testLocalUnitId-11111), KVCell(name,5TH PROPERTY TRADING LIMITED), KVCell(postcode,HQ92 3GV), KVCell(sic07,90481)))*/
+
+    )
+  }
 
   def testLinkRowsSmallWithNullValues(entLinks:Seq[HFileRow]) = List(
                 HFileRow("27280354~CH~201802",List(KVCell("p_LEU","10544190"))),
@@ -96,11 +159,71 @@ trait TestData {
              ).sortBy(_.key)
 
 
+  val testLocalUnitsRows3Recs = List(
+    new LocalUnit(
+      lurn="testLocalUnitId-11111",
+      luref=None,
+      ern="testEnterpriseId-11111",
+      entref = None,
+      name = "5TH PROPERTY TRADING LIMITED",
+      tradingstyle = None,
+      address1 = "",
+      address2 = None,
+      address3 = None,
+      address4 = None,
+      address5 = None,
+      postcode = "HQ92 3GV",
+      sic07 = "90481",
+      employees = "0"
+    ),
+    new LocalUnit(
+      lurn="testLocalUnitId-22222",
+      luref=None,
+      ern="testEnterpriseId-22222",
+      entref = None,
+      name = "ACCLAIMED HOMES LIMITED",
+      tradingstyle = None,
+      address1 = "",
+      address2 = None,
+      address3 = None,
+      address4 = None,
+      address5 = None,
+      postcode = "LB07 6UT",
+      sic07 = "00742",
+      employees = "0"
+    ),
+
+    new LocalUnit(
+      /*HFileRow(33333-dIesirpretnEtset~201802~testLocalUnitId-33333,List(KVCell(address1,), KVCell(employees,0), KVCell(ern,testEnterpriseId-33333), KVCell(lurn,testLocalUnitId-33333), KVCell(name,MERCATURA INVESTMENTS LIMITED), KVCell(postcode,FS20 3OS), KVCell(sic07,70176)))*/
+      lurn="testLocalUnitId-33333",
+      luref=None,
+      ern="testEnterpriseId-33333",
+      entref = None,
+      name = "MERCATURA INVESTMENTS LIMITED",
+      tradingstyle = None,
+      address1 = "",
+      address2 = None,
+      address3 = None,
+      address4 = None,
+      address5 = None,
+      postcode = "FS20 3OS",
+      sic07 = "70176",
+      employees = "0"
+    )
+
+
+  )
+
   val testLinkRows3Recs = List(
-    HFileRow("testEnterpriseId-22222",List(KVCell("c_15931638","LEU"))),
-    HFileRow("21840175~LEU~201802",List(KVCell("c_10000","VAT"),KVCell("c_20000","VAT"),  KVCell("p_ENT","testEnterpriseId-11111"))),
-    HFileRow("testEnterpriseId-11111",List(KVCell("c_21840175","LEU"))),
-    HFileRow("testEnterpriseId-33333",List(KVCell("c_28919372","LEU"))),
+
+   HFileRow("testLocalUnitId-11111~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-22222"))),
+   HFileRow("testLocalUnitId-22222~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-11111"))),
+   HFileRow("testLocalUnitId-33333~LOU~201802",List(KVCell("p_ENT","testEnterpriseId-33333"))),
+
+    HFileRow("testEnterpriseId-22222~ENT~201802",List(KVCell("c_15931638","LEU"), KVCell("testLocalUnitId-11111","LOU"))),
+    HFileRow("21840175~LEU~201802",List(KVCell("c_10000","VAT"),KVCell("c_20000","VAT"), KVCell("p_ENT","testEnterpriseId-11111"))),
+    HFileRow("testEnterpriseId-11111~ENT~201802",List(KVCell("c_21840175","LEU"), KVCell("testLocalUnitId-22222","LOU"))),
+    HFileRow("testEnterpriseId-33333~ENT~201802",List(KVCell("c_28919372","LEU"), KVCell("testLocalUnitId-33333","LOU"))),
     HFileRow("15931638~LEU~201802",List(KVCell("c_10002","VAT"), KVCell("c_12345W","PAYE"), KVCell("c_ERT12","PAYE"), KVCell("c_SZ124306","CH"), KVCell("p_ENT","testEnterpriseId-22222"))),
     HFileRow("28919372~LEU~201802",List(KVCell("c_20002","PAYE"), KVCell("c_30003","PAYE") , KVCell("p_ENT","testEnterpriseId-33333"))),
     HFileRow("12345W~PAYE~201802",List(KVCell("p_LEU","15931638"))),

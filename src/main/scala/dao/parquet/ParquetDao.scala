@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql.SqlRowExtensions
 
-object ParquetDao extends WithConversionHelper with DataFrameHelper{
+trait ParquetDao extends WithConversionHelper with DataFrameHelper with Serializable{
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -29,7 +29,7 @@ object ParquetDao extends WithConversionHelper with DataFrameHelper{
     val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
     val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
-    val parquetRDD: RDD[hfile.Tables] = adminCalculations(spark.read.parquet(appconf.PATH_TO_PARQUET), payeDF, vatDF).rdd.map(row => toNewEnterpriseRecordsWithLou(row,appArgs)).cache()
+    val parquetRDD: RDD[hfile.Tables] = adminCalculations(spark.read.parquet(appArgs.PATH_TO_PARQUET), payeDF, vatDF).rdd.map(row => toNewEnterpriseRecordsWithLou(row,appArgs)).cache()
 
         parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
           .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -106,3 +106,4 @@ object ParquetDao extends WithConversionHelper with DataFrameHelper{
 
 
 }
+object ParquetDao extends ParquetDao
