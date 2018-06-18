@@ -4,7 +4,8 @@ import closures.CreateNewPeriodClosure
 import dao.HFileTestUtils
 import dao.hbase.HBaseDao
 import global.AppParams
-import model.domain.{Enterprise, HFileRow}
+import model.domain.{Enterprise, HFileRow, LocalUnit}
+import model.hfile.HFileCell
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
@@ -12,16 +13,17 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecL
 import spark.extensions.rdd.HBaseDataReader._
 
 import scala.reflect.io.File
+import scala.util.Random
 /**
   *
   */
 
-trait Paths{
+trait Const{
   val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
   val linkHfilePath = "src/test/resources/data/newperiod/links"
   val entHfilePath = "src/test/resources/data/newperiod/enterprise"
   val louHfilePath = "src/test/resources/data/newperiod/lou"
-  val parquetHfilePath = "src/test/resources/data/newperiod/sample.parquet"
+  val parquetPath = "src/test/resources/data/newperiod/sample.parquet"
   val payeFilePath = "src/test/resources/data/newperiod/newPeriodPaye.csv"
   val vatFilePath = "src/test/resources/data/newperiod/newPeriodVat.csv"
   val existingEntRecordHFiles = "src/test/resources/data/newperiod/existing/enterprise"
@@ -29,11 +31,9 @@ trait Paths{
   val existingLousRecordHFiles = "src/test/resources/data/newperiod/existing/lou"
 }
 
-class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with HFileTestUtils with Paths{
+class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with Const{
   import global.Configs._
 
-
-  //val jsonFilePath = "src/test/resources/data/smallWithNullValues.json"
 
 
   val appConfs = AppParams(
@@ -41,32 +41,13 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
       "LINKS", "ons", "l", linkHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
-      parquetHfilePath,
+      parquetPath,
       "201804",payeFilePath,
       vatFilePath,
       "local",
       "addperiod"
     )))
 
-/*  def createExistingRecordsHFiles(implicit ss:SparkSession) = {
-    val prevTimePeriod = {(appConfs.TIME_PERIOD.toInt - 1).toString}
-    val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(conf,appConfs,s"~$prevTimePeriod")
-    val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(conf,appConfs,s"~$prevTimePeriod")
-    val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(conf,appConfs,s".*~$prevTimePeriod~*.")
-
-    ents.flatMap(_.toHFileCellRow(appConfs.HBASE_ENTERPRISE_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(existingEntRecordHFiles,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
-
-    links.flatMap(_.toHFileCellRow(appConfs.HBASE_LINKS_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(existingLinksRecordHFiles,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
-
-    lous.flatMap(_.toHFileCellRow(appConfs.HBASE_LOCALUNITS_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(existingLousRecordHFiles,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
-
-  }*/
 
   override def beforeAll() = {
 
@@ -83,12 +64,11 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
   }
 
   override def afterAll() = {
-    File(parquetHfilePath).deleteRecursively()
+  File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
   }
-
 
 
   "assembler" should {
@@ -106,11 +86,64 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
     }
   }
 
+  "assembler" should {
+    "create hfiles populated with expected local units data" in {
+
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
+      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.map(lou => {
+        if(lou.ern.matches(hasLettersAndNumbersRegex)) lou.copy(lurn = newLouLurn, ern = newEntErn)
+        else lou}).toList.sortBy(_.lurn)
+      val expected: List[LocalUnit] = newPeriodLocalUnits
+      actual shouldBe expected
+      spark.stop()
+
+    }
+  }
+
+
+  "assembler" should {
+    "create hfiles populated with expected links data" in {
+
+      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+      val confs = appConfs
+      //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
+
+      val systemGeneratedErnBasedENTKeyRegex = "(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,50}).~ENT~"+confs.TIME_PERIOD+"$"
+      val systemGeneratedLurnBasedLOUKeyRegex = "(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,50}).~LOU~"+confs.TIME_PERIOD+"$"
+      val systemGeneratedKeyRegex = "(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,50})$"
+
+      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)
+
+
+      /* HFileRow-s need to be flatMapped to HFileCell-s to avoid ordering mismatch on HFileRow.cells
+      *  and system generated ern-s and lurn-s replaced with static values to enable result matching
+      * */
+      val actualUpdated = actual.flatMap(row => {
+        row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY).map(cell => cell match{
+
+          case cell@HFileCell(key, _, _, "LOU", _, _) if (key.matches(systemGeneratedErnBasedENTKeyRegex)) => cell.copy(key = s"$newEntErn~ENT~${confs.TIME_PERIOD}", qualifier = s"c_$newLouLurn")
+          case cell@HFileCell(key, _, _, _, _, _) if (key.matches(systemGeneratedErnBasedENTKeyRegex)) => cell.copy(key = s"$newEntErn~ENT~${confs.TIME_PERIOD}")
+          case cell@HFileCell(key, _, "p_ENT", value, _, _) if (key.matches(systemGeneratedLurnBasedLOUKeyRegex)) => cell.copy(key = s"$newLouLurn~LOU~${confs.TIME_PERIOD}", value = newEntErn)
+          case cell@HFileCell(_, _, "p_ENT", value, _, _) if (value.matches(systemGeneratedKeyRegex)) => cell.copy(value = newEntErn)
+          case cell => cell
+
+        })
+      }).toSet
+      val expected = newPeriodLinks.toSet
+      actualUpdated shouldBe expected
+
+
+      spark.close()
+
+    }
+  }
+
 
 
 }
 
-object MockHBaseDao extends HBaseDao with Paths{
+object MockHBaseDao extends HBaseDao with Const{
 
   override def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
 
@@ -139,4 +172,6 @@ object MockHBaseDao extends HBaseDao with Paths{
 
 object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
   override val hbaseDao = MockHBaseDao
+  override def generateUniqueKey = Random.alphanumeric.take(16).mkString + "1a" //to ensure letters and numbers present
+
 }
