@@ -12,6 +12,9 @@ trait TestData {
   * As ENT keys generated dynamically and cannot be matched, the keys are copied from actual results so that the rest of Ent object's attribute values
   * can be checked for equality
   * */
+
+  val newEntErn = "5000000011"
+
   def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
@@ -238,6 +241,11 @@ trait TestData {
 
 )//.sortBy((_.cells.map(_.column).mkString))
   
-  
+  val newPeriodEnts = List(
+    Enterprise("2000000011",Some("9900000009"),Some("INDUSTRIES LTD"),Some("B22 2TL"),None,Some("12345"),Some("2"),Some("4"),None,None,None,None,None),
+    Enterprise("3000000011",Some("9900000126"),Some("BLACKWELLGROUP LTD"),Some("CO6 2JX"),None,Some("23456"),Some("17"),Some("20"),None,Some("1175"),Some("585"),Some("590"),None),
+    Enterprise("4000000011",Some("9900000242"),Some("IBM LTD"),Some("PO6 3AU"),None,Some("34567"),Some("4"),Some("8"),None,Some("180"),Some("180"),None,None),
+    Enterprise(newEntErn,Some("9999999999"),Some("NEW ENTERPRISE LU"),Some("W1A 1AA"),Some("9"),Some("10001"),None,None,None,Some("85"),Some("85"),None,None)
+  )
 
 }

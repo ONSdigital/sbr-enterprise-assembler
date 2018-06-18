@@ -10,9 +10,12 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
+
+import scala.reflect.io.File
 /**
   *
   */
+
 trait Paths{
   val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
   val linkHfilePath = "src/test/resources/data/newperiod/links"
@@ -72,19 +75,18 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-    //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-    //MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
     spark.stop()
 
 
   }
 
   override def afterAll() = {
-/*  //File(parquetHfilePath).deleteRecursively()
+    File(parquetHfilePath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()*/
+    File(louHfilePath).deleteRecursively()
   }
 
 
@@ -92,14 +94,13 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
-      val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-/*      conf.set("hbase.zookeeper.quorum", "localhost")
-      conf.set("hbase.zookeeper.property.clientPort", "2181")*/
-
-
-      MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
-      val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
-      actual shouldBe actual
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val hasLettersAndNumbersRegex ="^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
+      val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.map(ent => {
+        if(ent.ern.matches(hasLettersAndNumbersRegex)) ent.copy(ern=newEntErn)
+        else ent}).toList.sortBy(_.ern)
+      val expected: List[Enterprise] = newPeriodEnts
+      actual shouldBe expected
       spark.stop()
 
     }
