@@ -3,6 +3,7 @@ package dao.parquet
 import dao.HFileTestUtils
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, LocalUnit}
+import model.hfile
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
@@ -41,14 +42,16 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
   override def beforeAll() = {
 
-    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
+    conf.set("hbase.zookeeper.quorum", "localhost")
+    conf.set("hbase.zookeeper.property.clientPort", "2181")
+
+    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
     spark.stop()
 
-    conf.set("hbase.zookeeper.quorum", "localhost")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
 
   }
 
@@ -97,9 +100,9 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)
 
 
-     //replace dynamically generated erns with static in actual:
-     val actualUpdated = assignStaticLinkIds(actual)
-     val expected = testLinkRows3Recs.toSet
+     //HFileRow-s need to be flatMapped to HFileCell-s to avoid ordering mismatch on HFileRow.cells:
+     val actualUpdated = assignStaticLinkIds(actual).flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY))
+     val expected = testLinkRows3Recs.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
      actualUpdated shouldBe expected
 
 

@@ -22,14 +22,15 @@ import scala.util.Try
 
 
 
-object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/* with RddLogging*/{
+trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with DataFrameHelper/* with RddLogging*/{
 
+  val hbaseDao: HBaseDao = HBaseDao
 
   type Cells = Iterable[KVCell[String, String]]
   type Record = (String, Cells)
 
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession) = {
+  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession):Unit = {
 
     val confs = Configs.conf
 
@@ -49,11 +50,11 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     //next 3 lines: select LU rows from hbase
     val linksTableName = s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}"
     val luRegex = ".*(ENT|LEU)~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
-    val existingLuRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
+    val existingLuRdd: RDD[Record] = hbaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, luRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
 
     val louRegex = ".*~LOU~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
-    val existingLous: RDD[Record]  = HBaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, louRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
+    val existingLous: RDD[Record]  = hbaseDao.readTableWithKeyFilter(confs,appconf, linksTableName, louRegex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
     //printRdd("existingLous", existingLous,"Tuple (String,Iterable[KVCells])")
 
@@ -145,7 +146,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
-    val existingEntRdd: RDD[Row] = HBaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex).map(_.toEntRow)
+    val existingEntRdd: RDD[Row] = hbaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex).map(_.toEntRow)
 
     // printRddOfRows("existingEntRdd",existingEntRdd)
     val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
@@ -202,7 +203,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
    * add new + existing links and save to hfile
    * */
 
-  val existingEntLinkRefs: RDD[(String, HFileCell)] = existingLinksEnts.flatMap(hfrow => hfrow.toHfileCells(appconf.HBASE_LINKS_COLUMN_FAMILY))
+  val existingEntLinkRefs: RDD[(String, HFileCell)] = existingLinksEnts.flatMap(hfrow => hfrow.toHFileCellRow(appconf.HBASE_LINKS_COLUMN_FAMILY))
   val existingLousCells: RDD[(String, HFileCell)] = existingLous.flatMap(row => row._2.map(cell => (row._1,HFileCell(row._1, appconf.HBASE_LINKS_COLUMN_FAMILY, cell.column, cell.value))))
   val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs).union(existingLousCells)
 
@@ -249,7 +250,7 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
     //next 3 lines: select LOU rows from hbase
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
     val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
-    val existingLouRdd: RDD[Record] = HBaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
+    val existingLouRdd: RDD[Record] = hbaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex).map(row => (row.key.replace(s"~${appconf.PREVIOUS_TIME_PERIOD}",s"~${appconf.TIME_PERIOD}"),row.cells))
 
     val louRowCells: RDD[(String, HFileCell)] = existingLouRdd.flatMap(rec => rec._2.map(cell => (rec._1,HFileCell(rec._1,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY,cell.column,cell.value))))
     louRowCells
@@ -257,4 +258,6 @@ object CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper/
   }
 
 }
+
+object CreateNewPeriodClosure extends CreateNewPeriodClosure
 

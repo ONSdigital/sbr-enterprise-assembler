@@ -1,6 +1,6 @@
 package dao.hbase
 
-import global.AppParams
+import global.{AppParams, Configs}
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
 /**
   *
   */
-object HBaseDao{
+trait HBaseDao extends Serializable{
   import global.Configs._
 
   val logger = LoggerFactory.getLogger(getClass)
@@ -220,6 +220,32 @@ object HBaseDao{
       .map(_._2).map(HFileRow(_))
   }
 
+  def copyExistingRecordsToHFiles(appParams:AppParams,dirName:String = "existing")(implicit spark:SparkSession) = {
+    def buildPath(path:String) = {
+      val dirs = path.split("/")
+      val updatedDirs = (dirs.init :+ dirName) :+ dirs.last
+      val res = updatedDirs.mkString("/")
+      res
+    }
+    val prevTimePeriod = {(appParams.TIME_PERIOD.toInt - 1).toString}
+    val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(conf,appParams,s"~$prevTimePeriod")
+    val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(conf,appParams,s"~$prevTimePeriod")
+    val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(conf,appParams,s".*~$prevTimePeriod~*.")
+
+    ents.flatMap(_.toHFileCellRow(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(buildPath(appParams.PATH_TO_ENTERPRISE_HFILE),classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    links.flatMap(_.toHFileCellRow(appParams.HBASE_LINKS_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(buildPath(appParams.PATH_TO_LINKS_HFILE),classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    lous.flatMap(_.toHFileCellRow(appParams.HBASE_LOCALUNITS_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(buildPath(appParams.PATH_TO_LOCALUNITS_HFILE),classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+  }
+
  private def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
 
   private def setScanner(config:Configuration,regex:String, appParams:AppParams) = {
@@ -240,3 +266,5 @@ object HBaseDao{
   }
 
 }
+
+object HBaseDao extends HBaseDao

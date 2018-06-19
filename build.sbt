@@ -1,8 +1,10 @@
-name := "sbr-enterprise_assembler"
+name := "sbr-enterprise-assembler"
 
 version := "1.0"
 
 scalaVersion := "2.11.8"
+
+fork := true
 
 lazy val Versions = new {
   val hbase = "1.2.6"

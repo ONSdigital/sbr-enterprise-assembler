@@ -1,11 +1,13 @@
 package model.domain
 
+import global.AppParams
 import model.hfile
 import model.hfile.HFileCell
 import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{DataFrame, Row}
 
@@ -29,13 +31,15 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
     if(result.isEmpty) null
     else result
   }
-  
+
   override def equals(obj: scala.Any): Boolean = obj match{
     case HFileRow(otherKey, otherCells) if(
                   (otherKey == this.key) && (this.cells.toSet == otherCells.toSet)
                 ) => true
     case _ => false
   }
+  //put type set as default
+  def toHFileCells(columnFamily:String, kvType:Int = KeyValue.Type.Put.ordinal()) = cells.map(cell => HFileCell(key,columnFamily,cell.column,cell.value,kvType))
 
    def toEntRow = {
      import spark.extensions.sql._
@@ -72,7 +76,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
   
   
   
-   def toHfileCells(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
+   def toHFileCellRow(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
      cells.map(cell => (key,HFileCell(key, colFamily, cell.column, cell.value)))
    }
 
