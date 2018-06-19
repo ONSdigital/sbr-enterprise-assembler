@@ -4,6 +4,8 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
+fork := true
+
 lazy val Versions = new {
   val hbase = "1.2.6"
   val spark = "2.2.0"

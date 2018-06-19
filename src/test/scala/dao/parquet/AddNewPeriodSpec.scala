@@ -64,7 +64,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
   }
 
   override def afterAll() = {
-  File(parquetPath).deleteRecursively()
+    File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
@@ -79,7 +79,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
       val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.map(ent => {
         if(ent.ern.matches(hasLettersAndNumbersRegex)) ent.copy(ern=newEntErn)
         else ent}).toList.sortBy(_.ern)
-      val expected: List[Enterprise] = newPeriodEnts
+      val expected: List[Enterprise] = newPeriodEnts.sortBy(_.ern)
       actual shouldBe expected
       spark.stop()
 
