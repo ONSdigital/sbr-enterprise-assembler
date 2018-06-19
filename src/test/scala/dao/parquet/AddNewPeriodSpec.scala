@@ -18,18 +18,6 @@ import scala.util.Random
   *
   */
 
-trait Const{
-  val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
-  val linkHfilePath = "src/test/resources/data/newperiod/links"
-  val entHfilePath = "src/test/resources/data/newperiod/enterprise"
-  val louHfilePath = "src/test/resources/data/newperiod/lou"
-  val parquetPath = "src/test/resources/data/newperiod/sample.parquet"
-  val payeFilePath = "src/test/resources/data/newperiod/newPeriodPaye.csv"
-  val vatFilePath = "src/test/resources/data/newperiod/newPeriodVat.csv"
-  val existingEntRecordHFiles = "src/test/resources/data/newperiod/existing/enterprise"
-  val existingLinksRecordHFiles = "src/test/resources/data/newperiod/existing/links"
-  val existingLousRecordHFiles = "src/test/resources/data/newperiod/existing/lou"
-}
 
 class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with Const{
   import global.Configs._
@@ -174,4 +162,17 @@ object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
   override val hbaseDao = MockHBaseDao
   override def generateUniqueKey = Random.alphanumeric.take(16).mkString + "1a" //to ensure letters and numbers present
 
+}
+
+trait Const{
+  val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
+  val linkHfilePath = "src/test/resources/data/newperiod/links"
+  val entHfilePath = "src/test/resources/data/newperiod/enterprise"
+  val louHfilePath = "src/test/resources/data/newperiod/lou"
+  val parquetPath = "src/test/resources/data/newperiod/sample.parquet"
+  val payeFilePath = "src/test/resources/data/newperiod/newPeriodPaye.csv"
+  val vatFilePath = "src/test/resources/data/newperiod/newPeriodVat.csv"
+  val existingEntRecordHFiles = "src/test/resources/data/newperiod/existing/enterprise"
+  val existingLinksRecordHFiles = "src/test/resources/data/newperiod/existing/links"
+  val existingLousRecordHFiles = "src/test/resources/data/newperiod/existing/lou"
 }
