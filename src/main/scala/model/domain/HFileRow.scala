@@ -74,7 +74,26 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
      ),luRowSchema)
    }
   
-  
+  def toLouRow = {
+    import spark.extensions.sql._
+
+    new GenericRowWithSchema(Array(
+      getCellValue("lurn"),
+      getCellValue("luref"),
+      getCellValue("ern"),
+      getCellValue("name"),
+      getCellValue("tradingstyle"),
+      getCellValue("address1"),
+      getCellValue("address2"),
+      getCellValue("address3"),
+      getCellValue("address4"),
+      getCellValue("address5"),
+      getCellValue("postcode"),
+      getCellValue("sic07"),
+      getCellValue("employees"),
+      getCellValue("")
+    ),louRowSchema)
+  }
   
    def toHFileCellRow(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
      cells.map(cell => (key,HFileCell(key, colFamily, cell.column, cell.value)))

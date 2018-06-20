@@ -19,7 +19,7 @@ import scala.util.Random
   */
 
 
-class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with Const{
+class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with Paths{
   import global.Configs._
 
 
@@ -131,7 +131,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
 
 }
 
-object MockHBaseDao extends HBaseDao with Const{
+object MockHBaseDao extends HBaseDao with Paths{
 
   override def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
 
@@ -164,7 +164,7 @@ object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
 
 }
 
-trait Const{
+trait Paths{
   val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
   val linkHfilePath = "src/test/resources/data/newperiod/links"
   val entHfilePath = "src/test/resources/data/newperiod/enterprise"

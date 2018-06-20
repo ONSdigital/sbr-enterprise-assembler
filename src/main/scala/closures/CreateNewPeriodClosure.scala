@@ -13,6 +13,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import spark.RddLogging
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
@@ -22,7 +23,7 @@ import scala.util.Try
 
 
 
-trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with DataFrameHelper/* with RddLogging*/{
+trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with DataFrameHelper with RddLogging{
 
   val hbaseDao: HBaseDao = HBaseDao
 
@@ -31,7 +32,7 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
 
   def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession):Unit = {
-
+    import spark.implicits._
     val confs = Configs.conf
 
     val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
@@ -197,7 +198,12 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
     val allEnts: RDD[(String, HFileCell)] = newEnts.union(existingEntsCells)
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
-
+   val entsWithMissingLous: RDD[Row] = getEntsWithMissingLous(completeExistingEnts,appconf,confs)
+   val missingLousData: RDD[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])] = entsWithMissingLous.map(row => toLocalUnits(row,appconf))
+   missingLousData.cache()
+   val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._1)
+   val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._2)
+   missingLousData.unpersist()
 
    /**
    * add new + existing links and save to hfile
@@ -209,7 +215,7 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
   //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
-  val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).coalesce(numOfPartitions)
+  val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).union(missingLousLinks).coalesce(numOfPartitions)
 
   //printRdd("allLus",allLus,"(String, HFileCell)")
 
@@ -226,7 +232,7 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
 
-   val lous =  newEntTree.flatMap(_.localUnits)
+   val lous: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.localUnits).union(missingLous)
 
    saveAllLocalUnits(lous,appconf,confs)
 
@@ -246,7 +252,6 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
   }
 
   def getExistingLocalUnits(appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
-    //val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
     //next 3 lines: select LOU rows from hbase
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
     val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
@@ -255,6 +260,44 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
     val louRowCells: RDD[(String, HFileCell)] = existingLouRdd.flatMap(rec => rec._2.map(cell => (rec._1,HFileCell(rec._1,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY,cell.column,cell.value))))
     louRowCells
 
+  }
+
+  def getEntsWithMissingLous(completeExistingEnts: DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+
+    import spark.implicits._
+
+    val louIdsSchema = new StructType(Array(StructField("ern", StringType,false),StructField("lurn", StringType,false)))
+
+    val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
+    val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
+    val lous: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex)
+    val existingLouRdd: RDD[(String, Row)] = lous.map(hFileRow => {
+      val row = hFileRow.toLouRow
+      (row.getString("ern").get,Row(Array(
+        row.getString("lurn").get)))
+
+    })
+
+    val existingEntsTuples: RDD[(String, Row)] = completeExistingEnts.rdd.map(row => (row.getString("ern").get,row))
+    val joined = existingEntsTuples.leftOuterJoin(existingLouRdd)
+    joined.collect { case (ern, (row, None)) => row}
+    //printRddOfRows("entsWithMissingLous",entsWithMissingLous)
+    //entsWithMissingLous
+/*    val existingLousDF: DataFrame = spark.createDataFrame(existingLouRdd,louIdsSchema)
+    existingLousDF.createOrReplaceTempView("LOUS")
+    completeExistingEnts.createOrReplaceTempView("ENTS")
+    val sqlDF: DataFrame = spark.sql("SELECT * FROM ENTS  where ENTS.ern NOT IN(SELECT ern FROM LOUS)")
+    sqlDF.printSchema()
+    printRddOfRows("sqlDF", sqlDF.rdd)
+    sqlDF*/
+
+  }
+
+  private def tupleToRow(tuple:(String,String)) = {
+    val (ern,lurn) = tuple
+    Row(Array(
+      ern,lurn
+    ),new StructType(Array(StructField("ern", StringType,true),StructField("lurn", StringType,true))))
   }
 
 }

@@ -57,6 +57,16 @@ trait WithConversionHelper {
     Tables(ents, links, lous)
   }
 
+
+  def toLocalUnits(row: Row, appParams: AppParams): (Seq[(String, HFileCell)], Seq[(String, HFileCell)]) = {
+    val lurn = generateUniqueKey
+    val ern = row.getString("ern").get
+    val keyStr = generateLinkKey(ern,enterprise,appParams)
+    val links =  rowToLocalUnitLinks(row,lurn,ern,appParams) :+ createLinksRecord(keyStr,s"$childPrefix$lurn",localUnit,appParams)
+    val lous = toLocalUnits(row, lurn, ern, appParams)
+    (links, lous)
+  }
+
   def toLocalUnits(row: Row, lurn:String, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
 
     Seq(
