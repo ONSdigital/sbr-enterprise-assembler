@@ -4,7 +4,7 @@ import closures.CreateNewPeriodClosure
 import dao.HFileTestUtils
 import dao.hbase.HBaseDao
 import global.AppParams
-import model.domain.{Enterprise, HFileRow, LocalUnit}
+import model.domain.{Enterprise, HFileRow, KVCell, LocalUnit}
 import model.hfile.HFileCell
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
@@ -41,24 +41,24 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
 
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    conf.set("hbase.zookeeper.quorum", "localhost")
+/*    conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
-    //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
+   HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-    MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
-    spark.stop()
+       MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+      spark.stop()*/
 
 
   }
 
   override def afterAll() = {
-    File(parquetPath).deleteRecursively()
-    File(linkHfilePath).deleteRecursively()
-    File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()
+    //File(parquetPath).deleteRecursively()
+//    File(linkHfilePath).deleteRecursively()
+//    File(entHfilePath).deleteRecursively()
+//    File(louHfilePath).deleteRecursively()
   }
 
-
+/*
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
@@ -87,7 +87,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
       spark.stop()
 
     }
-  }
+  }*/
 
 
   "assembler" should {
@@ -97,28 +97,21 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
       val confs = appConfs
       //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
 
-      val systemGeneratedErnBasedENTKeyRegex = "(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,50}).~ENT~"+confs.TIME_PERIOD+"$"
-      val systemGeneratedLurnBasedLOUKeyRegex = "(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,50}).~LOU~"+confs.TIME_PERIOD+"$"
-      val systemGeneratedKeyRegex = "(?!^[0-9]*$)(?!^[a-zA-Z]*$)^([a-zA-Z0-9]{6,50})$"
+      val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
 
-      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)
-
-
-      /* HFileRow-s need to be flatMapped to HFileCell-s to avoid ordering mismatch on HFileRow.cells
-      *  and system generated ern-s and lurn-s replaced with static values to enable result matching
-      * */
-      val actualUpdated = actual.flatMap(row => {
-        row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY).map(cell => cell match{
-
-          case cell@HFileCell(key, _, _, "LOU", _, _) if (key.matches(systemGeneratedErnBasedENTKeyRegex)) => cell.copy(key = s"$newEntErn~ENT~${confs.TIME_PERIOD}", qualifier = s"c_$newLouLurn")
-          case cell@HFileCell(key, _, _, _, _, _) if (key.matches(systemGeneratedErnBasedENTKeyRegex)) => cell.copy(key = s"$newEntErn~ENT~${confs.TIME_PERIOD}")
-          case cell@HFileCell(key, _, "p_ENT", value, _, _) if (key.matches(systemGeneratedLurnBasedLOUKeyRegex)) => cell.copy(key = s"$newLouLurn~LOU~${confs.TIME_PERIOD}", value = newEntErn)
-          case cell@HFileCell(_, _, "p_ENT", value, _, _) if (value.matches(systemGeneratedKeyRegex)) => cell.copy(value = newEntErn)
-          case cell => cell
-
-        })
-      }).toSet
-      val expected = newPeriodLinks.toSet
+      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
+      /**
+        * substitute system generated key with const values for comparison*/
+      val actualUpdated: Seq[HFileRow] = actual.map(f = row => {
+        if (row.key.contains(s"~ENT~${confs.TIME_PERIOD}") && row.key.split("~").head.endsWith("TESTS")) {
+          row.copy(key = s"$newEntErn~ENT~${confs.TIME_PERIOD}", cells = row.cells.map(cell => if (cell.value == "LOU") cell.copy(column = s"c_$newLouLurn") else cell).toList.sortBy(_.column))
+        }
+        else if (row.key.contains(s"~LOU~${confs.TIME_PERIOD}") && row.key.split("~").head.endsWith("TESTS")) {
+          row.copy(key = s"$newLouLurn~LOU~${confs.TIME_PERIOD}", cells = row.cells.map(cell => if (cell.value == "p_ENT") cell.copy(value = s"c_$newEntErn") else cell).toList.sortBy(_.column))
+        }
+        else row.copy(cells = row.cells.map(cell => if (cell.value.endsWith("TESTS")) cell.copy(value = newEntErn) else cell).toList.sortBy(_.column))
+      }).sortBy(_.key)
+      val expected = newPeriodLinks//.sortBy(_.key)
       actualUpdated shouldBe expected
 
 
@@ -160,7 +153,7 @@ object MockHBaseDao extends HBaseDao with Paths{
 
 object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
   override val hbaseDao = MockHBaseDao
-  override def generateUniqueKey = Random.alphanumeric.take(16).mkString + "1a" //to ensure letters and numbers present
+  override def generateUniqueKey = Random.alphanumeric.take(12).mkString + "TESTS" //to ensure letters and numbers present
 
 }
 

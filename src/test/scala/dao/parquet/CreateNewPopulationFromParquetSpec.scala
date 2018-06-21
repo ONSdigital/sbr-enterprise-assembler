@@ -22,7 +22,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
   val linkHfilePath = "src/test/resources/data/links"
   val entHfilePath = "src/test/resources/data/enterprise"
   val louHfilePath = "src/test/resources/data/lou"
-  val parquetHfilePath = "src/test/resources/data/sample.parquet"
+  val parquetFilePath = "src/test/resources/data/sample.parquet"
   val payeFilePath = "src/test/resources/data/smallPaye.csv"
   val vatFilePath = "src/test/resources/data/smallVat.csv"
 
@@ -31,7 +31,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
       "LINKS", "ons", "l", linkHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
-      parquetHfilePath,
+      parquetFilePath,
       "201802",payeFilePath,
       vatFilePath,
       "local",
@@ -40,7 +40,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
 
 
-  override def beforeAll() = {
+  /*override def beforeAll() = {
 
     val confs = appConfs
     conf.set("hbase.zookeeper.quorum", "localhost")
@@ -56,12 +56,12 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
   }
 
   override def afterAll() = {
-   File(parquetHfilePath).deleteRecursively()
+   File(parquetFilePath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
  }
-
+*/
 /*    override def afterEach() = {
      File(linkHfilePath).deleteRecursively()
      File(entHfilePath).deleteRecursively()
@@ -69,7 +69,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
    }*/
 
 
- "assembler" should {
+ /*"assembler" should {
    "create hfiles populated with expected enterprise data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -124,6 +124,6 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
          spark.close()
        }
-     }
+     }*/
 
 }
