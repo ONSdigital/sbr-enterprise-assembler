@@ -11,8 +11,32 @@ hbase commands to populate ENT and LINKS tables:
 
 in newPeriod.json:
 
-1.PayeRef: "1777L" added to item id:100000459235 (IBM-3)
-2. New LU added: id:999000508999, "BusinessName": "NEW ENTERPRISE LU"
-3. item, id: 100002826247 does not have "CompanyNo": "00032261"
-4. item, id: 100000508723, "CompanyNo": "04223165" changed to
+1. "CompanyNo": "00032261" removed from item, id: "100002826247"
+2. Item, id: "100000508723", "CompanyNo": "04223165" changed to "01113199"
+3. Item, id: "100000827984", "CompanyNo": "00032263" changed to "04186804"
+4. PAYE ref "3333L" added to item, id: "100000508724"
+5. New BI item added: id: "999000508999", "BusinessName": "NEW ENTERPRISE LU", resulting in additional following changes:
+   5.1 new ENT added with dynamically generated id,
+   5.2 new LEU, id: 999000508999 added
+   5.3 new LOU added with dynamically generated id
+   5.4 "CompanyNo": "33322444" added to LEU, id: 999000508999
+   5.5 VAT ref "919100010" added to LEU, id: 999000508999
+
+Affected:
+LINKS table  rows change from 38 to 43:
+
+step 1:    -1 row
+step 2:    no effect on row count
+step 3:    no effect on row count
+step 4:    +1 row
+step 5:    n/a
+step 5.1:  +1 row
+step 5.2:  +1 row
+step 5.3:  +1 row
+step 5.4:  +1 row
+step 5.5:  +1 row
+--------------------
+TOTAL     +5 rows
+
+
 

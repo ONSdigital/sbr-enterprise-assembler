@@ -40,7 +40,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
 
 
-  /*override def beforeAll() = {
+  override def beforeAll() = {
 
     val confs = appConfs
     conf.set("hbase.zookeeper.quorum", "localhost")
@@ -48,7 +48,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 
-    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
     spark.stop()
 
@@ -56,20 +56,20 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
   }
 
   override def afterAll() = {
-   File(parquetFilePath).deleteRecursively()
+   //File(parquetFilePath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
  }
-*/
-/*    override def afterEach() = {
+
+/*  override def afterEach() = {
      File(linkHfilePath).deleteRecursively()
      File(entHfilePath).deleteRecursively()
      File(louHfilePath).deleteRecursively()
    }*/
 
 
- /*"assembler" should {
+ "assembler" should {
    "create hfiles populated with expected enterprise data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -124,6 +124,6 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
          spark.close()
        }
-     }*/
+     }
 
 }
