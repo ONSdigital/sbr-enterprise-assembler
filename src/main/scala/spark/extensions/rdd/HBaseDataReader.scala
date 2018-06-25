@@ -19,15 +19,13 @@ object HBaseDataReader{
 
         type DataMap = (String,Iterable[(String, String)])
 
-        def getKeyValue[T <: Cell](kv:T): (String, (String, String)) =
-              (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
+        def getKeyValue[T <: Cell](kv:T): (String, (String, String)) = {
+          val key = Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength)
+          val column =  Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset, kv.getQualifierOffset + kv.getQualifierLength)
+          val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset, kv.getValueOffset + kv.getValueLength)
+          (key,(column, value))
 
-              (Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
-                      kv.getQualifierOffset + kv.getQualifierLength),
-                      Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
-                      kv.getValueOffset + kv.getValueLength)))
-
-
+        }//"c_04223160" //HFileRow(100000508724~LEU~201803,List(KVCell(c_00012345,H), KVCell(c_5555L,PAYE), KVCell(c_999888777,VAT), KVCell(p_ENT,000000011)))
 
 
 
