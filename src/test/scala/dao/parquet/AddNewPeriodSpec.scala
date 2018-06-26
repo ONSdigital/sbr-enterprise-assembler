@@ -18,7 +18,7 @@ import scala.util.Random
   */
 
 
-class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with Paths{
+class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with AddPeriodPaths{
   import global.Configs._
 
 
@@ -78,7 +78,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
      val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
-     val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+     //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.map(lou => {
        if(lou.ern.endsWith("TESTS")) lou.copy(lurn = newLouLurn, ern = newEntErn)
        else lou}).toList.sortBy(_.lurn)
@@ -124,7 +124,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
 
 }
 
-object MockHBaseDao extends HBaseDao with Paths{
+object MockHBaseDao extends HBaseDao with AddPeriodPaths{
 
  override def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
 
@@ -157,7 +157,7 @@ object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
 
 }
 
-trait Paths{
+trait AddPeriodPaths{
  val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
  val linkHfilePath = "src/test/resources/data/newperiod/links"
  val entHfilePath = "src/test/resources/data/newperiod/enterprise"
