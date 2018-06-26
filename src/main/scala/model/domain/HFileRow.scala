@@ -1,15 +1,13 @@
 package model.domain
 
-import global.AppParams
 import model.hfile
 import model.hfile.HFileCell
-import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.rdd.RDD
+import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.{DataFrame, Row}
 
 import scala.util.Try
 
@@ -77,7 +75,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
   def toLouRow = {
     import spark.extensions.sql._
 
-    new GenericRowWithSchema(Array(
+    Row(Array(
       getCellValue("lurn"),
       getCellValue("luref"),
       getCellValue("ern"),
@@ -94,7 +92,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
       getCellValue("")
     ),louRowSchema)
   }
-  
+
    def toHFileCellRow(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
      cells.map(cell => (key,HFileCell(key, colFamily, cell.column, cell.value)))
    }

@@ -266,11 +266,11 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
     import spark.implicits._
 
-    val louIdsSchema = new StructType(Array(StructField("ern", StringType,false),StructField("lurn", StringType,false)))
 
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
     val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
     val lous: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex)
+    /*//this bit below is also working:
     val existingLouRdd: RDD[(String, Row)] = lous.map(hFileRow => {
       val row = hFileRow.toLouRow
       (row.getString("ern").get,Row(Array(
@@ -280,24 +280,35 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
     val existingEntsTuples: RDD[(String, Row)] = completeExistingEnts.rdd.map(row => (row.getString("ern").get,row))
     val joined = existingEntsTuples.leftOuterJoin(existingLouRdd)
-    joined.collect { case (ern, (row, None)) => row}
-    //printRddOfRows("entsWithMissingLous",entsWithMissingLous)
-    //entsWithMissingLous
-/*    val existingLousDF: DataFrame = spark.createDataFrame(existingLouRdd,louIdsSchema)
+    joined.collect { case (ern, (row, None)) => row}*/
+
+
+    val louRows: RDD[Row] = lous.map(hfileRow => {
+      new GenericRowWithSchema(Array(
+          hfileRow.getCellValue("ern"),
+          hfileRow.getCellValue("lurn")
+          ),louIdsSchema)
+    })
+    //printRddOfRows("louRows", louRows)
+
+
+    val existingLousDF: DataFrame = spark.createDataFrame(louRows,louIdsSchema)
+    //printDF("existingLousDF",existingLousDF)
     existingLousDF.createOrReplaceTempView("LOUS")
     completeExistingEnts.createOrReplaceTempView("ENTS")
-    val sqlDF: DataFrame = spark.sql("SELECT * FROM ENTS  where ENTS.ern NOT IN(SELECT ern FROM LOUS)")
-    sqlDF.printSchema()
-    printRddOfRows("sqlDF", sqlDF.rdd)
-    sqlDF*/
+    val sqlDF: DataFrame = spark.sql("SELECT * FROM ENTS where ENTS.ern NOT IN(SELECT ern FROM LOUS)")
+    //printDF("sqlDF",sqlDF)
+    val rdd: RDD[Row] = sqlDF.rdd
+    //printRddOfRows("sqlDF", rdd)
+    rdd
 
   }
 
   private def tupleToRow(tuple:(String,String)) = {
     val (ern,lurn) = tuple
-    Row(Array(
+    new GenericRowWithSchema(Array(
       ern,lurn
-    ),new StructType(Array(StructField("ern", StringType,true),StructField("lurn", StringType,true))))
+    ),louIdsSchema)
   }
 
 }

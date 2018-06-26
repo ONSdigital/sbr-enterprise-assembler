@@ -51,6 +51,10 @@ package object sql {
     .add(StructField("VatRefs", ArrayType(LongType,true),true))
 
 
+  val louIdsSchema = new StructType()
+    .add(StructField("ern", StringType,true))
+    .add(StructField("lurn", StringType,true))
+
 
   val entRowSchema = new StructType()
     .add(StructField("ern", StringType,false))
