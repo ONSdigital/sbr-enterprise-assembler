@@ -16,7 +16,7 @@ trait TestData {
   val newEntErn = "5000000011"
   val newLouLurn = "500000099"
 
-  def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
+  /*def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
 
     def getKeyByName(name:String): String =
       ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_,_,_,_,_,_,_) => ern}.head
@@ -33,17 +33,20 @@ trait TestData {
         Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some("50555"),Some(""),Some(""),None,None,None,None,None),
         Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some("60666"),Some(""),None,None,None,None,None,None)
     )
-  }
+  }*/
 
   def testEnterprises3Recs(ents:Seq[Enterprise] ) = {
 
     def getKeyByName(name:String): String =
-      ents.collect{case Enterprise(ern,_,Some(`name`),_,_,_,_,_,_,_,_,_,_) => ern}.head
+      ents.collect{case Enterprise(ern,_,`name`,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_) => ern}.head
 
     Seq(
-      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("70176"),Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
-      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some("00742"),None,None,None,Some("85"),Some("85"),None,None),
-      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("90481"),Some("2"),Some("4"),None,None,None,None,None)
+/*   Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","WHITE LANE",None,None,None,None,"B22 2TL",None,"12345","2",Some("4"),None,None,None,None,None,None),
+    Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",None,None,None,None, "CO6 2JX",None,"23456","17",Some("20"),None,None,Some("1175"),Some("585"),Some("590"),None),
+    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",None,None,None,None,"PO6 3AU",None,"34567","4",Some("8"),None,None,Some("180"),Some("180"),None,None),*/
+      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),"MERCATURA INVESTMENTS LIMITED","",None,None,None,None,"FS20 3OS",Some("6"),"70176","8",Some("10"),None,Some("45"),Some("45"),None,None,None),
+      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),"ACCLAIMED HOMES LIMITED","",None,None,None,None,"LB07 6UT",Some("3"),"00742","6",None,None,Some("85"),Some("85"),None,None,None),
+      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),"5TH PROPERTY TRADING LIMITED","",None,None,None,None,"HQ92 3GV",Some("3"),"90481","2", Some("4"),None,None,None,None,None,None)
 
     )
   }
@@ -241,18 +244,47 @@ trait TestData {
 
 
 )//.sortBy((_.cells.map(_.column).mkString))
-  
+
+ /* ern:String, idbrref:Option[String],
+  businessName:String,
+  address1:String,
+  address2:Option[String],
+  address3:Option[String],
+  address4:Option[String],
+  address5:Option[String],
+  PostCode:String,
+  tradingStyle:Option[String],
+  sic07:String,
+  legalStatus:String,
+  payeEmployees:Option[String],
+  payeJobs:Option[String],
+  appTurnover:Option[String],
+  entTurnover:Option[String],
+  cntdTurnover:Option[String],
+  stdTurnover:Option[String],
+  grp_turnover:Option[String]*/
+
   val newPeriodEnts = List(
-    Enterprise("2000000011",Some("9900000009"),Some("INDUSTRIES LTD"),Some("B22 2TL"),None,Some("12345"),Some("2"),Some("4"),None,None,None,None,None),
-    Enterprise("3000000011",Some("9900000126"),Some("BLACKWELLGROUP LTD"),Some("CO6 2JX"),None,Some("23456"),Some("17"),Some("20"),None,Some("1175"),Some("585"),Some("590"),None),
-    Enterprise("4000000011",Some("9900000242"),Some("IBM LTD"),Some("PO6 3AU"),None,Some("34567"),Some("4"),Some("8"),None,Some("180"),Some("180"),None,None),
-    Enterprise(newEntErn,Some("9999999999"),Some("NEW ENTERPRISE LU"),Some("W1A 1AA"),Some("9"),Some("10001"),None,None,None,Some("85"),Some("85"),None,None)
+    Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","WHITE LANE",None,None,None,None,"B22 2TL",None,"12345","2",Some("4"),None,None,None,None,None,None),
+    Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",None,None,None,None, "CO6 2JX",None,"23456","17",Some("20"),None,None,Some("1175"),Some("585"),Some("590"),None),
+    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",None,None,None,None,"PO6 3AU",None,"34567","4",Some("8"),None,None,Some("180"),Some("180"),None,None),
+    Enterprise(newEntErn,Some("9999999999"),"NEW ENTERPRISE LU","DEFAULT_VALUE", None,None,None,None, "W1A 1AA",Some("9"),"10001","1",None,None,None,Some("85"),Some("85"),None,None)
   )
   
   val newPeriodLocalUnits = List(
   LocalUnit("200000099",Some("100002826247"),"2000000011",Some("9900000009"),"INDUSTRIES LTD",None,"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345","2"),
   LocalUnit("300000088",Some("100000827984"),"3000000011",Some("9900000126"),"2-ND LU OF BLACKWELLGROUP LTD",None,"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122","2"),
-  LocalUnit("300000099",Some("100000246017"),"3000000011",Some("9900000126"),"BLACKWELLGROUP LTD",None,"COGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","2"),
+  LocalUnit("300000099",Some("100000246017"),"3000000011",Some("9900000126"),"BLACKWELLGROUP LTD",None,"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","2"),
+  LocalUnit("400000055",Some("100000508724"),"4000000011",Some("9900000242"),"3-RD LU OF IBM LTD",None,"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344","1"),
+  LocalUnit("400000066",Some("100000508723"),"4000000011",Some("9900000242"),"2-ND LU OF IBM LTD",None,"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233","2"),
+  LocalUnit("400000077",Some("100000459235"),"4000000011",Some("9900000242"),"IBM LTD",None,"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","34567","2"),
+  LocalUnit(newLouLurn, None, newEntErn, None, "NEW ENTERPRISE LU", None, "", None, None, None, None, "W1A 1AA", "10001", "0")
+  )
+
+  val newPeriodWithMissingLocalUnit = List(
+  LocalUnit("200000099",None,"2000000011",Some("9900000009"),"INDUSTRIES LTD",None,"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345","2"),
+  LocalUnit("300000088",Some("100000827984"),"3000000011",Some("9900000126"),"2-ND LU OF BLACKWELLGROUP LTD",None,"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122","2"),
+  LocalUnit("300000099",Some("100000246017"),"3000000011",Some("9900000126"),"BLACKWELLGROUP LTD",None,"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","2"),
   LocalUnit("400000055",Some("100000508724"),"4000000011",Some("9900000242"),"3-RD LU OF IBM LTD",None,"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344","1"),
   LocalUnit("400000066",Some("100000508723"),"4000000011",Some("9900000242"),"2-ND LU OF IBM LTD",None,"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233","2"),
   LocalUnit("400000077",Some("100000459235"),"4000000011",Some("9900000242"),"IBM LTD",None,"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","34567","2"),

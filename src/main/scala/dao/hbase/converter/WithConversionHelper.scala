@@ -47,7 +47,10 @@ trait WithConversionHelper {
   val childPrefix = "c_"
   val parentPrefix = "p_"
 
-
+/**
+  * generates enterprise with a local unit and all links
+  * from a BI record
+  * */
   def toNewEnterpriseRecordsWithLou(row: Row, appParams: AppParams): Tables = {
     val ern = generateUniqueKey
     val lurn = generateUniqueKey
@@ -58,13 +61,34 @@ trait WithConversionHelper {
   }
 
 
-  def toLocalUnits(row: Row, appParams: AppParams): (Seq[(String, HFileCell)], Seq[(String, HFileCell)]) = {
+  def entToLocalUnits(row: Row, appParams: AppParams): (Seq[(String, HFileCell)], Seq[(String, HFileCell)]) = {
     val lurn = generateUniqueKey
     val ern = row.getString("ern").get
     val keyStr = generateLinkKey(ern,enterprise,appParams)
     val links =  rowToLocalUnitLinks(row,lurn,ern,appParams) :+ createLinksRecord(keyStr,s"$childPrefix$lurn",localUnit,appParams)
-    val lous = toLocalUnits(row, lurn, ern, appParams)
+    val lous = entRowToLocalUnit(row, lurn, ern, appParams)
     (links, lous)
+  }
+
+  def entRowToLocalUnit(row: Row, lurn:String, ern: String, appParams: AppParams):Seq[(String, HFileCell)] = {
+
+    Seq(
+      createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
+      createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "name", row.getString("name").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "postcode", row.getString("postcode").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "sic07", row.getString("sic07").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "employees", row.getLong("paye_employees").map(_.toString).getOrElse("0"), appParams) //this one is still long as defined by df schema  of entAdminCalculation
+    ) ++ Seq(
+      row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
+      row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
+      row.getString("tradingstyle").map(bn => createLocalUnitCell(lurn,ern, "trading_style", bn, appParams)),
+      row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
+      row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
+      row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+      row.getString("address5").map(bn => createLocalUnitCell(lurn,ern, "address5", bn, appParams))
+    ).collect { case Some(v) => v }
   }
 
   def toLocalUnits(row: Row, lurn:String, ern: String, appParams: AppParams): Seq[(String, HFileCell)] = {
@@ -75,15 +99,16 @@ trait WithConversionHelper {
       createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getString("PostCode").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "sic07", row.getString("IndustryCode").getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "employees", row.getString("employees").map(_.toString).getOrElse("0"), appParams)
+      createLocalUnitCell(lurn,ern, "employees", row.getString("paye_employees").map(_.toString).getOrElse("0"), appParams)
     ) ++ Seq(
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
-      row.getString("BusinessName").map(bn => createLocalUnitCell(lurn,ern, "name", bn, appParams)),
+      row.getString("BusinessName").map(createLocalUnitCell(lurn,ern, "name", _, appParams)),
       row.getString("tradingstyle").map(bn => createLocalUnitCell(lurn,ern, "trading_style", bn, appParams)),
       row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
       row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
-      row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams))
+      row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+      row.getString("address5").map(bn => createLocalUnitCell(lurn,ern, "address5", bn, appParams))
     ).collect { case Some(v) => v }
   }
 

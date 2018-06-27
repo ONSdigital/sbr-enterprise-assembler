@@ -199,7 +199,7 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
    val entsWithMissingLous: RDD[Row] = getEntsWithMissingLous(completeExistingEnts,appconf,confs)
-   val missingLousData: RDD[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])] = entsWithMissingLous.map(row => toLocalUnits(row,appconf))
+   val missingLousData: RDD[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])] = entsWithMissingLous.map(row => entToLocalUnits(row,appconf))
    missingLousData.cache()
    val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._1)
    val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._2)

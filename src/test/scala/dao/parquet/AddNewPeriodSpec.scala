@@ -3,9 +3,13 @@ package dao.parquet
 import closures.CreateNewPeriodClosure
 import dao.HFileTestUtils
 import dao.hbase.HBaseDao
-import global.AppParams
+import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LocalUnit}
+import model.hfile
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
@@ -78,7 +82,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
      val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
-     //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+     val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.map(lou => {
        if(lou.ern.endsWith("TESTS")) lou.copy(lurn = newLouLurn, ern = newEntErn)
        else lou}).toList.sortBy(_.lurn)
@@ -120,42 +124,20 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
    }
  }
 
-
+def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
+      conf.set("hbase.zookeeper.quorum", "localhost")
+      conf.set("hbase.zookeeper.property.clientPort", "2181")
+     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
+     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
+     cells.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+       .saveAsNewAPIHadoopFile(path,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+}
 
 }
 
-object MockHBaseDao extends HBaseDao with AddPeriodPaths{
-
- override def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
-
-   val res = tableName.split(":").last match{
-
-     case appParams.HBASE_ENTERPRISE_TABLE_NAME => readEnterprisesWithKeyFilter(confs,appParams,regex)
-     case appParams.HBASE_LINKS_TABLE_NAME => readLinksWithKeyFilter(confs,appParams,regex)
-     case appParams.HBASE_LOCALUNITS_TABLE_NAME => readLouWithKeyFilter(confs,appParams,regex)
-     case _ => throw new IllegalArgumentException("invalid table name")
-
-   }
-   res
- }
-
- override def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] =
-   readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).sortBy(_.cells.map(_.column).mkString).filter(_.key.matches(regex))
 
 
- override def readLouWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] =
-   readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).sortBy(_.cells.map(_.column).mkString).filter(_.key.matches(regex))
-
-
- override def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] =
-   readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).sortBy(_.cells.map(_.column).mkString).filter(_.key.matches(regex))
-}
-
-object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
- override val hbaseDao = MockHBaseDao
- override def generateUniqueKey = Random.alphanumeric.take(12).mkString + "TESTS" //to ensure letters and numbers present
-
-}
 
 trait AddPeriodPaths{
  val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"

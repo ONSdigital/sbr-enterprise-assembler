@@ -22,7 +22,7 @@ in newPeriod.json:
    5.4 "CompanyNo": "33322444" added to LEU, id: 999000508999
    5.5 VAT ref "919100010" added to LEU, id: 999000508999
 
-Affected:
+LINKS table counts affected:
 LINKS table  rows change from 38 to 43:
 
 step 1:    -1 row
