@@ -130,9 +130,9 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
     val newEntTree: RDD[hfile.Tables] = adminCalculations(newRowsDf, payeDf, vatDf).rdd.map(row => toNewEnterpriseRecordsWithLou(row,appconf))
 
-    // println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
+    //println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
 
-    // printRdd("newEntTree",newEntTree,"hfile.Tables")
+    //printRdd("newEntTree",newEntTree,"hfile.Tables")
 
      newEntTree.cache()
 
@@ -147,9 +147,10 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
-    val existingEntRdd: RDD[Row] = hbaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex).map(_.toEntRow)
-
-    // printRddOfRows("existingEntRdd",existingEntRdd)
+    val entHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex)
+    //printRdd("entHFileRowRdd",entHFileRowRdd,"HFileRow")
+    val existingEntRdd: RDD[Row] = entHFileRowRdd.map(_.toEntRow)
+    //printRddOfRows("existingEntRdd",existingEntRdd)
     val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
     //printDF("existingEntDF",existingEntDF)
 
@@ -182,7 +183,7 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
     //printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
     val completeExistingEnts: DataFrame = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter")//.rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
     completeExistingEnts.cache()
-      //printDF("existingEntDF", existingEntDF)
+    //printDF("existingEntDF", existingEntDF)
       //printDF("completeExistingEnts", completeExistingEnts)
 
 

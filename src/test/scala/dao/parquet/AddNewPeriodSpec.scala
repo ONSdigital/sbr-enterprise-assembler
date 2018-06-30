@@ -22,10 +22,10 @@ import scala.util.Random
   */
 
 
-class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with AddPeriodPaths{
+class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with ExistingEnts with ExistingLocalUnits with ExistingPeriodLinks{
   import global.Configs._
 
-
+  lazy val testDir = "newperiod"
 
   val appConfs = AppParams(
     (Array[String](
@@ -41,13 +41,13 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
 
 
   override def beforeAll() = {
-
      val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
      val confs = appConfs
      conf.set("hbase.zookeeper.quorum", "localhost")
      conf.set("hbase.zookeeper.property.clientPort", "2181")
+     createRecords(confs)(spark)
      //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-     //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
      MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
      spark.stop()
 
@@ -55,7 +55,7 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
  }
 
  override def afterAll() = {
-    //File(parquetPath).deleteRecursively()
+    File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
@@ -65,12 +65,14 @@ class AddNewPeriodSpec extends WordSpecLike with Matchers with BeforeAndAfterAll
    "create hfiles populated with expected enterprise data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-     val hasLettersAndNumbersRegex ="^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
-     val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.map(ent => {
-       if(ent.ern.matches(hasLettersAndNumbersRegex)) ent.copy(ern=newEntErn)
+     val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
+     val actualRows: Array[HFileRow] = readEntitiesFromHFile[HFileRow](entHfilePath).collect
+     val actual = actualRows.map(Enterprise(_))
+     val actualEnts = actual.map(ent => {
+       if(ent.ern.endsWith("TESTS")) ent.copy(ern=newEntErn)
        else ent}).toList.sortBy(_.ern)
      val expected: List[Enterprise] = newPeriodEnts.sortBy(_.ern)
-     actual shouldBe expected
+     actualEnts shouldBe expected
      spark.stop()
 
    }
@@ -134,20 +136,12 @@ def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:St
        .saveAsNewAPIHadoopFile(path,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 }
 
+  def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
+    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
+    saveToHFile(links,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
+    saveToHFile(existingLous,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
+  }
+
 }
 
 
-
-
-trait AddPeriodPaths{
- val jsonFilePath = "src/test/resources/data/newperiod/newPeriod.json"
- val linkHfilePath = "src/test/resources/data/newperiod/links"
- val entHfilePath = "src/test/resources/data/newperiod/enterprise"
- val louHfilePath = "src/test/resources/data/newperiod/lou"
- val parquetPath = "src/test/resources/data/newperiod/sample.parquet"
- val payeFilePath = "src/test/resources/data/newperiod/newPeriodPaye.csv"
- val vatFilePath = "src/test/resources/data/newperiod/newPeriodVat.csv"
- val existingEntRecordHFiles = "src/test/resources/data/newperiod/existing/enterprise"
- val existingLinksRecordHFiles = "src/test/resources/data/newperiod/existing/links"
- val existingLousRecordHFiles = "src/test/resources/data/newperiod/existing/lou"
-}

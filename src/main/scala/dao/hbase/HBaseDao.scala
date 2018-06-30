@@ -230,9 +230,6 @@ trait HBaseDao extends Serializable{
     val prevTimePeriod = {(appParams.TIME_PERIOD.toInt - 1).toString}
     val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(conf,appParams,s"~$prevTimePeriod")
     val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(conf,appParams,s"~$prevTimePeriod")
-    links.cache()
-    val collectedLinks = links.collect()
-    links.unpersist()
     val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(conf,appParams,s".*~$prevTimePeriod~*.")
 
     ents.flatMap(_.toHFileCellRow(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")

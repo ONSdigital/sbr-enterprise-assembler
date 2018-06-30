@@ -52,6 +52,52 @@ object Enterprise{
     )
   }*/
 
+  def apply(row:HFileRow) = {
+
+    val cells = row.cells
+    val ern = cells.find(_.column == "ern")
+    val entref = cells.find(_.column == "entref")
+    val name= cells.find(_.column == "name")
+    val address1 = cells.find(_.column == "address1")
+    val address2 = cells.find(_.column == "address2")
+    val address3 = cells.find(_.column == "address3")
+    val address4 = cells.find(_.column == "address4")
+    val address5 = cells.find(_.column == "address5")
+    val postcode= cells.find(_.column == "postcode")
+    val legalStatus= cells.find(_.column == "legal_status")
+    val tradingStyle= cells.find(_.column == "trading_style")
+    val sic07= cells.find(_.column == "sic07")
+    val empees= cells.find(_.column == "paye_empees")
+    val jobs= cells.find(_.column == "paye_jobs")
+    val appTurnover= cells.find(_.column == "app_turnover")
+    val entTurnover= cells.find(_.column == "ent_turnover")
+    val cntdTurnover= cells.find(_.column == "cntd_turnover")
+    val stdTurnover= cells.find(_.column == "std_turnover")
+    val grpTurnover= cells.find(_.column == "grp_turnover")
+
+    new Enterprise(
+        ern.get.value,
+        entref.map(_.value),
+        name.get.value,
+        address1.get.value,
+        address2.map(_.value),
+        address3.map(_.value),
+        address4.map(_.value),
+        address4.map(_.value),
+        postcode.get.value,
+        tradingStyle.map(_.value),
+        legalStatus.get.value,
+        sic07.get.value,
+        empees.map(_.value),
+        jobs.map(_.value),
+        appTurnover.map(_.value),
+        entTurnover.map(_.value),
+        cntdTurnover.map(_.value),
+        stdTurnover.map(_.value),
+        grpTurnover.map(_.value)
+    )
+  }
+
   def apply(entry:(String, Iterable[(String, String)])) = buildFromHFileDataMap(entry)
 
 

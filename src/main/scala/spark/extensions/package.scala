@@ -60,15 +60,15 @@ package object sql {
     .add(StructField("ern", StringType,false))
     .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,true))
-    .add(StructField("tradingstyle", StringType,true))
-    .add(StructField("address1", StringType,true))
+    .add(StructField("trading_style", StringType,true))
+    .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
     .add(StructField("address3", StringType,true))
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,true))
     .add(StructField("sic07", StringType,true))
-    .add(StructField("legalstatus", StringType,true))
+    .add(StructField("legal_status", StringType,true))
 
 
   val entRowWithEmplDataSchema = new StructType()

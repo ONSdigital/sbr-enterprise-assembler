@@ -18,8 +18,10 @@ import spark.extensions.rdd.HBaseDataReader._
 import scala.reflect.io.File
 import scala.util.Random
 
-class AddNewPeriodWithMissingLoSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with AddPeriodWithMissingLoPaths with ExistingEnts with ExistingLocalUnits with ExistingPeriodLinks{
+class AddNewPeriodWithMissingLoSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodLinks with HFileTestUtils with ExistingEnts with ExistingLocalUnits with ExistingPeriodLinks{
   import global.Configs._
+
+ lazy val testDir = "missinglou"
 
   val appConfs = AppParams(
   (Array[String](
@@ -41,17 +43,17 @@ class AddNewPeriodWithMissingLoSpec extends WordSpecLike with Matchers with Befo
         conf.set("hbase.zookeeper.property.clientPort", "2181")
         createRecords(confs)(spark)
         //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-        //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-         MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+        MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
         spark.stop()
 
 }
 
 override def afterAll() = {
-      //File(parquetPath).deleteRecursively()
-      /*  File(linkHfilePath).deleteRecursively()
+      File(parquetPath).deleteRecursively()
+      File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
-      File(louHfilePath).deleteRecursively()*/
+      File(louHfilePath).deleteRecursively()
 }
 
 
@@ -133,16 +135,18 @@ def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
 
 
 }
+/*
 
-trait AddPeriodWithMissingLoPaths{
-    val jsonFilePath = "src/test/resources/data/missinglou/newPeriod.json"
-    val linkHfilePath = "src/test/resources/data/missinglou/links"
-    val entHfilePath = "src/test/resources/data/missinglou/enterprise"
-    val louHfilePath = "src/test/resources/data/missinglou/lou"
-    val parquetPath = "src/test/resources/data/missinglou/sample.parquet"
-    val payeFilePath = "src/test/resources/data/missinglou/newPeriodPaye.csv"
-    val vatFilePath = "src/test/resources/data/missinglou/newPeriodVat.csv"
-    val existingEntRecordHFiles = "src/test/resources/data/missinglou/existing/enterprise"
-    val existingLinksRecordHFiles = "src/test/resources/data/missinglou/existing/links"
-    val existingLousRecordHFiles = "src/test/resources/data/missinglou/existing/lou"
-}
+abstract class AddPeriodWithMissingLoPaths{
+    val testDir:String
+    val jsonFilePath = s"src/test/resources/data/$testDir/newPeriod.json"
+    val linkHfilePath = s"src/test/resources/data/$testDir/links"
+    val entHfilePath = s"src/test/resources/data/$testDir/enterprise"
+    val louHfilePath = s"src/test/resources/data/$testDir/lou"
+    val parquetPath = s"src/test/resources/data/$testDir/sample.parquet"
+    val payeFilePath = s"src/test/resources/data/$testDir/newPeriodPaye.csv"
+    val vatFilePath = s"src/test/resources/data/$testDir/newPeriodVat.csv"
+    val existingEntRecordHFiles = s"src/test/resources/data/$testDir/existing/enterprise"
+    val existingLinksRecordHFiles = s"src/test/resources/data/$testDir/existing/links"
+    val existingLousRecordHFiles = s"src/test/resources/data/$testDir/existing/lou"
+}*/

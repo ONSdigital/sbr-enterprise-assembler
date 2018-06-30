@@ -31,6 +31,7 @@ trait RddLogging {
     println("printing DF, START>>")
     println(s"$name Schema:\n")
     df.printSchema()
+    df.coalesce(df.rdd.getNumPartitions)
     df.show()
 /*    df.cache()
     val collected: Array[Row] = df.collect()

@@ -12,26 +12,19 @@ import scala.reflect.io.File
 /**
   *
   */
-class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with HFileTestUtils{
+class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with HFileTestUtils{
 
   import global.Configs._
 
+  lazy val testDir = "create"
 
-  //val jsonFilePath = "src/test/resources/data/smallWithNullValues.json"
-  val jsonFilePath = "src/test/resources/data/3recs.json"
-  val linkHfilePath = "src/test/resources/data/links"
-  val entHfilePath = "src/test/resources/data/enterprise"
-  val louHfilePath = "src/test/resources/data/lou"
-  val parquetFilePath = "src/test/resources/data/sample.parquet"
-  val payeFilePath = "src/test/resources/data/smallPaye.csv"
-  val vatFilePath = "src/test/resources/data/smallVat.csv"
 
   val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
-      parquetFilePath,
+      parquetPath,
       "201802",payeFilePath,
       vatFilePath,
       "local",
@@ -42,7 +35,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
   override def beforeAll() = {
 
-    val confs = appConfs
+/*    val confs = appConfs
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
 
@@ -50,13 +43,13 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
     //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-    spark.stop()
+    spark.stop()*/
 
 
   }
 
   override def afterAll() = {
-   //File(parquetFilePath).deleteRecursively()
+   //File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
@@ -89,7 +82,7 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
 
 
- "assembler" should {
+ /*"assembler" should {
    "create hfiles populated with expected links data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -125,5 +118,5 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
          spark.close()
        }
      }
-
+*/
 }

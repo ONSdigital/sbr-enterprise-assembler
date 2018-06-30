@@ -23,15 +23,15 @@ trait TestData {
 
       Seq(
         Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),Some("MERCATURA INVESTMENTS LIMITED"),Some("FS20 3OS"),Some("6"),Some("70176"),Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
-        Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("90125"),Some("4"), Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("JETMORE DEVELOPMENTS LIMITED") ,Some("9999999999"),Some("JETMORE DEVELOPMENTS LIMITED"),Some("OK16 5XQ"),Some("4"),Some("90125"),Some("4"), None,None,None,None,None,None),
         Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),Some("5TH PROPERTY TRADING LIMITED"),Some("HQ92 3GV"),Some("3"),Some("90481"),Some("2"),Some("4"),None,None,None,None,None),
         Enterprise(getKeyByName("NBD CONTRACTS LIMITED") ,Some("9999999999"),Some("NBD CONTRACTS LIMITED"),Some("UT10 7BS"),Some("5"),Some("10111"),Some("5"),Some("2"),None,None,None,None,None),
-        Enterprise(getKeyByName("PURPLE SKY FUTURES LTD") ,Some("9999999999"),Some("PURPLE SKY FUTURES LTD"),Some("HG33 4OY"),Some("7"),Some("20222"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("PURPLE SKY FUTURES LTD") ,Some("9999999999"),Some("PURPLE SKY FUTURES LTD"),Some("HG33 4OY"),Some("7"),Some("20222"),None,None,None,None,None,None,None),
         Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),Some("ACCLAIMED HOMES LIMITED"),Some("LB07 6UT"),Some("3"),Some("00742"),None,None,None,Some("85"),Some("85"),None,None),
-        Enterprise(getKeyByName("RALPH GROUP LIMITED") ,Some("9999999999"),Some("RALPH GROUP LIMITED"),Some("SI83 9RT"),Some("6"),Some("30333"),Some(""),Some(""),None,None,None,None,None),
+        Enterprise(getKeyByName("RALPH GROUP LIMITED") ,Some("9999999999"),Some("RALPH GROUP LIMITED"),Some("SI83 9RT"),Some("6"),Some("30333"),None,None,None,None,None,None,None),
         Enterprise(getKeyByName("BCM TRADING LIMITED") ,Some("9999999999"),Some("BCM TRADING LIMITED"),Some("RM91 8SJ"),Some("1"),Some("40444"),Some("6"),Some("8"),None,None,None,None,None),
-        Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some("50555"),Some(""),Some(""),None,None,None,None,None),
-        Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some("60666"),Some(""),None,None,None,None,None,None)
+        Enterprise(getKeyByName("GREAT GLEN CONSULTING LTD") ,Some("9999999999"),Some("GREAT GLEN CONSULTING LTD"),Some("MA61 3KB"),Some("7"),Some("50555"),None,None,None,None,None,None,None),
+        Enterprise(getKeyByName("TORUS DEVELOPMENT CONSULTANTS LIMITED") ,Some("9999999999"),Some("TORUS DEVELOPMENT CONSULTANTS LIMITED"),Some("FM25 8QP"),Some("7"),Some("60666"),None,None,None,None,None,None,None)
     )
   }*/
 
@@ -265,10 +265,10 @@ trait TestData {
   grp_turnover:Option[String]*/
 
   val newPeriodEnts = List(
-    Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","WHITE LANE",None,None,None,None,"B22 2TL",None,"12345","2",Some("4"),None,None,None,None,None,None),
-    Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",None,None,None,None, "CO6 2JX",None,"23456","17",Some("20"),None,None,Some("1175"),Some("585"),Some("590"),None),
-    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",None,None,None,None,"PO6 3AU",None,"34567","4",Some("8"),None,None,Some("180"),Some("180"),None,None),
-    Enterprise(newEntErn,Some("9999999999"),"NEW ENTERPRISE LU","DEFAULT_VALUE", None,None,None,None, "W1A 1AA",Some("9"),"10001","1",None,None,None,Some("85"),Some("85"),None,None)
+  Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"1","34567",Some("4"),Some("8"),None,Some("180"),Some("180"),None,None),
+  Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"1","23456",Some("17"),Some("20"),None,Some("1175"),Some("585"),Some("590"),None),
+  Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"1","12345",Some("2"),Some("4"),None,None,None,None,None),
+  Enterprise("5000000011",Some("9999999999"),"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"9","10001",None,None,None,Some("85"),Some("85"),None,None)
   )
   
   val newPeriodLocalUnits = List(

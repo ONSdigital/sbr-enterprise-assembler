@@ -45,7 +45,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("ern"),
        getCellValue("entref"),
        getCellValue("name"),
-       getCellValue("tradingstyle"),
+       getCellValue("trading_style"),
        getCellValue("address1"),
        getCellValue("address2"),
        getCellValue("address3"),
@@ -53,7 +53,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("address5"),
        getCellValue("postcode"),
        getCellValue("sic07"),
-       getCellValue("legalstatus")
+       getCellValue("legal_status")
        ),entRowSchema)
    }
   

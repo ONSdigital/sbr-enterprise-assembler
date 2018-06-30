@@ -11,7 +11,7 @@ import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 
 import scala.util.Random
 
-object MockHBaseDao extends HBaseDao with AddPeriodPaths {
+object MockCreateNewPeriodHBaseDao extends HBaseDao {
 
   override def readTableWithKeyFilter(confs: Configuration, appParams: AppParams, tableName: String, regex: String)(implicit spark: SparkSession) = {
 
@@ -52,7 +52,7 @@ object MockHBaseDao extends HBaseDao with AddPeriodPaths {
 }
 
 object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
-  override val hbaseDao = MockHBaseDao
+  override val hbaseDao = MockCreateNewPeriodHBaseDao
   override def generateUniqueKey = Random.alphanumeric.take(12).mkString + "TESTS" //to ensure letters and numbers present
 
 }
