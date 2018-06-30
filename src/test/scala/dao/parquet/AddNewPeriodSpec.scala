@@ -50,8 +50,6 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
      ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
      MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
      spark.stop()
-
-
  }
 
  override def afterAll() = {
@@ -65,7 +63,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
    "create hfiles populated with expected enterprise data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-     val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
+     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
      val actualRows: Array[HFileRow] = readEntitiesFromHFile[HFileRow](entHfilePath).collect
      val actual = actualRows.map(Enterprise(_))
      val actualEnts = actual.map(ent => {
@@ -84,7 +82,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
      val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
-     val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+     //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.map(lou => {
        if(lou.ern.endsWith("TESTS")) lou.copy(lurn = newLouLurn, ern = newEntErn)
        else lou}).toList.sortBy(_.lurn)
@@ -101,9 +99,6 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
      val confs = appConfs
-     //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-
-     //val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
 
      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
      /**

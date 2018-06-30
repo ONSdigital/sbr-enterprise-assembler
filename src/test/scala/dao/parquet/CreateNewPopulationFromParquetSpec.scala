@@ -32,24 +32,23 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
     )))
 
 
-
   override def beforeAll() = {
 
-/*    val confs = appConfs
+    val confs = appConfs
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
 
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 
-    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-    spark.stop()*/
+    spark.stop()
 
 
   }
 
   override def afterAll() = {
-   //File(parquetPath).deleteRecursively()
+   File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
@@ -70,7 +69,8 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
      conf.set("hbase.zookeeper.property.clientPort", "2181")
 
 
-     val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList.sortBy(_.ern)
+     val actualHFileRows: List[HFileRow] = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList//.sortBy(_.ern)
+     val actual = actualHFileRows.map(Enterprise(_)).sortBy(_.ern)
      val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
      actual shouldBe expected
 
@@ -82,7 +82,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
 
 
- /*"assembler" should {
+"assembler" should {
    "create hfiles populated with expected links data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -104,7 +104,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
  }
 
 
- "assembler" should {
+  "assembler" should {
    "create hfiles populated with expected local unit data" in {
 
          implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -118,5 +118,4 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
          spark.close()
        }
      }
-*/
 }

@@ -15,6 +15,8 @@ trait TestData {
 
   val newEntErn = "5000000011"
   val newLouLurn = "500000099"
+  val missingLouLurn = "888888888"
+  val entWithMissingLouId = "2000000011"
 
   /*def testEnterprisesSmallWithNullValues(ents:Seq[Enterprise]) = {
 
@@ -44,9 +46,9 @@ trait TestData {
 /*   Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","WHITE LANE",None,None,None,None,"B22 2TL",None,"12345","2",Some("4"),None,None,None,None,None,None),
     Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",None,None,None,None, "CO6 2JX",None,"23456","17",Some("20"),None,None,Some("1175"),Some("585"),Some("590"),None),
     Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",None,None,None,None,"PO6 3AU",None,"34567","4",Some("8"),None,None,Some("180"),Some("180"),None,None),*/
-      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),"MERCATURA INVESTMENTS LIMITED","",None,None,None,None,"FS20 3OS",Some("6"),"70176","8",Some("10"),None,Some("45"),Some("45"),None,None,None),
-      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),"ACCLAIMED HOMES LIMITED","",None,None,None,None,"LB07 6UT",Some("3"),"00742","6",None,None,Some("85"),Some("85"),None,None,None),
-      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),"5TH PROPERTY TRADING LIMITED","",None,None,None,None,"HQ92 3GV",Some("3"),"90481","2", Some("4"),None,None,None,None,None,None)
+      Enterprise(getKeyByName("MERCATURA INVESTMENTS LIMITED") ,Some("9999999999"),"MERCATURA INVESTMENTS LIMITED","",None,None,None,None,"FS20 3OS",None,"70176","6",Some("8"),Some("10"),None,Some("45"),Some("45"),None,None),
+      Enterprise(getKeyByName("ACCLAIMED HOMES LIMITED") ,Some("9999999999"),"ACCLAIMED HOMES LIMITED","",None,None,None,None,"LB07 6UT",None,"00742","3",None,None,None,Some("85"),Some("85"),None,None),
+      Enterprise(getKeyByName("5TH PROPERTY TRADING LIMITED") ,Some("9999999999"),"5TH PROPERTY TRADING LIMITED","",None,None,None,None,"HQ92 3GV",None,"90481","3",Some("2"), Some("4"),None,None,None,None,None)
 
     )
   }
@@ -181,7 +183,7 @@ trait TestData {
       address5 = None,
       postcode = "HQ92 3GV",
       sic07 = "90481",
-      employees = "0"
+      employees = "2"
     ),
     new LocalUnit(
       lurn="testLocalUnitId-22222",
@@ -215,7 +217,7 @@ trait TestData {
       address5 = None,
       postcode = "FS20 3OS",
       sic07 = "70176",
-      employees = "0"
+      employees = "8"
     )
 
 
@@ -265,10 +267,10 @@ trait TestData {
   grp_turnover:Option[String]*/
 
   val newPeriodEnts = List(
-  Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"1","34567",Some("4"),Some("8"),None,Some("180"),Some("180"),None,None),
-  Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"1","23456",Some("17"),Some("20"),None,Some("1175"),Some("585"),Some("590"),None),
-  Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"1","12345",Some("2"),Some("4"),None,None,None,None,None),
-  Enterprise("5000000011",Some("9999999999"),"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"9","10001",None,None,None,Some("85"),Some("85"),None,None)
+  Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"34567","1",Some("4"),Some("8"),None,Some("180"),Some("180"),None,None),
+  Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",Some("17"),Some("20"),None,Some("1175"),Some("585"),Some("590"),None),
+  Enterprise("2000000011",Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"12345","1",Some("2"),Some("4"),None,None,None,None,None),
+  Enterprise("5000000011",Some("9999999999"),"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,Some("85"),Some("85"),None,None)
   )
   
   val newPeriodLocalUnits = List(
