@@ -57,6 +57,9 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
+    File(existingEntRecordHFiles).deleteRecursively()
+    File(existingLinksRecordHFiles).deleteRecursively()
+    File(existingLousRecordHFiles).deleteRecursively()
  }
 
  "assembler" should {
