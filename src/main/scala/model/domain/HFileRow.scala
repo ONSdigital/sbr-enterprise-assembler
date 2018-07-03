@@ -61,14 +61,14 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        import spark.extensions.sql._
 
        new GenericRowWithSchema(Array(
-         getId.toLong,
+         getId,
          getCellValue("p_ENT"),
          {
            val ch: String = getCellValue("CH",false)
            if (ch!=null && ch.nonEmpty && ch.startsWith("c_") ){ch.substring(2)} else ch
          },
          Try{getCellArrayValue("PAYE").map(paye => if(paye.startsWith("c_")){paye.substring(2)} else paye)}.getOrElse(null),
-         Try{getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2).toLong} else vat)}.getOrElse(null)
+         Try{getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2)} else vat)}.getOrElse(null)
      ),luRowSchema)
    }
   

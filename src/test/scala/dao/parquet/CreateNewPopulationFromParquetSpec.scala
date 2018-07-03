@@ -3,16 +3,15 @@ package dao.parquet
 import dao.HFileTestUtils
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, LocalUnit}
-import model.hfile
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
 
 import scala.reflect.io.File
 /**
   *
   */
-class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with HFileTestUtils{
+class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExistingData{
 
   import global.Configs._
 
@@ -32,7 +31,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
     )))
 
 
-  override def beforeAll() = {
+/*  override def beforeAll() = {
 
     val confs = appConfs
     conf.set("hbase.zookeeper.quorum", "localhost")
@@ -40,26 +39,19 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 
-    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
     spark.stop()
 
 
-  }
+  }*/
 
-  override def afterAll() = {
+/*  override def afterAll() = {
    File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
- }
-
-/*  override def afterEach() = {
-     File(linkHfilePath).deleteRecursively()
-     File(entHfilePath).deleteRecursively()
-     File(louHfilePath).deleteRecursively()
-   }*/
-
+ }*/
 
  "assembler" should {
    "create hfiles populated with expected enterprise data" in {
@@ -71,7 +63,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
      val actualHFileRows: List[HFileRow] = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList//.sortBy(_.ern)
      val actual = actualHFileRows.map(Enterprise(_)).sortBy(_.ern)
-     val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
+     val expected: List[Enterprise] = replaceDynamiclyGeneratedErns(actual).sortBy(_.ern).toList
      actual shouldBe expected
 
 
@@ -87,15 +79,12 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
      val confs = appConfs
-     //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-
-
      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)
 
 
      //HFileRow-s need to be flatMapped to HFileCell-s to avoid ordering mismatch on HFileRow.cells:
      val actualUpdated = assignStaticLinkIds(actual).flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY))
-     val expected = testLinkRows3Recs.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
+     val expected = existingLinksForCreateNewPopulationScenarion.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
      actualUpdated shouldBe expected
 
 
@@ -111,7 +100,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
          val actual: Seq[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.name)
          val actualUpdated = assignStaticIds(actual)
-         val expected = testLocalUnitsRows3Recs
+         val expected = lousForCreateNewPopulationScenario
          actualUpdated shouldBe expected
 
 

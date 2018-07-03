@@ -37,12 +37,16 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
     val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
     val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
-    // printDF("update parquet Schema:",parquetDF)
+    //printDF("update parquet Schema:",parquetDF)
 
 
-    val parquetRows: RDD[Row] = parquetDF.rdd
+    //val parquetRows: RDD[Row] = parquetDF.rdd
     // printRddOfRows("parquetRows",parquetRows)
-    val linksRecords: RDD[(String, HFileCell)] = parquetRows.flatMap(row => toLinksRefreshRecords(row,appconf))
+
+    val castedToStringParquetDF = parquetDF.castAllToString
+    //printDF("castedToStringParquetDF:",castedToStringParquetDF)
+
+    val linksRecords: RDD[(String, HFileCell)] = castedToStringParquetDF.rdd.flatMap(row => toLinksRefreshRecords(row,appconf))
     val updatesRdd: RDD[Record] = linksRecords.groupByKey().map(v => (v._1,v._2.map(kv => KVCell[String,String](kv.qualifier,kv.value))))//get LINKS updates from input parquet
 
  // printRdd("updatesRdd", updatesRdd,"Tuple (String,Iterable[KVCells])")
@@ -76,43 +80,44 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
  // printRdd("updatedExistingLUs", updatedExistingLUs, "HFileRow")
 
     val newLUs: RDD[HFileRow] = joined.collect { case (key, (Some(newCells), None)) => HFileRow(key, newCells) }
- // printCount(newLUs,"new LUs count: ")
+    //printCount(newLUs,"new LUs count: ")
     /*
     * existingLinksEnts contains links rows with ent row records with column links to child LU records
     * */
     val existingLinksEnts: RDD[HFileRow] = joined.collect { case (key, (None, Some(oldCells))) if(key.endsWith(s"ENT~${appconf.TIME_PERIOD}"))=> HFileRow(key, oldCells) }
  // printCount(existingLinksEnts,"existing Enterprises: ")
- // printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
+    //printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
 
     //new Records
-    val newLuIds: RDD[(Long, Row)] = newLUs.filter(_.key.endsWith(s"~LEU~${appconf.TIME_PERIOD}")).collect{case HFileRow(key,_) if(key.endsWith(s"~${appconf.TIME_PERIOD}")) => (key.stripSuffix(s"~LEU~${appconf.TIME_PERIOD}").toLong,Row.empty)}
+    val newLuIds: RDD[(String, Row)] = newLUs.filter(_.key.endsWith(s"~LEU~${appconf.TIME_PERIOD}")).collect{case HFileRow(key,_) if(key.endsWith(s"~${appconf.TIME_PERIOD}")) => (key.stripSuffix(s"~LEU~${appconf.TIME_PERIOD}"),Row.empty)}
 
-    val rowMapByKey: RDD[(Long, Row)] = parquetRows.map(row => (row.getLong("id").get, row))
+    val rowMapByKey: RDD[(String, Row)] = castedToStringParquetDF.rdd.map(row => (row.getString("id").get, row))
 
-    val joinedParquetRows: RDD[(Long, (Row, Option[Row]))] = newLuIds.leftOuterJoin(rowMapByKey,numOfPartitions)
+    val joinedParquetRows: RDD[(String, (Row, Option[Row]))] = newLuIds.leftOuterJoin(rowMapByKey,numOfPartitions)
 
-    // printRdd("joinedParquetRows",joinedParquetRows,"(Long, (Row, Option[Row]))")
+    //printRdd("joinedParquetRows",joinedParquetRows,"(String, (Row, Option[Row]))")
+
     val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => {
       new GenericRowWithSchema(Array(
                 newRow.getAs[String]("BusinessName"),
                 newRow.getAs[String]("CompanyNo"),
                 newRow.getAs[String]("EmploymentBands"),
-                Try{newRow.getAs[Long]("IndustryCode").toString}.getOrElse(""),
+                Try{newRow.getAs[String]("IndustryCode")}.getOrElse(""),
                 newRow.getAs[String]("LegalStatus"),
                 newRow.getAs[Seq[String]]("PayeRefs"),
                 newRow.getAs[String]("PostCode"),
                 newRow.getAs[String]("TradingStatus"),
                 newRow.getAs[String]("Turnover"),
-                newRow.getAs[Long]("UPRN"),
-                newRow.getAs[Seq[Long]]("VatRefs"),
-                newRow.getAs[Long]("id")
+                newRow.getAs[String]("UPRN"),
+                newRow.getAs[Seq[String]]("VatRefs"),
+                newRow.getAs[String]("id")
       ),parquetRowSchema)
 
 
     } }
 
 
-    // printRddOfRows("newLUParquetRows",newLUParquetRows)
+    //printRddOfRows("newLUParquetRows",newLUParquetRows)
 
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
@@ -128,21 +133,25 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
     val vatDf = spark.read.option("header", "true").csv(pathToVat)
 
+    /*printDF("newRowsDf",newRowsDf)
+    printDF("payeDf",payeDf)
+    printDF("vatDf",vatDf)*/
+
     val newEntTree: RDD[hfile.Tables] = adminCalculations(newRowsDf, payeDf, vatDf).rdd.map(row => toNewEnterpriseRecordsWithLou(row,appconf))
 
     //println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
 
-    //printRdd("newEntTree",newEntTree,"hfile.Tables")
+      printRdd("newEntTree",newEntTree,"hfile.Tables")
 
      newEntTree.cache()
 
     val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
-    //printRdd("newEnts",newEnts,"(String, HFileCell)")
+    printRdd("newEnts",newEnts,"(String, HFileCell)")
 
 
 
     val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
- // printRdd("newLinks",newLinks,"(String, HFileCell)")
+    printRdd("newLinks",newLinks,"(String, HFileCell)")
     //newEntTree.unpersist()
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
@@ -160,16 +169,16 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
     val ernWithPayesAndVats: RDD[Row] = luRows.collect{
 
-      case row if(row.getStringSeq("PayeRefs").isDefined || row.getLongSeq("VatRefs").isDefined) => Row(
+      case row if(row.getStringSeq("PayeRefs").isDefined || row.getStringSeq("VatRefs").isDefined) => Row(
         row.getString("ern").get,
         row.getStringSeq("PayeRefs").getOrElse(null),
-        row.getLongSeq("VatRefs").getOrElse(null)
+        row.getStringSeq("VatRefs").getOrElse(null)
       )
     }
 
     // printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
 
-    val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[long])  DataFrame(ern, employees, jobs)
+    val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[String])  DataFrame(ern, employees, jobs)
     //printDF("ernWithEmployeesdata",ernWithEmployeesdata)
 
     val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)

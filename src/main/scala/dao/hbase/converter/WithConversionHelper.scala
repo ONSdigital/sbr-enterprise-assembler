@@ -79,7 +79,7 @@ trait WithConversionHelper {
       createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getString("postcode").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "sic07", row.getString("sic07").getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "employees", row.getLong("paye_employees").map(_.toString).getOrElse("0"), appParams) //this one is still long as defined by df schema  of entAdminCalculation
+      createLocalUnitCell(lurn,ern, "employees", row.getString("paye_employees").map(_.toString).getOrElse("0"), appParams) //this one is still long as defined by df schema  of entAdminCalculation
     ) ++ Seq(
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
@@ -99,7 +99,7 @@ trait WithConversionHelper {
       createLocalUnitCell(lurn,ern, "address1", row.getString("address1").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getString("PostCode").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "sic07", row.getString("IndustryCode").getOrElse(""), appParams),
-      createLocalUnitCell(lurn,ern, "employees", row.getLong("paye_employees").map(_.toString).getOrElse("0"), appParams)
+      createLocalUnitCell(lurn,ern, "employees", row.getString("paye_employees").map(_.toString).getOrElse("0"), appParams)
     ) ++ Seq(
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
@@ -149,13 +149,13 @@ trait WithConversionHelper {
       },
       Some(createEnterpriseCell(ern, "address1", row.getString("address1").getOrElse(""), appParams)),
       row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legal_status", ls, appParams)),
-      row.getLong("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees.toString, appParams)),
-      row.getLong("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs.toString, appParams)),
-      row.getLong("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion.toString, appParams)),
-      row.getInteger("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total.toString, appParams)),
-      row.getLong("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
-      row.getLong("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard.toString, appParams)),
-      row.getLong("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group.toString, appParams))
+      row.getString("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
+      row.getString("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs.toString, appParams)),
+      row.getString("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+      row.getString("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+      row.getString("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appParams)),
+      row.getString("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+      row.getString("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
     ).collect { case Some(v) => v }
 
 /**/
@@ -177,13 +177,13 @@ trait WithConversionHelper {
         val sic = Try{row.getString("sic07").get}.getOrElse("")
         Some(createEnterpriseCell(ern, "sic07", sic, appParams))
       },
-      row.getLong("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees.toString, appParams)),
-      row.getLong("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs.toString, appParams)),
-      row.getLong("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion.toString, appParams)),
-      row.getInteger("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total.toString, appParams)),
-      row.getLong("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
-      row.getLong("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard.toString, appParams)),
-      row.getLong("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group.toString, appParams))
+      row.getString("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
+      row.getString("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
+      row.getString("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+      row.getString("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+      row.getString("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
+      row.getString("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+      row.getString("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
     ).collect { case Some(v) => v }
 }
 
@@ -208,7 +208,9 @@ trait WithConversionHelper {
       rowToLocalUnitLinks(row,lurn,ern,appParams)
   }
 
-  def rowToLegalUnitLinks(row:Row, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = rowToLegalUnitLinks("id",ern,row,appParams)
+  def rowToLegalUnitLinks(row:Row, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
+    rowToLegalUnitLinks("id",ern,row,appParams)
+  }
 
 
   def rowToLegalUnitLinks(row:Row, appParams:AppParams):Seq[(String, HFileCell)] = rowToLegalUnitLinks("id",row,appParams)
@@ -241,9 +243,9 @@ trait WithConversionHelper {
     createLinksRecord(generateLinkKey(companyNo,companiesHouse,appParams),s"$parentPrefix$legalUnit",ubrn,appParams)
   )).getOrElse(Seq[(String, HFileCell)]())
 
-  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getLongSeq("VatRefs").map(_.flatMap(vat => Seq(
+  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("VatRefs").map(_.flatMap(vat => Seq(
     createLinksRecord(luKey,s"$childPrefix$vat",vatValue,appParams),
-    createLinksRecord(generateLinkKey(vat.toString,vatValue,appParams),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
+    createLinksRecord(generateLinkKey(vat,vatValue,appParams),s"$parentPrefix$legalUnit",ubrn,appParams)
   ))).getOrElse (Seq[(String, HFileCell)]())
 
   private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
@@ -251,9 +253,11 @@ trait WithConversionHelper {
     createLinksRecord(generateLinkKey(paye,payeValue,appParams),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
   ))).getOrElse(Seq[(String, HFileCell)]())
 
-  //def getId(row:Row) = row.getLong("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
+  //def getId(row:Row) = row.getString("id").map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
 
-  def getId(row:Row,idField:String) = row.getLong(idField).map(_.toString).getOrElse(throw new IllegalArgumentException("id must be present"))
+  def getId(row:Row,idField:String) = {
+    row.getString(idField).getOrElse(throw new IllegalArgumentException("id must be present"))
+  }
 
   private def createLinksRecord(key:String,column:String, value:String, appParams:AppParams) = createRecord(key,appParams.HBASE_LINKS_COLUMN_FAMILY,column,value)
 

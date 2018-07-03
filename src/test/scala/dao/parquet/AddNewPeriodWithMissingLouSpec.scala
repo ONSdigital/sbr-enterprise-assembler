@@ -18,7 +18,7 @@ import spark.extensions.rdd.HBaseDataReader._
 import scala.reflect.io.File
 import scala.util.Random
 
-class AddNewPeriodWithMissingLoSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with NewPeriodWithNewMissingLouLinks with HFileTestUtils with ExistingEnts with ExistingLocalUnits with ExistingPeriodLinks{
+class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
   import global.Configs._
 
  lazy val testDir = "missinglou"
@@ -41,21 +41,20 @@ class AddNewPeriodWithMissingLoSpec extends Paths with WordSpecLike with Matcher
         val confs = appConfs
         conf.set("hbase.zookeeper.quorum", "localhost")
         conf.set("hbase.zookeeper.property.clientPort", "2181")
-        createRecords(confs)(spark)
-        //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-        ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+        //createRecords(confs)(spark)
+        //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
         MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
         spark.stop()
   }
 
 override def afterAll() = {
-      File(parquetPath).deleteRecursively()
-      File(linkHfilePath).deleteRecursively()
+      //File(parquetPath).deleteRecursively()
+/*      File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
-      File(louHfilePath).deleteRecursively()
-      File(existingEntRecordHFiles).deleteRecursively()
+      File(louHfilePath).deleteRecursively()*/
+/*      File(existingEntRecordHFiles).deleteRecursively()
       File(existingLinksRecordHFiles).deleteRecursively()
-      File(existingLousRecordHFiles).deleteRecursively()
+      File(existingLousRecordHFiles).deleteRecursively()*/
 }
 
 
@@ -65,15 +64,12 @@ override def afterAll() = {
 
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
-/*    val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-    val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-    val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
 
     val updatedLous = readEntitiesFromHFile[HFileRow](louHfilePath).collect.toList.sortBy(_.key)
 
     val data = readEntitiesFromHFile[LocalUnit](louHfilePath).collect
     val actualCorrected: Set[LocalUnit] = data.map(lou => {
-                                                    if (lou.name=="INDUSTRIES LTD" && lou.lurn.endsWith("TESTS"))  lou.copy(lurn = "200000099")
+                                                    if (lou.name=="INDUSTRIES LTD" && lou.lurn.endsWith("TESTS"))  lou.copy(lurn = missingLouLurn)
                                                     else if(lou.ern.endsWith("TESTS")) lou.copy(lurn = newLouLurn, ern = newEntErn)
                                                     else lou
                                                   }
@@ -92,7 +88,7 @@ override def afterAll() = {
 implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
   val confs = appConfs
 
-  //val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
+  val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
 
   val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
   /**
@@ -154,7 +150,7 @@ def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:St
 
 def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
     saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
-    saveToHFile(louMissingLinks,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
+    saveToHFile(existingLinksForMissingLousScenario,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(louForLouMissingScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
 }
 

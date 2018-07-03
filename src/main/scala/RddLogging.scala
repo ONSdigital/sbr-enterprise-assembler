@@ -30,13 +30,13 @@ trait RddLogging {
   def printDF(name:String, df:DataFrame) = {
     println("printing DF, START>>")
     println(s"$name Schema:\n")
-    df.printSchema()
     df.coalesce(df.rdd.getNumPartitions)
     df.show()
-/*    df.cache()
-    val collected: Array[Row] = df.collect()
-    printRecords(collected,s"$name DataFrame converted to RDD[Row]")*/
-    println("printing DF, END>>")
+    df.printSchema()
+    /*    df.cache()
+        val collected: Array[Row] = df.collect()
+        printRecords(collected,s"$name DataFrame converted to RDD[Row]")*/
+    println(s"printing DF, name: $name, END>>")
     //df.unpersist()
   }
 
