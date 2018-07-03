@@ -41,20 +41,20 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         val confs = appConfs
         conf.set("hbase.zookeeper.quorum", "localhost")
         conf.set("hbase.zookeeper.property.clientPort", "2181")
-        //createRecords(confs)(spark)
-        //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+        createRecords(confs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
         MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
         spark.stop()
   }
 
 override def afterAll() = {
-      //File(parquetPath).deleteRecursively()
-/*      File(linkHfilePath).deleteRecursively()
+      File(parquetPath).deleteRecursively()
+      File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
-      File(louHfilePath).deleteRecursively()*/
-/*      File(existingEntRecordHFiles).deleteRecursively()
+      File(louHfilePath).deleteRecursively()
+      File(existingEntRecordHFiles).deleteRecursively()
       File(existingLinksRecordHFiles).deleteRecursively()
-      File(existingLousRecordHFiles).deleteRecursively()*/
+      File(existingLousRecordHFiles).deleteRecursively()
 }
 
 

@@ -31,7 +31,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
     )))
 
 
-/*  override def beforeAll() = {
+  override def beforeAll() = {
 
     val confs = appConfs
     conf.set("hbase.zookeeper.quorum", "localhost")
@@ -39,19 +39,19 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 
-    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     ParquetDao.parquetCreateNewToHFile(spark,appConfs)
     spark.stop()
 
 
-  }*/
+  }
 
-/*  override def afterAll() = {
+  override def afterAll() = {
    File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
- }*/
+ }
 
  "assembler" should {
    "create hfiles populated with expected enterprise data" in {
