@@ -13,17 +13,16 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import spark.RddLogging
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
 
+
+
 import scala.util.Try
 
 
-
-
-trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with DataFrameHelper with RddLogging{
+trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging with Serializable{
 
   val hbaseDao: HBaseDao = HBaseDao
 
@@ -32,7 +31,6 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
 
 
   def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession):Unit = {
-    import spark.implicits._
     val confs = Configs.conf
 
     val updatedConfs = appconf.copy(TIME_PERIOD=appconf.PREVIOUS_TIME_PERIOD)
@@ -273,8 +271,6 @@ trait CreateNewPeriodClosure extends Serializable with WithConversionHelper with
   }
 
   def getEntsWithMissingLous(completeExistingEnts: DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
-
-    import spark.implicits._
 
 
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"

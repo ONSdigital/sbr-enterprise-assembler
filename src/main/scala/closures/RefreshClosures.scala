@@ -20,7 +20,7 @@ import spark.extensions.sql.SqlRowExtensions
 /**
   *
   */
-trait RefreshClosures extends WithConversionHelper with DataFrameHelper{
+trait RefreshClosures extends  WithConversionHelper with DataFrameHelper with Serializable{
 
 
 
@@ -86,3 +86,5 @@ trait RefreshClosures extends WithConversionHelper with DataFrameHelper{
 
   }
 }
+
+object RefreshClosures extends RefreshClosures

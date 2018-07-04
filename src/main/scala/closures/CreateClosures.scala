@@ -14,7 +14,7 @@ import org.apache.spark.sql.SparkSession
 /**
   *
   */
-trait CreateClosures {
+trait CreateClosures extends Serializable{
 
   def loadFromCreateParquet(appconf:AppParams)(implicit ss:SparkSession,con: Connection){
     ParquetDao.parquetCreateNewToHFile(ss,appconf)
@@ -49,3 +49,5 @@ trait CreateClosures {
   }
 
 }
+
+object CreateClosures extends CreateClosures

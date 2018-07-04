@@ -1,7 +1,7 @@
 package spark.extensions
 
-import org.apache.spark.sql.{Column, DataFrame, Row}
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Row}
 
 /**
   *
