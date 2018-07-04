@@ -25,19 +25,22 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
       val dataDF: DataFrame = spark.read.json(jsonFilePath).castAllToString
       dataDF.cache()
 
-        val payeeRefs: DataFrame = dataDF.withColumn("vatref", explode_outer(dataDF.apply("VatRefs"))).select("id","vatref")
-        val vatRefs: DataFrame = dataDF.withColumn("payeeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeeref")
+      val payeeRefs: DataFrame = dataDF.withColumn("vatref", explode_outer(dataDF.apply("VatRefs"))).select("id","vatref")
+      val vatRefs: DataFrame = dataDF.withColumn("payeeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeeref")
 
-      payeeRefs.printSchema()
-      payeeRefs.show()
-
-      print("="*10+'\n')
-
-      vatRefs.printSchema()
-      vatRefs.show()
+      printDFs(Seq(payeeRefs,vatRefs))
 
       dataDF.unpersist
     }
     }
+
+
+  def printDFs(dfs:Seq[DataFrame]): Unit ={
+    dfs.foreach(df => {
+      df.printSchema()
+      df.show()
+      print("="*10+'\n')
+    })
+  }
 
 }
