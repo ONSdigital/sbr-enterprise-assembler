@@ -1,6 +1,4 @@
-package dao.parquet
-
-import model.domain.{Enterprise, HFileRow, KVCell, LocalUnit}
+package test.data
 
 /**
   *

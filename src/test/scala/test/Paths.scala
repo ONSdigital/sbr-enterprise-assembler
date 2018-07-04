@@ -1,4 +1,4 @@
-package dao.parquet
+package test
 
 /**
   *
@@ -14,7 +14,8 @@ trait Paths {this: { val testDir: String } =>
   val parquetPath = s"src/test/resources/data/$testDir/sample.parquet"
   val payeFilePath = s"src/test/resources/data/$testDir/newPeriodPaye.csv"
   val vatFilePath = s"src/test/resources/data/$testDir/newPeriodVat.csv"
-  val existingEntRecordHFiles = s"src/test/resources/data/$testDir/existing/enterprise"
-  val existingLinksRecordHFiles = s"src/test/resources/data/$testDir/existing/links"
-  val existingLousRecordHFiles = s"src/test/resources/data/$testDir/existing/lou"
+  val existingRecordsDir = s"src/test/resources/data/$testDir/existing"
+  val existingEntRecordHFiles = s"$existingRecordsDir/enterprise"
+  val existingLinksRecordHFiles = s"$existingRecordsDir/links"
+  val existingLousRecordHFiles = s"$existingRecordsDir/lou"
 }

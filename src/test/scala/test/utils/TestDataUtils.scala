@@ -1,6 +1,5 @@
-package dao.parquet
+package test.utils
 
-import dao.HFileTestUtils
 import model.domain.Enterprise
 
 trait TestDataUtils extends HFileTestUtils{

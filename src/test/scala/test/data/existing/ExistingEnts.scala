@@ -1,6 +1,6 @@
-package dao.parquet
+package test.data.existing
 
-import model.domain.{Enterprise, HFileRow, KVCell}
+import model.domain.{HFileRow, KVCell}
 
 trait ExistingEnts {
 

@@ -1,5 +1,6 @@
-package dao.parquet
+package test.data.expected
 
+import test.data.TestIds
 import model.domain.{HFileRow, KVCell, LocalUnit}
 
 trait ExpectedDataForNewPeriodWithMissingLouLinks extends TestIds{

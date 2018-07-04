@@ -1,17 +1,19 @@
 package dao.parquet
 
-import dao.HFileTestUtils
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, LocalUnit}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
+import test.Paths
+import test.data.expected.ExpectedDataForCreatePopulationScenario
+import test.utils.TestDataUtils
 
 import scala.reflect.io.File
 /**
   *
   */
-class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExistingData{
+class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExpectedDataForCreatePopulationScenario{
 
   import global.Configs._
 
@@ -46,12 +48,12 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
   }
 
-  override def afterAll() = {
+/*  override def afterAll() = {
    File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
- }
+ }*/
 
  "assembler" should {
    "create hfiles populated with expected enterprise data" in {
@@ -84,7 +86,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
      //HFileRow-s need to be flatMapped to HFileCell-s to avoid ordering mismatch on HFileRow.cells:
      val actualUpdated = assignStaticLinkIds(actual).flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY))
-     val expected = existingLinksForCreateNewPopulationScenarion.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
+     val expected = expectedLinks.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
      actualUpdated shouldBe expected
 
 
@@ -100,7 +102,7 @@ class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Ma
 
          val actual: Seq[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.name)
          val actualUpdated = assignStaticIds(actual)
-         val expected = lousForCreateNewPopulationScenario
+         val expected = expectedLous
          actualUpdated shouldBe expected
 
 

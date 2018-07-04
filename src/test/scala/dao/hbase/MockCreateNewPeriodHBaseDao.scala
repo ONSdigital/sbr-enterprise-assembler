@@ -1,15 +1,11 @@
-package dao.parquet
+package dao.hbase
 
-import closures.CreateNewPeriodClosure
-import dao.hbase.HBaseDao
 import global.AppParams
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
-
-import scala.util.Random
 
 object MockCreateNewPeriodHBaseDao extends HBaseDao {
 
@@ -51,9 +47,5 @@ object MockCreateNewPeriodHBaseDao extends HBaseDao {
 }
 }
 
-object MockCreateNewPeriodClosure extends CreateNewPeriodClosure{
-  override val hbaseDao = MockCreateNewPeriodHBaseDao
-  override def generateUniqueKey = Random.alphanumeric.take(12).mkString + "TESTS" //to ensure letters and numbers present
 
-}
 

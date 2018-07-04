@@ -1,5 +1,9 @@
-package dao.parquet
+package closures
 
+import closures.mocks.MockCreateNewPeriodClosure
+import dao.parquet.ParquetDao
+import test.data.existing.ExistingData
+import test.data.expected.ExpectedDataForAddNewPeriodScenario
 import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LocalUnit}
 import model.hfile
@@ -10,6 +14,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import spark.extensions.rdd.HBaseDataReader._
+import test.Paths
+import test.utils.TestDataUtils
 
 import scala.reflect.io.File
 /**
@@ -52,9 +58,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
-    File(existingEntRecordHFiles).deleteRecursively()
-    File(existingLinksRecordHFiles).deleteRecursively()
-    File(existingLousRecordHFiles).deleteRecursively()
+    File(existingRecordsDir).deleteRecursively()
   }
 
   "assembler" should {

@@ -1,6 +1,6 @@
-package dao.parquet
+package test.data.existing
 
-import model.domain.{HFileRow, KVCell, LocalUnit}
+import model.domain.{HFileRow, KVCell}
 
 trait ExistingLocalUnits {
 
@@ -21,56 +21,4 @@ val louForLouMissingScenario = Seq(
   HFileRow("1100000004~201803~400000077",List(KVCell("address1","BSTER DEPT"), KVCell("address2","MAILPOINT A1F"), KVCell("address3","P O BOX 41"), KVCell("address4","NORTH HARBOUR"), KVCell("address5","PORTSMOUTH"), KVCell("employees","2"), KVCell("entref","9900000242"), KVCell("ern","4000000011"), KVCell("luref","100000459235"), KVCell("lurn","400000077"), KVCell("name","IBM LTD"), KVCell("postcode","PO6 3AU"), KVCell("sic07","34567"), KVCell("trading_style","C")))
  )
 
- val lousForCreateNewPopulationScenario = List(
-    new LocalUnit(
-      lurn="testLocalUnitId-11111",
-      luref=None,
-      ern="testEnterpriseId-11111",
-      entref = None,
-      name = "5TH PROPERTY TRADING LIMITED",
-      tradingstyle = None,
-      address1 = "",
-      address2 = None,
-      address3 = None,
-      address4 = None,
-      address5 = None,
-      postcode = "HQ92 3GV",
-      sic07 = "90481",
-      employees = "2"
-    ),
-    new LocalUnit(
-      lurn="testLocalUnitId-22222",
-      luref=None,
-      ern="testEnterpriseId-22222",
-      entref = None,
-      name = "ACCLAIMED HOMES LIMITED",
-      tradingstyle = None,
-      address1 = "",
-      address2 = None,
-      address3 = None,
-      address4 = None,
-      address5 = None,
-      postcode = "LB07 6UT",
-      sic07 = "00742",
-      employees = "0"
-    ),
-
-    new LocalUnit(
-      lurn="testLocalUnitId-33333",
-      luref=None,
-      ern="testEnterpriseId-33333",
-      entref = None,
-      name = "MERCATURA INVESTMENTS LIMITED",
-      tradingstyle = None,
-      address1 = "",
-      address2 = None,
-      address3 = None,
-      address4 = None,
-      address5 = None,
-      postcode = "FS20 3OS",
-      sic07 = "70176",
-      employees = "8"
-    )
-
-  )
 }

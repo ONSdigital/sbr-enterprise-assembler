@@ -1,22 +1,23 @@
-package dao.parquet
+package closures
 
-import closures.CreateNewPeriodClosure
-import dao.HFileTestUtils
-import dao.hbase.HBaseDao
+import closures.mocks.MockCreateNewPeriodClosure
+import dao.parquet.ParquetDao
+import test.data.existing.ExistingData
+import test.data.expected.ExpectedDataForAddNewPeriodScenario
 import global.{AppParams, Configs}
-import model.domain.{Enterprise, HFileRow, KVCell, LocalUnit}
+import model.domain.{HFileRow, LocalUnit}
 import model.hfile
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
+import test.Paths
+import test.utils.HFileTestUtils
 
 import scala.reflect.io.File
-import scala.util.Random
 
 class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
   import global.Configs._
@@ -47,15 +48,13 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         spark.stop()
   }
 
-override def afterAll() = {
+/*override def afterAll() = {
       File(parquetPath).deleteRecursively()
       File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
       File(louHfilePath).deleteRecursively()
-      File(existingEntRecordHFiles).deleteRecursively()
-      File(existingLinksRecordHFiles).deleteRecursively()
-      File(existingLousRecordHFiles).deleteRecursively()
-}
+      File(existingRecordsDir).deleteRecursively()
+}*/
 
 
 
