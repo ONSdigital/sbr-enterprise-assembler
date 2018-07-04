@@ -39,7 +39,7 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
     dfs.foreach(df => {
       df.printSchema()
       df.show()
-      print("="*10+'\n')
+      print("="*20+'\n')
     })
   }
 
