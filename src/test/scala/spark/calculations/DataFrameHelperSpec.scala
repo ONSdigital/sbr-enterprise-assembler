@@ -1,8 +1,10 @@
 package spark.calculations
 
 
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.explode_outer
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.sql._
 import test.Paths
@@ -14,25 +16,26 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
 
   lazy val testDir = "calculations"
 
+   val payeSchema = new StructType()
+                        .add(StructField("payeref", StringType,false))
+                        .add(StructField("mar_jobs", LongType,true))
+                        .add(StructField("june_jobs", LongType,true))
+                        .add(StructField("sept_jobs", LongType,true))
+                        .add(StructField("dec_jobs", LongType,true))
+                        .add(StructField("count", IntegerType,true))
+                        .add(StructField("avg", IntegerType,true))
+
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-
-      val payeDf = spark.read.option("header", "true").csv(payeFilePath)
-      val vatDf = spark.read.option("header", "true").csv(vatFilePath)
-
-      val dataDF: DataFrame = spark.read.json(jsonFilePath).castAllToString
-      dataDF.cache()
-
-      val payeeRefs: DataFrame = dataDF.withColumn("vatref", explode_outer(dataDF.apply("VatRefs"))).select("id","vatref")
-      val vatRefs: DataFrame = dataDF.withColumn("payeeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeeref")
-
-      printDFs(Seq(payeeRefs,vatRefs))
-
-      dataDF.unpersist
+      val payesCalculated: DataFrame = AdminDataCalculator.caclulatePayee(payeFilePath,vatFilePath,jsonFilePath)
+      payesCalculated.printSchema()
+      payesCalculated.show()
+      spark.close()
     }
     }
+
 
 
   def printDFs(dfs:Seq[DataFrame]): Unit ={
