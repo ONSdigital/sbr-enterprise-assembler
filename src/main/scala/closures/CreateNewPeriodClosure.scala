@@ -139,17 +139,17 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
 
     //println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
 
-      printRdd("newEntTree",newEntTree,"hfile.Tables")
+      //printRdd("newEntTree",newEntTree,"hfile.Tables")
 
      newEntTree.cache()
 
     val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
-    printRdd("newEnts",newEnts,"(String, HFileCell)")
+    //printRdd("newEnts",newEnts,"(String, HFileCell)")
 
 
 
     val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
-    printRdd("newLinks",newLinks,"(String, HFileCell)")
+    //printRdd("newLinks",newLinks,"(String, HFileCell)")
     //newEntTree.unpersist()
     //existing records:
     val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
