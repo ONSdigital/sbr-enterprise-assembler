@@ -78,7 +78,7 @@ object AdminDataCalculator extends RddLogging{
       avg), payeSchema)
   }
 
-  def doWithSqlpayeFile(payeFilePath:String, vatFilePath:String, jsonFilePath:String)(implicit spark: SparkSession ) = {
+  def doWithSqlPayeFile(payeFilePath:String, vatFilePath:String, jsonFilePath:String)(implicit spark: SparkSession ) = {
 
     val payeDf = spark.read.option("header", "true").csv(payeFilePath)
     val vatDf = spark.read.option("header", "true").csv(vatFilePath)
