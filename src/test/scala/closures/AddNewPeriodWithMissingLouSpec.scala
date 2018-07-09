@@ -48,13 +48,13 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         spark.stop()
   }
 
-/*override def afterAll() = {
+override def afterAll() = {
       File(parquetPath).deleteRecursively()
       File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
       File(louHfilePath).deleteRecursively()
       File(existingRecordsDir).deleteRecursively()
-}*/
+}
 
 
 
