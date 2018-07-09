@@ -211,13 +211,13 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
 
    val missingLousData: RDD[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])] = entsWithMissingLous.map(row => entToLocalUnits(row,appconf))
    missingLousData.cache()
-
+    printRdd("missingLousData:",missingLousData,"[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])]")
    val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._1)
    missingLousLinks.cache()
-
+   printRdd("update parquet Schema:",missingLousLinks,"[(String, HFileCell)]")
    val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._2)
    missingLous.cache()
-
+   printRdd("missingLous:",missingLous,"[(String, HFileCell)]")
 
    /**
    * add new + existing links and save to hfile
