@@ -207,11 +207,17 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
    val entsWithMissingLous: RDD[Row] = getEntsWithMissingLous(completeExistingEnts,appconf,confs)
+   entsWithMissingLous.cache()
+
    val missingLousData: RDD[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])] = entsWithMissingLous.map(row => entToLocalUnits(row,appconf))
    missingLousData.cache()
+
    val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._1)
+   missingLousLinks.cache()
+
    val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._2)
-   missingLousData.unpersist()
+   missingLous.cache()
+
 
    /**
    * add new + existing links and save to hfile
@@ -233,6 +239,8 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
+  missingLousLinks.unpersist()
+
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
   allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
@@ -243,9 +251,10 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
    val lous: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.localUnits).union(missingLous)
 
    saveAllLocalUnits(lous,appconf,confs)
-
-  completeExistingEnts.unpersist()
-  newEntTree.unpersist()
+   missingLous.unpersist()
+   missingLousData.unpersist()
+   completeExistingEnts.unpersist()
+   newEntTree.unpersist()
 
   }
 
