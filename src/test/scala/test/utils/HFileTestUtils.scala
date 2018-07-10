@@ -1,13 +1,8 @@
-package dao
-
-
-
-import java.io
+package test.utils
 
 import global.AppParams
 import model.domain._
 import model.hfile.HFileCell
-import org.apache.hadoop.hbase.io.hfile.HFile
 import org.apache.spark.rdd.RDD
 
 import scala.util.Try

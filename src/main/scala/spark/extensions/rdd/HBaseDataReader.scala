@@ -19,16 +19,13 @@ object HBaseDataReader{
 
         type DataMap = (String,Iterable[(String, String)])
 
-        def getKeyValue[T <: Cell](kv:T): (String, (String, String)) =
-              (Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength),
+        def getKeyValue[T <: Cell](kv:T): (String, (String, String)) = {
+          val key = Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength)
+          val column =  Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset, kv.getQualifierOffset + kv.getQualifierLength)
+          val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset, kv.getValueOffset + kv.getValueLength)
+          (key,(column, value))
 
-              (Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
-                      kv.getQualifierOffset + kv.getQualifierLength),
-                      Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
-                      kv.getValueOffset + kv.getValueLength)))
-
-
-
+        }
 
 
         def readEntitiesFromHFile[T:ClassTag](hfilePath:String)(implicit spark:SparkSession, readEntity:DataMap => T ): RDD[T] = {
@@ -43,8 +40,6 @@ object HBaseDataReader{
         }
 
 
-
-//RDD[(String, hfile.HFileCell)]
         def readKvsFromHFile(hfilePath:String)(implicit spark:SparkSession): RDD[DataMap] = {
           val confLocalCopy = conf
           spark.sparkContext.newAPIHadoopFile(
@@ -58,3 +53,5 @@ object HBaseDataReader{
         }
 
 }
+
+

@@ -5,7 +5,7 @@ import global.AppParams
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 
-object DeleteClosures {
+trait DeleteClosures extends Serializable{
 
   def createDeleteDataForPeriodHfiles(appconf:AppParams)(implicit ss:SparkSession): Unit ={
     createDeleteLinksHFile(appconf)
@@ -24,6 +24,5 @@ object DeleteClosures {
     HBaseDao.saveDeleteLouToHFile(appconf)
   }
 
-
-
 }
+object DeleteClosures extends DeleteClosures

@@ -1,15 +1,13 @@
 package model.domain
 
-import global.AppParams
 import model.hfile
 import model.hfile.HFileCell
-import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.spark.rdd.RDD
+import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.{DataFrame, Row}
 
 import scala.util.Try
 
@@ -47,7 +45,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("ern"),
        getCellValue("entref"),
        getCellValue("name"),
-       getCellValue("tradingstyle"),
+       getCellValue("trading_style"),
        getCellValue("address1"),
        getCellValue("address2"),
        getCellValue("address3"),
@@ -55,7 +53,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("address5"),
        getCellValue("postcode"),
        getCellValue("sic07"),
-       getCellValue("legalstatus")
+       getCellValue("legal_status")
        ),entRowSchema)
    }
   
@@ -63,19 +61,38 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        import spark.extensions.sql._
 
        new GenericRowWithSchema(Array(
-         getId.toLong,
+         getId,
          getCellValue("p_ENT"),
          {
            val ch: String = getCellValue("CH",false)
            if (ch!=null && ch.nonEmpty && ch.startsWith("c_") ){ch.substring(2)} else ch
          },
          Try{getCellArrayValue("PAYE").map(paye => if(paye.startsWith("c_")){paye.substring(2)} else paye)}.getOrElse(null),
-         Try{getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2).toLong} else vat)}.getOrElse(null)
+         Try{getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2)} else vat)}.getOrElse(null)
      ),luRowSchema)
    }
   
-  
-  
+  def toLouRow = {
+    import spark.extensions.sql._
+
+    new GenericRowWithSchema(Array(
+      getCellValue("lurn"),
+      getCellValue("luref"),
+      getCellValue("ern"),
+      getCellValue("name"),
+      getCellValue("tradingstyle"),
+      getCellValue("address1"),
+      getCellValue("address2"),
+      getCellValue("address3"),
+      getCellValue("address4"),
+      getCellValue("address5"),
+      getCellValue("postcode"),
+      getCellValue("sic07"),
+      getCellValue("employees"),
+      getCellValue("")
+    ),louRowSchema)
+  }
+
    def toHFileCellRow(colFamily:String):Iterable[(String, hfile.HFileCell)] = {
      cells.map(cell => (key,HFileCell(key, colFamily, cell.column, cell.value)))
    }
@@ -146,7 +163,7 @@ object HFileRow{
     val column = Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
       kv.getQualifierOffset + kv.getQualifierLength)
 
-    val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset-1,
+    val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
       kv.getValueOffset + kv.getValueLength)
 
      (key,(column,value))

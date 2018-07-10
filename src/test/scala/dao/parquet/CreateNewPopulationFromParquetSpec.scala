@@ -1,43 +1,36 @@
 package dao.parquet
 
-import dao.HFileTestUtils
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, LocalUnit}
-import model.hfile
 import org.apache.spark.sql.SparkSession
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
+import test.Paths
+import test.data.expected.ExpectedDataForCreatePopulationScenario
+import test.utils.TestDataUtils
 
 import scala.reflect.io.File
 /**
   *
   */
-class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with TestData with HFileTestUtils{
+class CreateNewPopulationFromParquetSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExpectedDataForCreatePopulationScenario{
 
   import global.Configs._
 
+  lazy val testDir = "create"
 
-  //val jsonFilePath = "src/test/resources/data/smallWithNullValues.json"
-  val jsonFilePath = "src/test/resources/data/3recs.json"
-  val linkHfilePath = "src/test/resources/data/links"
-  val entHfilePath = "src/test/resources/data/enterprise"
-  val louHfilePath = "src/test/resources/data/lou"
-  val parquetHfilePath = "src/test/resources/data/sample.parquet"
-  val payeFilePath = "src/test/resources/data/smallPaye.csv"
-  val vatFilePath = "src/test/resources/data/smallVat.csv"
 
   val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
-      parquetHfilePath,
+      parquetPath,
       "201802",payeFilePath,
       vatFilePath,
       "local",
       "addperiod"
     )))
-
 
 
   override def beforeAll() = {
@@ -55,19 +48,12 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
   }
 
-  override def afterAll() = {
-   File(parquetHfilePath).deleteRecursively()
+/*  override def afterAll() = {
+   File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(entHfilePath).deleteRecursively()
    File(louHfilePath).deleteRecursively()
- }
-
-/*    override def afterEach() = {
-     File(linkHfilePath).deleteRecursively()
-     File(entHfilePath).deleteRecursively()
-     File(louHfilePath).deleteRecursively()
-   }*/
-
+ }*/
 
  "assembler" should {
    "create hfiles populated with expected enterprise data" in {
@@ -77,8 +63,9 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
      conf.set("hbase.zookeeper.property.clientPort", "2181")
 
 
-     val actual: List[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList.sortBy(_.ern)
-     val expected: List[Enterprise] = testEnterprises3Recs(actual).sortBy(_.ern).toList
+     val actualHFileRows: List[HFileRow] = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList//.sortBy(_.ern)
+     val actual = actualHFileRows.map(Enterprise(_)).sortBy(_.ern)
+     val expected: List[Enterprise] = replaceDynamiclyGeneratedErns(actual).sortBy(_.ern).toList
      actual shouldBe expected
 
 
@@ -89,20 +76,17 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
 
 
 
- "assembler" should {
+"assembler" should {
    "create hfiles populated with expected links data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
      val confs = appConfs
-     //ParquetDao.parquetCreateNewToHFile(spark,appConfs)
-
-
      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.cells.map(_.column).mkString)
 
 
      //HFileRow-s need to be flatMapped to HFileCell-s to avoid ordering mismatch on HFileRow.cells:
      val actualUpdated = assignStaticLinkIds(actual).flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY))
-     val expected = testLinkRows3Recs.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
+     val expected = expectedLinks.flatMap(row => row.toHFileCells(confs.HBASE_ENTERPRISE_COLUMN_FAMILY)).toSet
      actualUpdated shouldBe expected
 
 
@@ -111,19 +95,18 @@ class CreateNewPopulationFromParquetSpec extends WordSpecLike with Matchers with
  }
 
 
- "assembler" should {
+  "assembler" should {
    "create hfiles populated with expected local unit data" in {
 
          implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
 
          val actual: Seq[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.name)
          val actualUpdated = assignStaticIds(actual)
-         val expected = testLocalUnitsRows3Recs
+         val expected = expectedLous
          actualUpdated shouldBe expected
 
 
          spark.close()
        }
      }
-
 }

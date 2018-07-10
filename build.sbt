@@ -6,6 +6,8 @@ scalaVersion := "2.11.8"
 
 fork := true
 
+parallelExecution in Test:= false
+
 lazy val Versions = new {
   val hbase = "1.2.6"
   val spark = "2.2.0"

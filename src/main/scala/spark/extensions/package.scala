@@ -1,7 +1,7 @@
 package spark.extensions
 
-import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Row}
 
 /**
   *
@@ -18,38 +18,57 @@ package object sql {
     .add(StructField("PostCode", StringType,true))
     .add(StructField("TradingStatus", StringType,true))
     .add(StructField("Turnover", StringType,true))
-    .add(StructField("UPRN", LongType,true))
-    .add(StructField("VatRefs", ArrayType(LongType,true),true))
-    .add(StructField("id", LongType,false))
+    .add(StructField("UPRN", StringType,true))
+    .add(StructField("VatRefs", ArrayType(StringType,true),true))
+    .add(StructField("id", StringType,false))
 
   val luRowSchema = new StructType()
-    .add(StructField("ubrn", LongType,false))
+    .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,true))
     .add(StructField("CompanyNo", StringType,true))
     .add(StructField("PayeRefs", ArrayType(StringType,true),true))
-    .add(StructField("VatRefs", ArrayType(LongType,true),true))
+    .add(StructField("VatRefs", ArrayType(StringType,true),true))
 
+  val louRowSchema = new StructType()
+    .add(StructField("lurn", StringType,false))
+    .add(StructField("luref", StringType,true))
+    .add(StructField("ern", StringType,true))
+    .add(StructField("entref", StringType,true))
+    .add(StructField("name", StringType,false))
+    .add(StructField("tradingstyle", StringType,true))
+    .add(StructField("address1", StringType,false))
+    .add(StructField("address2", StringType,true))
+    .add(StructField("address3", StringType,true))
+    .add(StructField("address4", StringType,true))
+    .add(StructField("address5", StringType,true))
+    .add(StructField("postcode", StringType,false))
+    .add(StructField("sic07", StringType,false))
+    .add(StructField("employees", StringType,false))
 
   val ernToEmployeesSchema = new StructType()
     .add(StructField("ern", StringType,true))
     .add(StructField("PayeRefs", ArrayType(StringType,true),true))
-    .add(StructField("VatRefs", ArrayType(LongType,true),true))
+    .add(StructField("VatRefs", ArrayType(StringType,true),true))
 
+
+  val louIdsSchema = new StructType()
+    .add(StructField("ern", StringType,true))
+    .add(StructField("lurn", StringType,true))
 
 
   val entRowSchema = new StructType()
     .add(StructField("ern", StringType,false))
     .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,true))
-    .add(StructField("tradingstyle", StringType,true))
-    .add(StructField("address1", StringType,true))
+    .add(StructField("trading_style", StringType,true))
+    .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
     .add(StructField("address3", StringType,true))
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,true))
     .add(StructField("sic07", StringType,true))
-    .add(StructField("legalstatus", StringType,true))
+    .add(StructField("legal_status", StringType,true))
 
 
   val entRowWithEmplDataSchema = new StructType()
@@ -68,7 +87,17 @@ package object sql {
     .add(StructField("paye_employees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
 
+  implicit class DataFrameExtensions(df:DataFrame){
 
+    def castAllToString() =  df.schema.fields.foldLeft(df)((dataFrame, field) => field.dataType match{
+        case ArrayType(LongType, nullability) =>  dataFrame.withColumn(field.name,df.col(field.name).cast((ArrayType(StringType,nullability))))
+        case ArrayType(IntegerType, nullability) =>  dataFrame.withColumn(field.name,df.col(field.name).cast((ArrayType(StringType,nullability))))
+        case ArrayType(StringType, nullability) =>  dataFrame
+        case _  => dataFrame.withColumn(field.name,df.col(field.name).cast((StringType)))
+      }
+    )
+
+  }
 
   implicit class SqlRowExtensions(val row:Row) {
 
@@ -77,6 +106,7 @@ package object sql {
       if (v.isDefined && v==null) None
       else v
     }
+
 
     def getString(field:String): Option[String] = getValue[String](field)
 

@@ -22,7 +22,7 @@ object LocalUnit {
 
     val ern = entry._2.find(_._1=="ern").get._2
     val lurn = entry._2.find(_._1=="lurn").get._2
-    val name = entry._2.find(_._1=="name").get._2
+    val name = entry._2.find(_._1=="name").map(_._2).getOrElse("No Name found")
     val address1 = entry._2.find(_._1=="address1").get._2
     val postcode = entry._2.find(_._1=="postcode").get._2
     val sic07 = entry._2.find(_._1=="sic07").get._2
