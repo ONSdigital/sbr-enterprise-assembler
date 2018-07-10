@@ -61,13 +61,13 @@ trait WithConversionHelper {
   }
 
 
-  def entToLocalUnits(row: Row, appParams: AppParams): (Seq[(String, HFileCell)], Seq[(String, HFileCell)]) = {
+  def entToLocalUnits(row: Row, appParams: AppParams): Tables = {
     val lurn = generateUniqueKey
     val ern = row.getString("ern").get
     val keyStr = generateLinkKey(ern,enterprise,appParams)
     val links =  rowToLocalUnitLinks(row,lurn,ern,appParams) :+ createLinksRecord(keyStr,s"$childPrefix$lurn",localUnit,appParams)
     val lous = entRowToLocalUnit(row, lurn, ern, appParams)
-    (links, lous)
+    Tables(null, links, lous)
   }
 
   def entRowToLocalUnit(row: Row, lurn:String, ern: String, appParams: AppParams):Seq[(String, HFileCell)] = {

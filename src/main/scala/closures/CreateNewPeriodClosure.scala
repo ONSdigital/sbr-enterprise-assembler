@@ -5,7 +5,7 @@ import dao.hbase.converter.WithConversionHelper
 import global.{AppParams, Configs}
 import model.domain.{HFileRow, KVCell}
 import model.hfile
-import model.hfile.HFileCell
+import model.hfile.{HFileCell, Tables}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -16,8 +16,6 @@ import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.RddLogging
 import spark.calculations.DataFrameHelper
 import spark.extensions.sql._
-
-
 
 import scala.util.Try
 
@@ -191,7 +189,7 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     val completeExistingEnts: DataFrame = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter")//.rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
     completeExistingEnts.cache()
     //printDF("existingEntDF", existingEntDF)
-      //printDF("completeExistingEnts", completeExistingEnts)
+    //printDF("completeExistingEnts", completeExistingEnts)
 
 
     /**
@@ -207,17 +205,17 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
    val entsWithMissingLous: RDD[Row] = getEntsWithMissingLous(completeExistingEnts,appconf,confs)
-   entsWithMissingLous.cache()
+   //entsWithMissingLous.cache()
 
-   val missingLousData: RDD[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])] = entsWithMissingLous.map(row => entToLocalUnits(row,appconf))
+   val missingLousData: RDD[Tables]= entsWithMissingLous.map(row => entToLocalUnits(row,appconf))
    missingLousData.cache()
-    printRdd("missingLousData:",missingLousData,"[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])]")
-   val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._1)
-   missingLousLinks.cache()
-   printRdd("update parquet Schema:",missingLousLinks,"[(String, HFileCell)]")
-   val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_._2)
-   missingLous.cache()
-   printRdd("missingLous:",missingLous,"[(String, HFileCell)]")
+   //printRdd("missingLousData:",missingLousData,"[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])]")
+   val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_.links)
+   //missingLousLinks.cache()
+   //printRdd("missingLousLinks:",missingLousLinks,"[(String, HFileCell)]")
+   val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_.localUnits)
+   //missingLous.cache()
+   //printRdd("missingLous:",missingLous,"[(String, HFileCell)]")
 
    /**
    * add new + existing links and save to hfile
@@ -239,7 +237,7 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
-  missingLousLinks.unpersist()
+
 
     //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
@@ -251,7 +249,6 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
    val lous: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.localUnits).union(missingLous)
 
    saveAllLocalUnits(lous,appconf,confs)
-   missingLous.unpersist()
    missingLousData.unpersist()
    completeExistingEnts.unpersist()
    newEntTree.unpersist()

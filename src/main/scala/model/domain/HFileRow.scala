@@ -75,7 +75,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
   def toLouRow = {
     import spark.extensions.sql._
 
-    Row(Array(
+    new GenericRowWithSchema(Array(
       getCellValue("lurn"),
       getCellValue("luref"),
       getCellValue("ern"),
