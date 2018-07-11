@@ -1,6 +1,7 @@
 package closures
 
-import closures.mocks.MockCreateNewPeriodClosure
+import closures.mocks.MockClosures
+import dao.hbase.{HBaseDao, MockCreateNewPeriodHBaseDao}
 import dao.parquet.ParquetDao
 import test.data.existing.ExistingData
 import test.data.expected.ExpectedDataForAddNewPeriodScenario
@@ -24,24 +25,35 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
 
  lazy val testDir = "missinglou"
 
-  val appConfs = AppParams(
-  (Array[String](
-  "LINKS", "ons", "l", linkHfilePath,
-  "ENT", "ons", "d",entHfilePath,
-  "LOU", "ons", "d",louHfilePath,
-  parquetPath,
-  "201804",payeFilePath,
-  vatFilePath,
-  "local",
-  "addperiod"
-  )))
+  object MockCreateNewPeriodClosure extends CreateNewPeriodClosure with MockClosures {
 
+    override val hbaseDao: HBaseDao = MockCreateNewPeriodHBaseDao
+
+    override val ernMapping: Map[String, String] = Map(
+      ("NEW ENTERPRISE LU" -> newEntErn),
+      ("INDUSTRIES LTD" -> entWithMissingLouId)
+    )
+
+    override val lurnMapping: Map[String, String] = Map(
+      ("NEW ENTERPRISE LU" ->  newLouLurn),
+      ("INDUSTRIES LTD" ->  missingLouLurn)
+    )
+  }
+
+  val appConfs = AppParams((Array[String](
+                            "LINKS", "ons", "l", linkHfilePath,
+                            "ENT", "ons", "d",entHfilePath,
+                            "LOU", "ons", "d",louHfilePath,
+                            parquetPath,
+                            "201804",payeFilePath,
+                            vatFilePath,
+                            "local",
+                            "addperiod"
+                            )))
 
   override def beforeAll() = {
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
-        conf.set("hbase.zookeeper.quorum", "localhost")
-        conf.set("hbase.zookeeper.property.clientPort", "2181")
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
         MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
@@ -59,87 +71,38 @@ override def afterAll() = {
 
 
 "assembler" should {
-"create hfiles populated with expected local units data" in {
+   "create hfiles populated with expected local units data" in {
 
-    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-    val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
+        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 
-    val updatedLous = readEntitiesFromHFile[HFileRow](louHfilePath).collect.toList.sortBy(_.key)
 
-    val data = readEntitiesFromHFile[LocalUnit](louHfilePath).collect
-    val actualCorrected: Set[LocalUnit] = data.map(lou => {
-                                                    if (lou.name=="INDUSTRIES LTD" && lou.lurn.endsWith("TESTS"))  lou.copy(lurn = missingLouLurn)
-                                                    else if(lou.ern.endsWith("TESTS")) lou.copy(lurn = newLouLurn, ern = newEntErn)
-                                                    else lou
-                                                  }
-                                          ).toSet
-    val expected: Set[LocalUnit] = newPeriodWithMissingLocalUnit.sortBy(_.lurn).toSet
-    actualCorrected shouldBe expected
-    spark.stop()
+        val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
+        val expected: List[LocalUnit] = newPeriodWithMissingLocalUnit.sortBy(_.lurn).sortBy(_.lurn)
+        actual shouldBe expected
+        spark.stop()
 
-}
+   }
 }
 
+/*"assembler" should {
+    "create hfiles populated with expected links data" in {
 
-"assembler" should {
-"create hfiles populated with expected links data" in {
+        implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+        val confs = appConfs
 
-implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-  val confs = appConfs
+        val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
 
-  val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
+        val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
+        val expected = newPeriodLinks.sortBy(_.key)
+        actual shouldBe expected
 
-  val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
-  /**
-  * substitute system generated key with const values for comparison*/
-  val actualUpdated: Seq[HFileRow] = replaceIds(actual,confs).sortBy(_.key)
-  val expected = newPeriodLinks.sortBy(_.key)
-  actualUpdated shouldBe expected
+        spark.close()
 
-  spark.close()
+        }
+}*/
 
-}
-}
-
-def replaceIds(rows:Seq[HFileRow],appConfs:AppParams) = {
-
-  val withNewEntRowUpdated = rows.map(row => {
-                //replace id in ENTS
-                if (row.key.endsWith(s"TESTS~ENT~${appConfs.TIME_PERIOD}")) {
-                  row.copy(key = s"$newEntErn~ENT~${appConfs.TIME_PERIOD}", cells = row.cells.map(cell => if (cell.value == "LOU") cell.copy(column = s"c_$newLouLurn") else cell).toList.sortBy(_.column))
-                  //replace id in LEU
-                }else if (row.key.contains(s"~LEU~${appConfs.TIME_PERIOD}") && row.cells.find(cell => cell.column=="p_ENT" && cell.value.endsWith("TESTS")).isDefined) {
-                  row.copy(cells = row.cells.map(cell => if (cell.column == "p_ENT") cell.copy(value = newEntErn)
-                  else cell
-                  ).toList.sortBy(_.column))
-                  //replace id in LOU
-                }else if(row.key.endsWith(s"TESTS~LOU~${appConfs.TIME_PERIOD}") && row.cells.find(cell => {cell.column=="p_ENT" && cell.value.endsWith("TESTS")}).isDefined){
-                    row.copy(key = s"$newLouLurn~LOU~${appConfs.TIME_PERIOD}", cells = row.cells.map(cell => if(cell.column=="p_ENT" && cell.value.endsWith("TESTS")){
-                      cell.copy(value=newEntErn)
-                    }else cell
-                    ).toList.sortBy(_.column))
-
-
-                 } else {
-                  row.copy(cells = row.cells.toList.sortBy(_.column))
-                }
-          })
-
-  val withNewMissingLouUpdated = withNewEntRowUpdated.map(row =>
-    if(row.key.endsWith(s"TESTS~LOU~${appConfs.TIME_PERIOD}")&& row.cells.find(cell => cell.column=="p_ENT" && cell.value==entWithMissingLouId).isDefined){
-      row.copy(key = s"$missingLouLurn~LOU~${appConfs.TIME_PERIOD}", cells = row.cells.toList.sortBy(_.column))
-    }else if(row.key==s"$entWithMissingLouId~ENT~${appConfs.TIME_PERIOD}"){
-      row.copy(cells = row.cells.map(cell => if(cell.value=="LOU" && cell.column.endsWith("TESTS")){
-                                              cell.copy(column = s"c_$missingLouLurn")
-                                            }else cell).toList.sortBy(_.column))
-     }else row.copy(cells = row.cells.toList.sortBy(_.column)) )
-
-  withNewMissingLouUpdated
-}
 
 def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
-    conf.set("hbase.zookeeper.quorum", "localhost")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
     cells.sortBy(t => s"${t._2.key}${t._2.qualifier}")
