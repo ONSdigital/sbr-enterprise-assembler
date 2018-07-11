@@ -35,7 +35,8 @@
     }
 
     def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "id") : DataFrame = {
-      val numOfPartitions = 4//parquetDF.rdd.getNumPartitions
+      parquetDF.castAllToString()
+      /*val numOfPartitions = 4//parquetDF.rdd.getNumPartitions
 
       val partionedDF = parquetDF.repartition(numOfPartitions)
       val entPaye = flattenPaye(partionedDF).join(intConvert(payeDF), Seq("payeref"), "outer")
@@ -78,7 +79,7 @@
 
       val withTotalTurnoverDF = apportionDF.withColumn("total_turnover", total(array(totalCols.map(s => apportionDF.apply(s)):_*)))
 
-      withTotalTurnoverDF.castAllToString
+      withTotalTurnoverDF.castAllToString*/
 
 
     }
