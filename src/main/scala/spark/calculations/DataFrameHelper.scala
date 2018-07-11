@@ -29,9 +29,11 @@
     val prefix = udf((vatRef: Long) => if(vatRef.toString.length == 12) vatRef.toString.substring(0,9).toLong else vatRef)
 
     def adminCalculationsEnt(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "ern") : DataFrame = {
-      adminCalculations(parquetDF, payeDF, vatDF, idColumnName)
-        .select(idColumnName,"paye_employees","paye_jobs","total_turnover","apportion_turnover",
-          "temp_contained_rep_vat_turnover", "temp_standard_vat_turnover", "group_turnover")
+      parquetDF.castAllToString()
+//      adminCalculations(parquetDF, payeDF, vatDF, idColumnName)
+//        .select(idColumnName)
+//      ,"paye_employees","paye_jobs","total_turnover","apportion_turnover",
+//          "temp_contained_rep_vat_turnover", "temp_standard_vat_turnover", "group_turnover")
     }
 
     def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "id") : DataFrame = {
