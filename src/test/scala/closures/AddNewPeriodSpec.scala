@@ -1,6 +1,7 @@
 package closures
 
-import closures.mocks.MockCreateNewPeriodClosure
+import closures.mocks.MockClosures
+import dao.hbase.{HBaseDao, MockCreateNewPeriodHBaseDao}
 import dao.parquet.ParquetDao
 import test.data.existing.ExistingData
 import test.data.expected.ExpectedDataForAddNewPeriodScenario
@@ -28,6 +29,19 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
   lazy val testDir = "newperiod"
 
+  object MockCreateNewPeriodClosure extends CreateNewPeriodClosure with MockClosures{
+
+    override val hbaseDao = MockCreateNewPeriodHBaseDao
+
+    override val ernMapping: Map[String, String] = Map(
+      ("NEW ENTERPRISE LU" -> newEntErn)
+    )
+
+    override val lurnMapping: Map[String, String] = Map(
+      ("NEW ENTERPRISE LU" ->  newLouLurn)
+    )
+  }
+
   val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
@@ -40,15 +54,15 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "addperiod"
     )))
 
-
   override def beforeAll() = {
-    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    conf.set("hbase.zookeeper.quorum", "localhost")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
     createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    /*val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+    val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
+    val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
     MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
     spark.stop()
   }
@@ -66,13 +80,10 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-      val actualRows: Array[HFileRow] = readEntitiesFromHFile[HFileRow](entHfilePath).collect
-      val actual = actualRows.map(Enterprise(_))
-      val actualEnts = actual.map(ent => {
-        if(ent.ern.endsWith("TESTS")) ent.copy(ern=newEntErn)
-        else ent}).toList.sortBy(_.ern)
+      val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
+      val actual = actualRows.map(Enterprise(_)).sortBy(_.ern)
       val expected: List[Enterprise] = newPeriodEnts.sortBy(_.ern)
-      actualEnts shouldBe expected
+      actual shouldBe expected
       spark.stop()
 
     }
@@ -84,11 +95,9 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
-      val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.map(lou => {
-        if(lou.ern.endsWith("TESTS")) lou.copy(lurn = newLouLurn, ern = newEntErn)
-        else lou}).toList.sortBy(_.lurn)
-      val expected: List[LocalUnit] = newPeriodLocalUnits
+      //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
+      val expected: List[LocalUnit] = newPeriodLocalUnits.sortBy(_.lurn)
       actual shouldBe expected
       spark.stop()
 
@@ -101,31 +110,17 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
       val confs = appConfs
-
+      val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
+      //print(existing)
       val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
-      /**
-        * substitute system generated key with const values for comparison*/
-      val actualUpdated: Seq[HFileRow] = actual.map(f = row => {
-        if (row.key.contains(s"~ENT~${confs.TIME_PERIOD}") && row.key.split("~").head.endsWith("TESTS")) {
-          row.copy(key = s"$newEntErn~ENT~${confs.TIME_PERIOD}", cells = row.cells.map(cell => if (cell.value == "LOU") cell.copy(column = s"c_$newLouLurn") else cell).toList.sortBy(_.column))
-        }
-        else if (row.key.contains(s"~LOU~${confs.TIME_PERIOD}") && row.key.split("~").head.endsWith("TESTS")) {
-          row.copy(key = s"$newLouLurn~LOU~${confs.TIME_PERIOD}", cells = row.cells.map(cell => if (cell.column == "p_ENT") cell.copy(value = s"$newEntErn") else cell).toList.sortBy(_.column))
-        }
-        else row.copy(cells = row.cells.map(cell => if (cell.value.endsWith("TESTS")) cell.copy(value = newEntErn) else cell).toList.sortBy(_.column))
-      }).sortBy(_.key)
-      val expected = newPeriodLinks//.sortBy(_.key)
-      actualUpdated shouldBe expected
-
-
+      val expected: Seq[HFileRow] = newPeriodLinks.sortBy(_.key)
+      actual shouldBe expected
       spark.close()
 
     }
   }
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
-    conf.set("hbase.zookeeper.quorum", "localhost")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
     cells.sortBy(t => s"${t._2.key}${t._2.qualifier}")
@@ -136,7 +131,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
     saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
     saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
-    saveToHFile(existingLouslousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
+    saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
   }
 
 }

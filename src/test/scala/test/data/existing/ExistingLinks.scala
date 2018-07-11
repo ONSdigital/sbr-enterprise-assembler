@@ -1,9 +1,10 @@
 package test.data.existing
 
 import model.domain.{HFileRow, KVCell}
+import test.data.TestIds
 
 
-trait ExistingLinks {
+trait ExistingLinks {this:TestIds =>
 
 //     HFileRow("00032261~CH~201803",List(KVCell("p_LEU","100002826247"))),
 
@@ -18,7 +19,7 @@ trait ExistingLinks {
     HFileRow("100000508723~LEU~201803",List(KVCell("c_04223165","CH"), KVCell("c_111000111","VAT"), KVCell("c_1188L","PAYE"), KVCell("c_1199L","PAYE"), KVCell("p_ENT","4000000011"))),
     HFileRow("100000508724~LEU~201803",List(KVCell("c_00012345","CH"), KVCell("c_5555L","PAYE"), KVCell("c_999888777","VAT"), KVCell("p_ENT","4000000011"))),
     HFileRow("100000827984~LEU~201803",List(KVCell("c_00032263","CH"), KVCell("c_1154L","PAYE"), KVCell("c_1155L","PAYE"), KVCell("c_222333444","VAT"), KVCell("p_ENT","3000000011"))),
-    HFileRow("100002826247~LEU~201803",List(KVCell("c_00032261","CH"), KVCell("c_1151L","PAYE"), KVCell("c_123123123","VAT"), KVCell("p_ENT","2000000011"))),
+    HFileRow("100002826247~LEU~201803",List(KVCell("c_00032261","CH"), KVCell("c_1151L","PAYE"), KVCell("c_123123123","VAT"), KVCell("p_ENT",entWithMissingLouId))),
     HFileRow("111000111~VAT~201803",List(KVCell("p_LEU","100000508723"))),
     HFileRow("111222333~VAT~201803",List(KVCell("p_LEU","100000246017"))),
     HFileRow("1151L~PAYE~201803",List(KVCell("p_LEU","100002826247"))),
@@ -31,8 +32,8 @@ trait ExistingLinks {
     HFileRow("1188L~PAYE~201803",List(KVCell("p_LEU","100000508723"))),
     HFileRow("1199L~PAYE~201803",List(KVCell("p_LEU","100000508723"))),
     HFileRow("123123123~VAT~201803",List(KVCell("p_LEU","100002826247"))),
-    HFileRow("2000000011~ENT~201803",List(KVCell("c_100002826247","LEU"), KVCell("c_200000099","LOU"))),
-    HFileRow("200000099~LOU~201803",List(KVCell("p_ENT","2000000011"))),
+    HFileRow(s"$entWithMissingLouId~ENT~201803",List(KVCell("c_100002826247","LEU"), KVCell(s"c_$missingLouLurn","LOU"))),
+    HFileRow(s"$missingLouLurn~LOU~201803",List(KVCell("p_ENT",entWithMissingLouId))),
     HFileRow("222333444~VAT~201803",List(KVCell("p_LEU","100000827984"))),
     HFileRow("222666000~VAT~201803",List(KVCell("p_LEU","100000459235"))),
     HFileRow("3000000011~ENT~201803",List(KVCell("c_100000246017","LEU"), KVCell("c_100000827984","LEU"), KVCell("c_300000088","LOU"), KVCell("c_300000099","LOU"))),
@@ -59,7 +60,7 @@ trait ExistingLinks {
     HFileRow("100000508723~LEU~201803",List(KVCell("c_04223165","CH"), KVCell("c_111000111","VAT"), KVCell("c_1188L","PAYE"), KVCell("c_1199L","PAYE"), KVCell("p_ENT","4000000011"))),
     HFileRow("100000508724~LEU~201803",List(KVCell("c_00012345","CH"), KVCell("c_5555L","PAYE"), KVCell("c_999888777","VAT"), KVCell("p_ENT","4000000011"))),
     HFileRow("100000827984~LEU~201803",List(KVCell("c_00032263","CH"), KVCell("c_1154L","PAYE"), KVCell("c_1155L","PAYE"), KVCell("c_222333444","VAT"), KVCell("p_ENT","3000000011"))),
-    HFileRow("100002826247~LEU~201803",List(KVCell("c_00032261","CH"), KVCell("c_1151L","PAYE"), KVCell("c_123123123","VAT"), KVCell("p_ENT","2000000011"))),
+    HFileRow("100002826247~LEU~201803",List(KVCell("c_00032261","CH"), KVCell("c_1151L","PAYE"), KVCell("c_123123123","VAT"), KVCell("p_ENT",entWithMissingLouId))),
     HFileRow("111000111~VAT~201803",List(KVCell("p_LEU","100000508723"))),
     HFileRow("111222333~VAT~201803",List(KVCell("p_LEU","100000246017"))),
     HFileRow("1151L~PAYE~201803",List(KVCell("p_LEU","100002826247"))),
@@ -72,7 +73,7 @@ trait ExistingLinks {
     HFileRow("1188L~PAYE~201803",List(KVCell("p_LEU","100000508723"))),
     HFileRow("1199L~PAYE~201803",List(KVCell("p_LEU","100000508723"))),
     HFileRow("123123123~VAT~201803",List(KVCell("p_LEU","100002826247"))),
-    HFileRow("2000000011~ENT~201803",List(KVCell("c_100002826247","LEU"))),
+    HFileRow(s"$entWithMissingLouId~ENT~201803",List(KVCell("c_100002826247","LEU"))),
     HFileRow("222333444~VAT~201803",List(KVCell("p_LEU","100000827984"))),
     HFileRow("222666000~VAT~201803",List(KVCell("p_LEU","100000459235"))),
     HFileRow("3000000011~ENT~201803",List(KVCell("c_100000246017","LEU"), KVCell("c_100000827984","LEU"), KVCell("c_300000088","LOU"), KVCell("c_300000099","LOU"))),

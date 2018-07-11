@@ -8,7 +8,7 @@ import service._
 import scala.reflect.io.File
 
 
-object AssemblerMain extends EnterpriseAssemblerService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService with DataIntegrityReportService{
+object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService with DataIntegrityReportService{
 
   def main(args: Array[String]) {
 

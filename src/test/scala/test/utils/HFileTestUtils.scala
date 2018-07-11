@@ -28,24 +28,28 @@ trait HFileTestUtils {
 
 
 
-   def assignStaticLinkIds(rows:Seq[HFileRow]): Set[HFileRow] = {
+  /* def assignStaticLinkIds(rows:Seq[HFileRow]): Set[HFileRow] = {
 
+
+   def getErn(rowKey:String) = rowKey.split("~").head
+   def isEnt(rowKey:String) = rowKey.split("~")(1)=="ENT"
 
     //dictionary mapping actual erns to static
-    val ernsDictionary: Seq[(String, String)] = {
+    val ernsDictionary: Seq[(String, String, String)] = {
 
-      val erns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.column=="p_ENT").isDefined) => {row.cells.collect{case KVCell("p_ENT",value) => value}}}.flatten.zipWithIndex
-
+      val erns: Seq[(String, Int)] = rows.collect{case row if(isEnt(row.key)) => row.cells.find(cell => cell.column=="p_ENT" && cell.value.endsWith("TESTS") ).map(_.value)}.flatten.zipWithIndex
+                                   //rows.collect{case row if(row.cells.find(cell => cell.column=="p_ENT" && cell.value.endsWith("TESTS") ).isDefined) => row.cells.find(cell => cell.column=="p_ENT" && cell.value.endsWith("TESTS") ).map(_.value)}.flatten.zipWithIndex
       erns.map(ernTup => {
         val (ern,index) = ernTup
-        (ern,"testEnterpriseId-"+({index+1}.toString*5))
+        (ern,"testEnterpriseId-"+({index+1}.toString*5,))
 
-        })}
+        })
 
 
 
     val lurnsDictionary: Seq[(String, String)] = {
-      val lurns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(_.value=="LOU").isDefined) => {row.cells.collect{case KVCell(lurn,"LOU") => lurn}}}.flatten.zipWithIndex
+                                    //rows.collect{case row if(row.cells.find(cell => cell.column=="p_ENT" && cell.value.endsWith("TEST") ).isDefined) => row.cells.find(cell => cell.column=="p_ENT" && cell.value.endsWith("TEST") ).map(_.value)}.flatten.zipWithIndex
+      val lurns: Seq[(String, Int)] = rows.collect{case row if(row.cells.find(cell => cell.value=="LOU" && cell.column.endsWith("TESTS")).isDefined) => row.cells.find(cell => cell.column.endsWith("TESTS") && cell.value=="LOU").map(_.value)}.flatten.zipWithIndex
 
      lurns.map(lurnTup => {
         val (lurn,index) = lurnTup
@@ -176,7 +180,7 @@ trait HFileTestUtils {
 
     })
 
-  }
+  }*/
 
 
 }

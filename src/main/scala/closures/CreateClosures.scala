@@ -1,24 +1,51 @@
 package closures
 
 import dao.hbase.HBaseDao
-import dao.parquet.ParquetDao
+import dao.hbase.converter.WithConversionHelper
 import global.{AppParams, Configs}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql._
+import spark.RddLogging
+import spark.calculations.DataFrameHelper
+import spark.extensions.sql._
 
 /**
   *
   */
-trait CreateClosures extends Serializable{
+trait CreateClosures extends WithConversionHelper with DataFrameHelper with RddLogging with Serializable{
 
-  def loadFromCreateParquet(appconf:AppParams)(implicit ss:SparkSession,con: Connection){
-    ParquetDao.parquetCreateNewToHFile(ss,appconf)
-    HBaseDao.loadHFiles(con,appconf)
+
+  def parquetCreateNewToHFile(implicit spark:SparkSession, appconf:AppParams){
+
+    val appArgs = appconf
+
+    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+    val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
+
+    val stringifiedParquet = spark.read.parquet(appArgs.PATH_TO_PARQUET).castAllToString
+    val parquetDF = adminCalculations(stringifiedParquet, payeDF, vatDF)
+    //printDF("parquetDF", parquetDF)
+    val parquetRDD = parquetDF.rdd.map(row => toNewEnterpriseRecordsWithLou(row,appArgs)).cache()
+
+    parquetRDD.flatMap(_.links).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    parquetRDD.flatMap(_.enterprises).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    parquetRDD.flatMap(_.localUnits).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+
+
+    parquetRDD.unpersist()
   }
 
 
@@ -30,7 +57,7 @@ trait CreateClosures extends Serializable{
       s"${v._2.key}${v._2.qualifier}"
     })
 
-    val updateRecs: RDD[(String, hfile.HFileCell)] = ss.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => ParquetDao.toLinksRefreshRecords(row, appconf)).sortBy(v => {
+    val updateRecs: RDD[(String, hfile.HFileCell)] = ss.read.parquet(appconf.PATH_TO_PARQUET).rdd.flatMap(row => toLinksRefreshRecords(row, appconf)).sortBy(v => {
       s"${v._2.key}${v._2.qualifier}"
     })
 

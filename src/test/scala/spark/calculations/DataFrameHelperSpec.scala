@@ -25,7 +25,7 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
                         .add(StructField("count", IntegerType,true))
                         .add(StructField("avg", IntegerType,true))
 
-  "assembler" should {
+/*  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -34,7 +34,7 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
       payesCalculated.show()
       spark.close()
     }
-    }
+    }*/
 
 
 

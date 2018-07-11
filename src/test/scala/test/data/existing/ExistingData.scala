@@ -1,3 +1,5 @@
 package test.data.existing
 
-trait ExistingData extends ExistingEnts with ExistingLinks with ExistingLocalUnits
+import test.data.TestIds
+
+trait ExistingData extends TestIds with ExistingEnts with ExistingLinks with ExistingLocalUnits

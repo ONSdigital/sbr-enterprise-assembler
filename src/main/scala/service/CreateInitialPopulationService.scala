@@ -10,7 +10,7 @@ import spark.SparkSessionManager
 /**
   *
   */
-trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessionManager with CreateClosures{
+trait CreateInitialPopulationService extends HBaseConnectionManager with SparkSessionManager with CreateClosures{
   import global.Configs._
 
 
@@ -22,17 +22,15 @@ trait EnterpriseAssemblerService extends HBaseConnectionManager with SparkSessio
 
   def loadNewPopulationFromJson(appconf:AppParams) = withSpark(appconf) { implicit ss: SparkSession =>
 
-                                                                 ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
-    withHbaseConnection { implicit con: Connection => loadFromCreateParquet(appconf)(ss, con)}
-
-                                           }
-
-
-
+    ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
+    parquetCreateNewToHFile(ss, appconf)
+    withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
+  }
 
   def createNewPopulationFromParquet(appconf:AppParams){
     withSpark(appconf){ implicit ss:SparkSession =>
-    withHbaseConnection { implicit con: Connection => loadFromCreateParquet(appconf) }
+      parquetCreateNewToHFile(ss, appconf)
+      withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
   }}
 
   def loadFromHFile(appconf:AppParams) = withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}

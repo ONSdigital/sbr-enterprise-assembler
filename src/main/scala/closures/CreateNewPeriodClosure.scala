@@ -223,17 +223,17 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
 
   val existingEntLinkRefs: RDD[(String, HFileCell)] = existingLinksEnts.flatMap(hfrow => hfrow.toHFileCellRow(appconf.HBASE_LINKS_COLUMN_FAMILY))
   val existingLousCells: RDD[(String, HFileCell)] = existingLous.flatMap(row => row._2.map(cell => (row._1,HFileCell(row._1, appconf.HBASE_LINKS_COLUMN_FAMILY, cell.column, cell.value))))
-  val existingLusCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs).union(existingLousCells)
+  val existingLinkCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs).union(existingLousCells)
 
   //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
-  val allLus: RDD[(String, HFileCell)] = existingLusCells.union(newLinks).union(missingLousLinks).coalesce(numOfPartitions)
+  val allLinks: RDD[(String, HFileCell)] = existingLinkCells.union(newLinks).union(missingLousLinks).coalesce(numOfPartitions)
 
   //printRdd("allLus",allLus,"(String, HFileCell)")
 
 
 
-  allLus.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+  allLinks.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
