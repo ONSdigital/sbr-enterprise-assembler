@@ -36,14 +36,15 @@
 
     def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "id") : DataFrame = {
       val numOfPartitions = parquetDF.rdd.getNumPartitions
-      parquetDF.cache()
+      //parquetDF.cache()
       val partionedDF = parquetDF.repartition(numOfPartitions)
-      val entPaye = flattenPaye(parquetDF).join(intConvert(payeDF), Seq("payeref"), "outer")
+      partionedDF.cache()
+      val entPaye = flattenPaye(partionedDF).join(intConvert(payeDF), Seq("payeref"), "outer")
       val employees = getEmployeeCount(entPaye, idColumnName)
       employees.cache()
       val jobs = entPaye.groupBy(idColumnName).agg(sum("dec_jobs") as "paye_jobs")
 
-      val entVat = flattenVat(parquetDF).join(vatConvert(vatDF), Seq("vatref"), "outer")
+      val entVat = flattenVat(partionedDF).join(vatConvert(vatDF), Seq("vatref"), "outer")
       val prefixDF = entVat.withColumn("vatref9", prefix(col("vatref")))
       val startDF = prefixDF.join(prefixDF.groupBy("vatref9").agg(countDistinct(idColumnName)as "unique").filter(col("vatref9").isNotNull), Seq("vatref9"))
 
@@ -55,7 +56,7 @@
 /*      printDF("groupTurnover", groupTurnover)
       printDF("employees", employees)*/
 
-      val df = parquetDF
+      val df = partionedDF
         .join(containedTurnover,Seq(idColumnName), "outer")
         .join(standardVatTurnover,Seq(idColumnName), "outer")
         .join(groupTurnover, Seq(idColumnName), "outer")
@@ -79,7 +80,7 @@
       //printDF("apportionDF",apportionDF)
 
       val withTotalTurnoverDF = apportionDF.withColumn("total_turnover", total(array(totalCols.map(s => apportionDF.apply(s)):_*)))
-      parquetDF.unpersist()
+      partionedDF.unpersist()
       withTotalTurnoverDF.castAllToString
 
 
