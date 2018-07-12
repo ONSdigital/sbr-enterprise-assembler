@@ -52,8 +52,8 @@ trait WithConversionHelper {
   * from a BI record
   * */
   def toNewEnterpriseRecordsWithLou(row: Row, appParams: AppParams): Tables = {
-    val ern = generateUniqueKey
-    val lurn = generateUniqueKey
+    val ern = generateErn(row,appParams)
+    val lurn = generateLurn(row,appParams)
     val ents = rowToEnterprise(row, ern, appParams)
     val links = rowToNewLinks(row, lurn,ern, appParams)
     val lous = toLocalUnits(row, lurn, ern, appParams)
@@ -62,7 +62,7 @@ trait WithConversionHelper {
 
 
   def entToLocalUnits(row: Row, appParams: AppParams): Tables = {
-    val lurn = generateUniqueKey
+    val lurn = generateLurnFromEnt(row,appParams)
     val ern = row.getString("ern").get
     val keyStr = generateLinkKey(ern,enterprise,appParams)
     val links =  rowToLocalUnitLinks(row,lurn,ern,appParams) :+ createLinksRecord(keyStr,s"$childPrefix$lurn",localUnit,appParams)
@@ -115,7 +115,7 @@ trait WithConversionHelper {
 /*
 
   def toEnterpriseRecords(row:Row, appParams:AppParams): Tables = {
-    val ern = generateUniqueKey
+    val ern = generateErn
     Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
   }*/
 
@@ -194,13 +194,13 @@ trait WithConversionHelper {
     rowToFullEnterprise(row,appParams,ern)
 }
 
-  private def rowToLinks(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
+  def rowToLinks(row:Row,ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row,"id")
     val keyStr = generateLinkKey(ern,enterprise,appParams)
     createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit,appParams)+:rowToLegalUnitLinks(row,ern,appParams)
   }
 
-  private def rowToNewLinks(row:Row,lurn:String, ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
+  def rowToNewLinks(row:Row,lurn:String, ern:String,appParams:AppParams): Seq[(String, HFileCell)] = {
     val ubrn = getId(row,"id")
     val keyStr = generateLinkKey(ern,enterprise,appParams)
     Seq(createLinksRecord(keyStr,s"$childPrefix$ubrn",legalUnit,appParams),createLinksRecord(keyStr,s"$childPrefix$lurn",localUnit,appParams))++
@@ -266,6 +266,10 @@ trait WithConversionHelper {
   def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_LOCALUNITS_COLUMN_FAMILY,column,value)
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
+
+  def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
+  def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
+  def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey
 
   def generateUniqueKey = Random.alphanumeric.take(18).mkString
 

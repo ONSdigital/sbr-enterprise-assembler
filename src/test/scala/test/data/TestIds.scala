@@ -5,9 +5,9 @@ package test.data
   */
 trait TestIds {
 
-  val newEntErn = "5000000011"
-  val newLouLurn = "500000099"
-  val missingLouLurn = "200000099"
+  val newEntErn = "111111111-TEST-ERN"
+  val newLouLurn = "11111111-TEST-LURN"
+  val missingLouLurn = "MISS-LOU-TEST-LURN"
   val entWithMissingLouId = "2000000011"
 
 

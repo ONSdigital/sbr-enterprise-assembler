@@ -11,7 +11,7 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
-import service.EnterpriseAssemblerService
+import service.CreateInitialPopulationService
 import model.domain.Enterprise
 /**
   *
@@ -34,7 +34,7 @@ class EnterpriseAssemblerTest extends WordSpecLike with Matchers with BeforeAndA
  "assembler" should {
      "create and populate hbase tables 'ENT' and 'LINKS' with expected data" in{
 
-       val assembler = new EnterpriseAssemblerService{}
+       val assembler = new CreateInitialPopulationService{}
        assembler.loadFromJson
 
        val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
