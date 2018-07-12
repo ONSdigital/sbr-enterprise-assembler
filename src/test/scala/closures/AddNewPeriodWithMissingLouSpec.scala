@@ -84,7 +84,7 @@ override def afterAll() = {
    }
 }
 
-/*"assembler" should {
+"assembler" should {
     "create hfiles populated with expected links data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -99,7 +99,7 @@ override def afterAll() = {
         spark.close()
 
         }
-}*/
+}
 
 
 def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
