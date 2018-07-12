@@ -51,12 +51,12 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
 
   }*/
 
-  override def afterAll() = {
+/*  override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
-  }
+  }*/
 /*
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -71,13 +71,72 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
+
+      /*val calcuatePayeStuff = ( BusinessName: String,
+                                CompanyNo: String,
+                                EmploymentBands: String,
+                                IndustryCode: String,
+                                LegalStatus: String,
+                                PayeRefs: Seq[String],
+                                PostCode: String,
+                                TradingStatus: String,
+                                Turnover: String,
+                                UPRN: String,
+                                VatRefs: Seq[String],
+                                id: String) => {
+        val employees = String
+      }*/
+
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val unitsDF = spark.read.parquet(appConfs.PATH_TO_PARQUET).castAllToString
+
+      val payes = unitsDF.select("id","VatRefs").withColumn("vatref", explode_outer(unitsDF.apply("VatRefs")))
+
+
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
+
+      val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
+
+      unitsDF.createOrReplaceTempView("UNITS")
+
+      val payeRefs = flatUnitDf.select("id","payeref")
+/*      vatRefs.show()
+      vatRefs.printSchema()*/
+      payeRefs.createOrReplaceTempView("PAYE_UNITS_LINK")
+      payeDF.createOrReplaceTempView("PAYE_DATA")
+      val linkedPayes = spark.sql(
+        """
+          SELECT PAYE_UNITS_LINK.id, PAYE_UNITS_LINK.payeref, PAYE_DATA.mar_jobs, PAYE_DATA.june_jobs, PAYE_DATA.sept_jobs, PAYE_DATA.dec_jobs,
+          (CASE
+            WHEN PAYE_DATA.mar_jobs IS NULL
+            THEN 0
+            ELSE 1
+          END +
+          CASE
+            WHEN PAYE_DATA.june_jobs IS NULL
+            THEN 0
+            ELSE 1
+          END +
+          CASE
+             WHEN PAYE_DATA.sept_jobs IS NULL
+             THEN 0
+             ELSE 1
+          END +
+          CASE
+              WHEN PAYE_DATA.dec_jobs IS NULL
+              THEN 0
+              ELSE 1
+          END) as count
+          FROM PAYE_UNITS_LINK,PAYE_DATA
+          WHERE PAYE_UNITS_LINK.payeref = PAYE_DATA.payeref
+        """.stripMargin)
+      linkedPayes.show()
+      linkedPayes.printSchema()
+
       val calculated: DataFrame = new DataFrameHelper{}.adminCalculations(unitsDF,payeDF,vatDF)
-      calculated.printSchema()
-      calculated.show()
+/*      calculated.show()
+      calculated.printSchema()*/
       spark.close()
     }
     }
