@@ -40,6 +40,7 @@
       val partionedDF = parquetDF.repartition(numOfPartitions)
       val entPaye = flattenPaye(partionedDF).join(intConvert(payeDF), Seq("payeref"), "outer")
       val employees = getEmployeeCount(entPaye, idColumnName)
+      employees.cache()
       val jobs = entPaye.groupBy(idColumnName).agg(sum("dec_jobs") as "paye_jobs")
 
       val entVat = flattenVat(partionedDF).join(vatConvert(vatDF), Seq("vatref"), "outer")
@@ -48,7 +49,7 @@
 
       val containedTurnover = getContainedTurnover(startDF, idColumnName)
       val standardVatTurnover = getStandardTurnover(startDF, idColumnName)
-      val groupTurnover = getGroupTurnover(startDF, getEmployeeCount(entPaye, idColumnName), idColumnName)
+      val groupTurnover = getGroupTurnover(startDF, employees, idColumnName)
 
 
 /*      printDF("groupTurnover", groupTurnover)
@@ -62,6 +63,7 @@
         .join(jobs,Seq(idColumnName), "outer")
         .coalesce(numOfPartitions)
 
+      employees.unpersist()
       //printDF("df", df)
 
       val app_turnover = getApportionedTurnover(df, idColumnName)
