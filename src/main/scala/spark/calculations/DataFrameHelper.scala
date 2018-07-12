@@ -60,8 +60,8 @@
 /*        .join(containedTurnover,Seq(idColumnName), "outer")
      .join(standardVatTurnover,Seq(idColumnName), "outer")
      .join(groupTurnover, Seq(idColumnName), "outer")*/
-     .join(employees,Seq(idColumnName), "outer")
-     .join(jobs,Seq(idColumnName), "outer")
+     .join(employees,Seq(idColumnName), "left_outer")
+     .join(jobs,Seq(idColumnName), "left_outer")
      .coalesce(numOfPartitions)
 
    employees.unpersist()
