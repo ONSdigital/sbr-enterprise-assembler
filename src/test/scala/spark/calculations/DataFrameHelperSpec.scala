@@ -127,7 +127,54 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
               WHEN PAYE_DATA.dec_jobs IS NULL
               THEN 0
               ELSE 1
-          END) as count
+          END) as count,
+
+          CAST(
+         (
+          (CASE
+             WHEN PAYE_DATA.mar_jobs IS NULL
+             THEN 0
+             ELSE PAYE_DATA.mar_jobs
+           END +
+           CASE
+             WHEN PAYE_DATA.june_jobs IS NULL
+             THEN 0
+             ELSE PAYE_DATA.june_jobs
+           END +
+           CASE
+              WHEN PAYE_DATA.sept_jobs IS NULL
+              THEN 0
+              ELSE PAYE_DATA.sept_jobs
+           END +
+           CASE
+               WHEN PAYE_DATA.dec_jobs IS NULL
+               THEN 0
+               ELSE PAYE_DATA.dec_jobs
+           END)
+
+          ) / (
+          (CASE
+              WHEN PAYE_DATA.mar_jobs IS NULL
+              THEN 0
+              ELSE 1
+           END +
+           CASE
+              WHEN PAYE_DATA.june_jobs IS NULL
+              THEN 0
+              ELSE 1
+           END +
+           CASE
+              WHEN PAYE_DATA.sept_jobs IS NULL
+              THEN 0
+              ELSE 1
+           END +
+           CASE
+             WHEN PAYE_DATA.dec_jobs IS NULL
+             THEN 0
+             ELSE 1
+           END)
+          ) AS int) as avg
+
           FROM PAYE_UNITS_LINK,PAYE_DATA
           WHERE PAYE_UNITS_LINK.payeref = PAYE_DATA.payeref
         """.stripMargin)
