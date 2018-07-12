@@ -1,6 +1,8 @@
 package spark.calculations
 
 
+import dao.parquet.ParquetDao
+import global.AppParams
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.explode_outer
 import org.apache.spark.sql.types._
@@ -11,6 +13,8 @@ import test.Paths
 import test.data.existing.ExistingData
 import test.data.expected.ExpectedDataForAddNewPeriodScenario
 import test.utils.TestDataUtils
+
+import scala.reflect.io.File
 
 class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
@@ -25,7 +29,36 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
                         .add(StructField("count", IntegerType,true))
                         .add(StructField("avg", IntegerType,true))
 
-/*  "assembler" should {
+    val appConfs = AppParams((Array[String](
+      "LINKS", "ons", "l", linkHfilePath,
+      "ENT", "ons", "d",entHfilePath,
+      "LOU", "ons", "d",louHfilePath,
+      parquetPath,
+      "201802",payeFilePath,
+      vatFilePath,
+      "local",
+      "addperiod"
+    )))
+
+
+/*  override def beforeAll() = {
+
+    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+    spark.stop()
+
+
+  }*/
+
+  override def afterAll() = {
+    File(parquetPath).deleteRecursively()
+    File(linkHfilePath).deleteRecursively()
+    File(entHfilePath).deleteRecursively()
+    File(louHfilePath).deleteRecursively()
+  }
+/*
+  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -35,6 +68,19 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
       spark.close()
     }
     }*/
+
+  "assembler" should {
+    "create hfiles populated with expected enterprise data" in {
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val unitsDF = spark.read.parquet(appConfs.PATH_TO_PARQUET).castAllToString
+      val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
+      val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
+      val calculated: DataFrame = new DataFrameHelper{}.adminCalculations(unitsDF,payeDF,vatDF)
+      calculated.printSchema()
+      calculated.show()
+      spark.close()
+    }
+    }
 
 
 
