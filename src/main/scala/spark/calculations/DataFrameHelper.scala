@@ -30,8 +30,8 @@
 
     def adminCalculationsEnt(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "ern") : DataFrame = {
       adminCalculations(parquetDF, payeDF, vatDF, idColumnName)
-        .select(idColumnName,"paye_employees","paye_jobs","total_turnover","apportion_turnover",
-          "temp_contained_rep_vat_turnover", "temp_standard_vat_turnover", "group_turnover")
+        .select(idColumnName,"paye_employees","paye_jobs"/*,"total_turnover","apportion_turnover",
+          "temp_contained_rep_vat_turnover", "temp_standard_vat_turnover", "group_turnover"*/)
     }
 
     def adminCalculations(parquetDF:DataFrame, payeDF: DataFrame, vatDF: DataFrame, idColumnName:String = "id") : DataFrame = {
@@ -44,144 +44,145 @@
       employees.cache()
       val jobs = entPaye.groupBy(idColumnName).agg(sum("dec_jobs") as "paye_jobs")
 
-      val entVat = flattenVat(partionedDF).join(vatConvert(vatDF), Seq("vatref"), "outer")
-      val prefixDF = entVat.withColumn("vatref9", prefix(col("vatref")))
-      val startDF = prefixDF.join(prefixDF.groupBy("vatref9").agg(countDistinct(idColumnName)as "unique").filter(col("vatref9").isNotNull), Seq("vatref9"))
+ /*   val entVat = flattenVat(partionedDF).join(vatConvert(vatDF), Seq("vatref"), "outer")
+     val prefixDF = entVat.withColumn("vatref9", prefix(col("vatref")))
+   val startDF = prefixDF.join(prefixDF.groupBy("vatref9").agg(countDistinct(idColumnName)as "unique").filter(col("vatref9").isNotNull), Seq("vatref9"))
 
-      val containedTurnover = getContainedTurnover(startDF, idColumnName)
-      val standardVatTurnover = getStandardTurnover(startDF, idColumnName)
-      val groupTurnover = getGroupTurnover(startDF, employees, idColumnName)
+   val containedTurnover = getContainedTurnover(startDF, idColumnName)
+   val standardVatTurnover = getStandardTurnover(startDF, idColumnName)
+   val groupTurnover = getGroupTurnover(startDF, employees, idColumnName)*/
 
 
 /*      printDF("groupTurnover", groupTurnover)
-      printDF("employees", employees)*/
+   printDF("employees", employees)*/
 
-      val df = partionedDF
-        .join(containedTurnover,Seq(idColumnName), "outer")
-        .join(standardVatTurnover,Seq(idColumnName), "outer")
-        .join(groupTurnover, Seq(idColumnName), "outer")
-        .join(employees,Seq(idColumnName), "outer")
-        .join(jobs,Seq(idColumnName), "outer")
-        .coalesce(numOfPartitions)
+   val df = partionedDF
+/*        .join(containedTurnover,Seq(idColumnName), "outer")
+     .join(standardVatTurnover,Seq(idColumnName), "outer")
+     .join(groupTurnover, Seq(idColumnName), "outer")*/
+     .join(employees,Seq(idColumnName), "outer")
+     .join(jobs,Seq(idColumnName), "outer")
+     .coalesce(numOfPartitions)
 
-      employees.unpersist()
-      //printDF("df", df)
+   employees.unpersist()
+   //printDF("df", df)
 
-      val app_turnover = getApportionedTurnover(df, idColumnName)
-      //printDF("app_turnover", app_turnover)
+   /*val app_turnover = getApportionedTurnover(df, idColumnName)
+   //printDF("app_turnover", app_turnover)
 
-      val apportionDF = df
-        .join(app_turnover, Seq(idColumnName), "left_outer")
-        .dropDuplicates(idColumnName,"apportion_turnover")
-        .filter(s"$idColumnName is not null")
-        .coalesce(numOfPartitions)
-
-
-      //printDF("apportionDF",apportionDF)
-
-      val withTotalTurnoverDF = apportionDF.withColumn("total_turnover", total(array(totalCols.map(s => apportionDF.apply(s)):_*)))
-      partionedDF.unpersist()
-      withTotalTurnoverDF.castAllToString
+   val apportionDF = df
+     .join(app_turnover, Seq(idColumnName), "left_outer")
+     .dropDuplicates(idColumnName,"apportion_turnover")
+     .filter(s"$idColumnName is not null")
+     .coalesce(numOfPartitions)*/
 
 
-    }
+   //printDF("apportionDF",apportionDF)
 
-    private def flattenVat(parquetDF: DataFrame): DataFrame = {
-      parquetDF
-        .withColumn("vatref", explode_outer(parquetDF.apply("VatRefs")))
-        .withColumnRenamed("Turnover", "TurnoverBand")
-    }
+   //val withTotalTurnoverDF = apportionDF.withColumn("total_turnover", total(array(totalCols.map(s => apportionDF.apply(s)):_*)))
+   partionedDF.unpersist()
+   //withTotalTurnoverDF.castAllToString
+   df.castAllToString
 
-    private def flattenPaye(parquetDF: DataFrame): DataFrame = {
-      parquetDF.withColumn("payeref", explode_outer(parquetDF.apply("PayeRefs")))
-    }
 
-    private def intConvert(payeFrame: DataFrame): DataFrame = {
-      payeFrame
-        .withColumn("mar_jobs", payeFrame("mar_jobs").cast(IntegerType))
-        .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
-        .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
-        .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
-    }
+ }
 
-    private def vatConvert(vatFrame: DataFrame): DataFrame = {
-      vatFrame.withColumn("turnover", vatFrame("turnover").cast(IntegerType))
-    }
+ private def flattenVat(parquetDF: DataFrame): DataFrame = {
+   parquetDF
+     .withColumn("vatref", explode_outer(parquetDF.apply("VatRefs")))
+     .withColumnRenamed("Turnover", "TurnoverBand")
+ }
 
-    private def getContainedTurnover(vatDF: DataFrame, idColumnName: String): DataFrame = vatDF.filter("unique == 1 and record_type == 1").groupBy(idColumnName).agg(sum("turnover") as "temp_contained_rep_vat_turnover")
+ private def flattenPaye(parquetDF: DataFrame): DataFrame = {
+   parquetDF.withColumn("payeref", explode_outer(parquetDF.apply("PayeRefs")))
+ }
 
-    private def getStandardTurnover(vatDF: DataFrame, idColumnName: String): DataFrame = vatDF.filter("record_type == 0 or record_type == 2").groupBy(idColumnName).agg(sum("turnover") as "temp_standard_vat_turnover")
+ private def intConvert(payeFrame: DataFrame): DataFrame = {
+   payeFrame
+     .withColumn("mar_jobs", payeFrame("mar_jobs").cast(IntegerType))
+     .withColumn("june_jobs", payeFrame("june_jobs").cast(IntegerType))
+     .withColumn("sept_jobs", payeFrame("sept_jobs").cast(IntegerType))
+     .withColumn("dec_jobs", payeFrame("dec_jobs").cast(IntegerType))
+ }
 
-    private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
-      val numOfPartitions = payeDF.rdd.getNumPartitions
-      val joined = payeDF
-        .repartition(numOfPartitions)
-        .join(broadcast(payeDF).groupBy("PayeRefs").sum("june_jobs"),"PayeRefs")
-        .join(broadcast(payeDF).groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs")
-        .join(broadcast(payeDF).groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs")
-        .join(broadcast(payeDF).groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs")
-        .coalesce(numOfPartitions)
-        .dropDuplicates("PayeRefs")
+ private def vatConvert(vatFrame: DataFrame): DataFrame = {
+   vatFrame.withColumn("turnover", vatFrame("turnover").cast(IntegerType))
+ }
 
-      val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
-      val dropAvg = avgDf.dropDuplicates("PayeRefs")
-      val summedAvg = dropAvg.groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees")
-      val newDF = summedAvg.toDF(idColumnName,"paye_employees")
-      /*printDF("avgDf",summedAvg)
-      printDF("payeDF",payeDF)*/
-      val res = payeDF
-        .join(newDF, Seq(idColumnName), "outer")
-        .dropDuplicates(idColumnName).select(idColumnName,"paye_employees")
+ private def getContainedTurnover(vatDF: DataFrame, idColumnName: String): DataFrame = vatDF.filter("unique == 1 and record_type == 1").groupBy(idColumnName).agg(sum("turnover") as "temp_contained_rep_vat_turnover")
 
-      //printDF("", res)
+ private def getStandardTurnover(vatDF: DataFrame, idColumnName: String): DataFrame = vatDF.filter("record_type == 0 or record_type == 2").groupBy(idColumnName).agg(sum("turnover") as "temp_standard_vat_turnover")
 
-      res
-    }
+ private def getEmployeeCount(payeDF: DataFrame, idColumnName: String): DataFrame = {
+   val numOfPartitions = payeDF.rdd.getNumPartitions
+   val joined = payeDF
+     .repartition(numOfPartitions)
+     .join(broadcast(payeDF).groupBy("PayeRefs").sum("june_jobs"),"PayeRefs")
+     .join(broadcast(payeDF).groupBy("PayeRefs").sum("sept_jobs"),"PayeRefs")
+     .join(broadcast(payeDF).groupBy("PayeRefs").sum("dec_jobs"),"PayeRefs")
+     .join(broadcast(payeDF).groupBy("PayeRefs").sum("mar_jobs"),"PayeRefs")
+     .coalesce(numOfPartitions)
+     .dropDuplicates("PayeRefs")
 
-    private def getGroupTurnover(startDF: DataFrame, empCount: DataFrame, idColumnName: String): DataFrame = {
-      val numOfPartitions = startDF.rdd.getNumPartitions
-      val vatDF = startDF.select(idColumnName, "unique", "record_type", "turnover", "vatref9")
+   val avgDf = joined.withColumn("id_paye_employees", avg(array(cols.map(s => joined.apply(s)):_*)))
+   val dropAvg = avgDf.dropDuplicates("PayeRefs")
+   val summedAvg = dropAvg.groupBy(idColumnName).agg(sum("id_paye_employees") as "paye_employees")
+   val newDF = summedAvg.toDF(idColumnName,"paye_employees")
+   /*printDF("avgDf",summedAvg)
+   printDF("payeDF",payeDF)*/
+   val res = payeDF
+     .join(newDF, Seq(idColumnName), "outer")
+     .dropDuplicates(idColumnName).select(idColumnName,"paye_employees")
 
-      val nonContained = vatDF.filter("unique > 1")
-        .withColumn("rep_vat", when(col("record_type").equalTo(1), 1).otherwise(0))
-        .withColumn("rep_vat_turnover",col("rep_vat")*col("turnover"))
-        .dropDuplicates(idColumnName,"vatref9")
+   //printDF("", res)
 
-      val repVatTurnover = nonContained
-          .repartition(numOfPartitions)
-          .join(nonContained.groupBy("vatref9").agg(sum("rep_vat_turnover") as "total_rep_vat"), Seq("vatref9"), "outer")
-          .coalesce(4)
+   res
+ }
 
-      val vatGroupDF = repVatTurnover
-          .join(repVatTurnover.groupBy("vatref9").agg(sum("rep_vat_turnover") as "vat_group_turnover"), Seq("vatref9"), "outer")
-          .coalesce(4)
+ private def getGroupTurnover(startDF: DataFrame, empCount: DataFrame, idColumnName: String): DataFrame = {
+   val numOfPartitions = startDF.rdd.getNumPartitions
+   val vatDF = startDF.select(idColumnName, "unique", "record_type", "turnover", "vatref9")
 
-      val groupDF = vatGroupDF.groupBy(idColumnName).agg(sum("vat_group_turnover") as "group_turnover").toDF(idColumnName, "group_turnover").coalesce(4)
+   val nonContained = vatDF.filter("unique > 1")
+     .withColumn("rep_vat", when(col("record_type").equalTo(1), 1).otherwise(0))
+     .withColumn("rep_vat_turnover",col("rep_vat")*col("turnover"))
+     .dropDuplicates(idColumnName,"vatref9")
 
-      vatGroupDF.join(groupDF, idColumnName).select(idColumnName, "total_rep_vat", "vatref9", "group_turnover")
-    }
+   val repVatTurnover = nonContained
+       .repartition(numOfPartitions)
+       .join(nonContained.groupBy("vatref9").agg(sum("rep_vat_turnover") as "total_rep_vat"), Seq("vatref9"), "outer")
+       .coalesce(4)
 
-    private def getApportionedTurnover(vatDF: DataFrame,idColumnName: String): DataFrame = {
-      val numOfPartitions = vatDF.rdd.getNumPartitions
+   val vatGroupDF = repVatTurnover
+       .join(repVatTurnover.groupBy("vatref9").agg(sum("rep_vat_turnover") as "vat_group_turnover"), Seq("vatref9"), "outer")
+       .coalesce(4)
 
-      val fullCount = vatDF
-        .groupBy("vatref9").agg(count("vatref9") as "full_count").toDF("countId","count")
-        .join(vatDF.filter(col("paye_employees").isNotNull).groupBy("vatref9").agg(count("vatref9") as "not_null").toDF("countId","not_null"), "countId")
-        .join(vatDF.groupBy("vatref9").agg(sum("paye_employees") as "vat_employees").toDF("countId","vat_employees"), "countId")
-        .coalesce(numOfPartitions)
-        .toDF("vatref9","full_count","not_null","vat_employees")
+   val groupDF = vatGroupDF.groupBy(idColumnName).agg(sum("vat_group_turnover") as "group_turnover").toDF(idColumnName, "group_turnover").coalesce(4)
 
-      val apportionDF = vatDF.join(fullCount, "vatref9")
-        .select(idColumnName,"full_count","not_null","paye_employees","vat_employees","total_rep_vat","group_turnover")
-        .withColumn("boolean", when(col("full_count").equalTo(col("not_null")),1).otherwise(lit(null)))
-        .withColumn("emp_prop", (col("paye_employees")/col("vat_employees"))*col("boolean"))
-        .withColumn("apportion", col("emp_prop")*col("total_rep_vat")).coalesce(numOfPartitions)
+   vatGroupDF.join(groupDF, idColumnName).select(idColumnName, "total_rep_vat", "vatref9", "group_turnover")
+ }
 
-      apportionDF
-        .select(idColumnName)
-        .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "sum_apportion"),Seq(idColumnName), "outer")
-        .withColumn("apportion_turnover",round(col("sum_apportion"),0).cast(IntegerType))
-        .coalesce(numOfPartitions)
-        .dropDuplicates(idColumnName).coalesce(numOfPartitions)
-  }
+ private def getApportionedTurnover(vatDF: DataFrame,idColumnName: String): DataFrame = {
+   val numOfPartitions = vatDF.rdd.getNumPartitions
+
+   val fullCount = vatDF
+     .groupBy("vatref9").agg(count("vatref9") as "full_count").toDF("countId","count")
+     .join(vatDF.filter(col("paye_employees").isNotNull).groupBy("vatref9").agg(count("vatref9") as "not_null").toDF("countId","not_null"), "countId")
+     .join(vatDF.groupBy("vatref9").agg(sum("paye_employees") as "vat_employees").toDF("countId","vat_employees"), "countId")
+     .coalesce(numOfPartitions)
+     .toDF("vatref9","full_count","not_null","vat_employees")
+
+   val apportionDF = vatDF.join(fullCount, "vatref9")
+     .select(idColumnName,"full_count","not_null","paye_employees","vat_employees","total_rep_vat","group_turnover")
+     .withColumn("boolean", when(col("full_count").equalTo(col("not_null")),1).otherwise(lit(null)))
+     .withColumn("emp_prop", (col("paye_employees")/col("vat_employees"))*col("boolean"))
+     .withColumn("apportion", col("emp_prop")*col("total_rep_vat")).coalesce(numOfPartitions)
+
+   apportionDF
+     .select(idColumnName)
+     .join(apportionDF.groupBy(idColumnName).agg(sum("apportion")as "sum_apportion"),Seq(idColumnName), "outer")
+     .withColumn("apportion_turnover",round(col("sum_apportion"),0).cast(IntegerType))
+     .coalesce(numOfPartitions)
+     .dropDuplicates(idColumnName).coalesce(numOfPartitions)
+}
 }
