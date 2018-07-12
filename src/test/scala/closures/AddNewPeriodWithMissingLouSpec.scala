@@ -96,7 +96,7 @@ override def afterAll() = {
         val expected = newPeriodLinks.sortBy(_.key)
         actual shouldBe expected
 
-        spark.close()
+        spark.stop()
 
         }
 }
