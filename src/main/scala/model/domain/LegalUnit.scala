@@ -3,12 +3,19 @@ package model.domain
 /**
   *
   */
-case class VatData()
+case class PayeData(payeRef:String,q1:Option[String],q2:Option[String],q3:Option[String],q4:Option[String])
+object PayeData{
+  def apply(payeRef:String) = new PayeData(payeRef, None,None,None,None)
+}
 
-case class PayeData()
-//{"id": 100000246017, "BusinessName": "BLACKWELLGROUP LTD", "UPRN": 904240, "PostCode": "CO6 2JX", "IndustryCode": "90481", "LegalStatus": "1", "TradingStatus": "B", "Turnover": "B", "EmploymentBands": "N", "VatRefs": [111222333], "PayeRefs": ["1152L", "1153L"], "CompanyNo": "00032262"}
+case class VatData(vatRef:String,turnover:Option[String],recordType:Option[String])
+object VatData{
+  def apply(vatRef:String) = new VatData(vatRef,None,None)
+}
+
 case class LegalUnit(
                        id:String,
+                       ern:String,
                        businessName:String,
                        postCode:String,
                        industryCode:String,
@@ -24,6 +31,7 @@ case class LegalUnit(
 
 case class LegalUnitWithCalculations(
                                 id:String,
+                                ern:String,
                                 businessName:String,
                                 postCode:String,
                                 industryCode:String,
@@ -32,8 +40,8 @@ case class LegalUnitWithCalculations(
                                 tradingStatus:Option[String],
                                 turnover:Option[String],
                                 employmentBands:Option[String],
-                                vatRefs: Seq[String],
-                                payeRefs: Seq[String],
+                                vatRefs: Seq[VatData],
+                                payeRefs: Seq[PayeData],
                                 companyNo:Option[String],
 
                                 payeEmployees:Option[String],
@@ -44,10 +52,11 @@ case class LegalUnitWithCalculations(
                                 standardTurnover:Option[String],
                                 groupTurnover:Option[String]
                               )
-object CalculatedLegalUnit{
+object LegalUnitWithCalculations{
 
   def apply(lu:LegalUnit) = new LegalUnitWithCalculations(
                                                     lu.id,
+                                                    lu.ern,
                                                     lu.businessName,
                                                     lu.postCode,
                                                     lu.industryCode,
@@ -56,10 +65,10 @@ object CalculatedLegalUnit{
                                                     lu.tradingStatus,
                                                     lu.turnover,
                                                     lu.employmentBands,
-                                                    lu.vatRefs,
-                                                    lu.payeRefs,
+                                                    lu.vatRefs.map(VatData(_)),
+                                                    lu.payeRefs.map(PayeData(_)),
                                                     lu.companyNo,
-                               None,None,None,None,None,None,None)
+                                                     None,None,None,None,None,None,None)
 
   def apply(    lu:LegalUnit,
                 payeEmployees:Option[String],
@@ -71,6 +80,7 @@ object CalculatedLegalUnit{
                 groupTurnover:Option[String]
            ) = new LegalUnitWithCalculations(
                                               lu.id,
+                                              lu.ern,
                                               lu.businessName,
                                               lu.postCode,
                                               lu.industryCode,
@@ -79,8 +89,8 @@ object CalculatedLegalUnit{
                                               lu.tradingStatus,
                                               lu.turnover,
                                               lu.employmentBands,
-                                              lu.vatRefs,
-                                              lu.payeRefs,
+                                              lu.vatRefs.map(VatData(_)),
+                                              lu.payeRefs.map(PayeData(_)),
                                               lu.companyNo,
                                               payeEmployees,
                                               payeJobs,
