@@ -9,44 +9,22 @@ import spark.RddLogging
 import spark.extensions.sql._
 
 
-object AdminDataCalculator extends RddLogging{
+trait AdminDataCalculator extends Serializable with RddLogging{
 
-  val payeSchema = new StructType()
-    .add(StructField("payeref", StringType,false))
-    .add(StructField("mar_jobs", LongType,true))
-    .add(StructField("june_jobs", LongType,true))
-    .add(StructField("sept_jobs", LongType,true))
-    .add(StructField("dec_jobs", LongType,true))
-    .add(StructField("total", IntegerType,true))
-    .add(StructField("count", IntegerType,true))
-    .add(StructField("avg", IntegerType,true))
 
-  def caclulatePayee(payeFilePath:String, vatFilePath:String, jsonFilePath:String)(implicit spark: SparkSession ) = {
+  def calculatePaye(dataDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ):DataFrame = {
 
-    val payeDf = spark.read.option("header", "true").csv(payeFilePath)
-    val vatDf = spark.read.option("header", "true").csv(vatFilePath)
-
-    val dataDF: DataFrame = spark.read.json(jsonFilePath).castAllToString
-    dataDF.cache()
-
-    val vatRefs: DataFrame = dataDF.withColumn("vatref", explode_outer(dataDF.apply("VatRefs"))).select("id","vatref")
     val payeeRefs: DataFrame = dataDF.withColumn("payeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeref")
+     payeeRefs.printSchema()
+    val calculatedRdd: RDD[Row] = payeDF.rdd.map(calculatePaye)
 
-    //printDFs(Seq(payeeRefs,vatRefs))
+    spark.createDataFrame(calculatedRdd, payeCalculationSchema)
 
 
-
-    val calcuatedRdd: RDD[Row] = payeDf.rdd.map(getAvgEmpl)
-    printRddOfRows("calcuatedRdd",calcuatedRdd)
-    val payesCalculated: DataFrame = spark.createDataFrame(calcuatedRdd, payeSchema)
-    payesCalculated.printSchema()
-    payesCalculated.show()
-    dataDF.unpersist
-    payesCalculated
   }
 
 
-  def getAvgEmpl(row:Row)(implicit spark: SparkSession ):Row = {
+  /*def getAvgEmpl(row:Row)(implicit spark: SparkSession ):Row = {
 
     val marchEmplCount: Option[Long] = row.getString("mar_jobs").map(_.toLong)
     val juneEmplCount: Option[Long] = row.getString("june_jobs").map(_.toLong)
@@ -76,33 +54,150 @@ object AdminDataCalculator extends RddLogging{
       totalEmps.map(_.toInt).getOrElse(null),
       if (count==0) null else count,
       avg), payeSchema)
+  }*/
+
+  def calculatePaye(payeRow:Row)(implicit spark:SparkSession): GenericRowWithSchema = {
+
+    val payeRef = payeRow.getString("payeref").get
+
+    val q1 = payeRow.getString("mar_jobs").map(_.toInt)
+    val q2 = payeRow.getString("june_jobs").map(_.toInt)
+    val q3 = payeRow.getString("sept_jobs").map(_.toInt)
+    val q4 = payeRow.getString("dec_jobs").map(_.toInt)
+
+    val all_qs = Seq(q1,q2,q3,q4)
+
+    val (count,sum): (Int, Int) = all_qs.foldLeft((0,0))((count_and_sum, q) => {
+      val (count,sum) = count_and_sum
+      q match{
+        case Some(emplCount) => {
+          if(count==null)
+          (count + 1,sum + emplCount)
+        }
+        case _ => count_and_sum
+      }
+    })
+
+    val avg = if(count.isValidInt && count!=0) (sum / count) else null
+
+    new GenericRowWithSchema(payeRef+:all_qs.toArray.map(_.getOrElse(null)):+count:+sum:+avg
+    , payeCalculationSchema)
   }
 
-  def doWithSqlPayeFile(payeFilePath:String, vatFilePath:String, jsonFilePath:String)(implicit spark: SparkSession ) = {
+  def calculatePayeWithSQL(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+    import spark.sqlContext.implicits._
+    val res = unitsDF.map(row => {
+      row.getString("id").get
+    })
+    val collectedRes = res.collect()
+    val payes = unitsDF.select("id","VatRefs").withColumn("vatref", explode_outer(unitsDF.apply("VatRefs")))
 
-    val payeDf = spark.read.option("header", "true").csv(payeFilePath)
-    val vatDf = spark.read.option("header", "true").csv(vatFilePath)
+    val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
 
-    val dataDF: DataFrame = spark.read.json(jsonFilePath).castAllToString
-    dataDF.cache()
-    payeDf.createOrReplaceTempView("PAYEE")
-    vatDf.createOrReplaceTempView("VAT")
+    unitsDF.createOrReplaceTempView("UNITS")
 
-    val vatRefs: DataFrame = dataDF.withColumn("vatref", explode_outer(dataDF.apply("VatRefs"))).select("id","vatref")
-    val payeeRefs: DataFrame = dataDF.withColumn("payeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeref")
+    val payeRefs = flatUnitDf.select("id","payeref")
 
-    payeeRefs.createOrReplaceTempView("PAYEE_REFS")
-    vatRefs.createOrReplaceTempView("VAT_REFS")
-    //, (PAYEE.mar_jobs + PAYEE.june_jobs + PAYEE.sept_jobs + PAYEE.dec_jobs) / ( (SELECT CASE WHEN PAYEE.mar_jobs IS NULL THEN 0 ELSE 1 END) + (SELECT CASE WHEN PAYEE.june_jobs IS NULL THEN 0 ELSE 1 END) + (SELECT CASE WHEN PAYEE.sept_jobs IS NULL THEN 0 ELSE 1 END) + (SELECT CASE WHEN PAYEE.dec_jobs IS NULL THEN 0 ELSE 1 END) ) AS AVRG
-    /*      val res = spark.sql(
-            """
-              SELECT PAYEE_REFS.id, PAYEE_REFS.payeref, PAYEE.mar_jobs, PAYEE.june_jobs, PAYEE.sept_jobs, PAYEE.dec_jobs
-              FROM PAYEE_REFS,PAYEE
-              WHERE PAYEE_REFS.payeref = PAYEE.payeref
-            """.stripMargin)
+    payeRefs.createOrReplaceTempView("PAYE_UNITS_LINK")
+    payeDF.createOrReplaceTempView("PAYE_DATA")
 
-          res.printSchema()
-          res.show()*/
-    import spark.implicits._
+    spark.sql(payeSql)
+/*  linkedPayes.show()
+    linkedPayes.printSchema()*/
   }
+
+  val payeSql =
+    """
+      SELECT PAYE_UNITS_LINK.id, PAYE_UNITS_LINK.payeref, PAYE_DATA.mar_jobs, PAYE_DATA.june_jobs, PAYE_DATA.sept_jobs, PAYE_DATA.dec_jobs,
+                (CASE
+                  WHEN PAYE_DATA.mar_jobs IS NULL
+                  THEN 0
+                  ELSE 1
+                END +
+                CASE
+                  WHEN PAYE_DATA.june_jobs IS NULL
+                  THEN 0
+                  ELSE 1
+                END +
+                CASE
+                   WHEN PAYE_DATA.sept_jobs IS NULL
+                   THEN 0
+                   ELSE 1
+                END +
+                CASE
+                    WHEN PAYE_DATA.dec_jobs IS NULL
+                    THEN 0
+                    ELSE 1
+                END) as quarters_count,
+                (CASE
+                   WHEN PAYE_DATA.mar_jobs IS NULL
+                   THEN 0
+                   ELSE PAYE_DATA.mar_jobs
+                 END +
+                 CASE
+                   WHEN PAYE_DATA.june_jobs IS NULL
+                   THEN 0
+                   ELSE PAYE_DATA.june_jobs
+                 END +
+                 CASE
+                    WHEN PAYE_DATA.sept_jobs IS NULL
+                    THEN 0
+                    ELSE PAYE_DATA.sept_jobs
+                 END +
+                 CASE
+                     WHEN PAYE_DATA.dec_jobs IS NULL
+                     THEN 0
+                     ELSE PAYE_DATA.dec_jobs
+                 END) as total_emp_count,
+                CAST(
+               (
+                (CASE
+                   WHEN PAYE_DATA.mar_jobs IS NULL
+                   THEN 0
+                   ELSE PAYE_DATA.mar_jobs
+                 END +
+                 CASE
+                   WHEN PAYE_DATA.june_jobs IS NULL
+                   THEN 0
+                   ELSE PAYE_DATA.june_jobs
+                 END +
+                 CASE
+                    WHEN PAYE_DATA.sept_jobs IS NULL
+                    THEN 0
+                    ELSE PAYE_DATA.sept_jobs
+                 END +
+                 CASE
+                     WHEN PAYE_DATA.dec_jobs IS NULL
+                     THEN 0
+                     ELSE PAYE_DATA.dec_jobs
+                 END)
+
+                ) / (
+                (CASE
+                    WHEN PAYE_DATA.mar_jobs IS NULL
+                    THEN 0
+                    ELSE 1
+                 END +
+                 CASE
+                    WHEN PAYE_DATA.june_jobs IS NULL
+                    THEN 0
+                    ELSE 1
+                 END +
+                 CASE
+                    WHEN PAYE_DATA.sept_jobs IS NULL
+                    THEN 0
+                    ELSE 1
+                 END +
+                 CASE
+                   WHEN PAYE_DATA.dec_jobs IS NULL
+                   THEN 0
+                   ELSE 1
+                 END)
+                ) AS int) as quoter_avg
+
+                FROM PAYE_UNITS_LINK,PAYE_DATA
+                WHERE PAYE_UNITS_LINK.payeref = PAYE_DATA.payeref
+        """.stripMargin
 }
+
+object AdminDataCalculator extends AdminDataCalculator
