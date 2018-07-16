@@ -96,6 +96,17 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
         res.show()
         res.printSchema()
         spark.close()
+      /*
+      * +--------------+---------+----------+
+        |paye_employees|paye_jobs|       ern|
+        +--------------+---------+----------+
+        |             4|      3.0|2200000002|
+        |            19|     20.0|1100000003|
+        |          null|     null|9900000009|
+        |             2|      4.0|2000000011|
+        |             4|      8.0|1100000004|
+        +--------------+---------+----------+
+      * */
     }
     }
 

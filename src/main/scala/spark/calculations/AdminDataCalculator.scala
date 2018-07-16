@@ -76,7 +76,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     flatUnitDf.createOrReplaceTempView(luTableName)
     payeDF.createOrReplaceTempView(payeTableName)
 
-    spark.sql(payeSql(luTableName,payeTableName))
+    spark.sql(generateCalculateAvgSQL(luTableName,payeTableName))
 
 /*  linkedPayes.show()
     linkedPayes.printSchema()*/
@@ -89,58 +89,18 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     flatUnitDf.createOrReplaceTempView(luTableName)
     payeDF.createOrReplaceTempView(payeDataTableName)
 
-    val flatPayeDataSql = payeSql(luTableName,payeDataTableName)
+    val flatPayeDataSql = generateCalculateAvgSQL(luTableName,payeDataTableName)
     val sql = s"""
-              SELECT SUM(FLAT.quoter_avg) AS paye_employees, SUM(FLAT.$quarter) AS paye_jobs, FLAT.ern
-              FROM ($flatPayeDataSql) as FLAT
-              GROUP BY FLAT.ern
+              SELECT SUM(AVG_CALCULATED.quoter_avg) AS paye_employees, SUM(AVG_CALCULATED.$quarter) AS paye_jobs, AVG_CALCULATED.ern
+              FROM ($flatPayeDataSql) as AVG_CALCULATED
+              GROUP BY AVG_CALCULATED.ern
             """.stripMargin
     spark.sql(sql)
   }
 
-  def payeSql(luTablename:String, payeDataTableName:String) =
+  def generateCalculateAvgSQL(luTablename:String, payeDataTableName:String) =
     s"""
       SELECT $luTablename.*, $payeDataTableName.mar_jobs, $payeDataTableName.june_jobs, $payeDataTableName.sept_jobs, $payeDataTableName.dec_jobs,
-                (CASE
-                  WHEN $payeDataTableName.mar_jobs IS NULL
-                  THEN 0
-                  ELSE 1
-                END +
-                CASE
-                  WHEN $payeDataTableName.june_jobs IS NULL
-                  THEN 0
-                  ELSE 1
-                END +
-                CASE
-                   WHEN $payeDataTableName.sept_jobs IS NULL
-                   THEN 0
-                   ELSE 1
-                END +
-                CASE
-                    WHEN $payeDataTableName.dec_jobs IS NULL
-                    THEN 0
-                    ELSE 1
-                END) as quarters_count,
-                (CASE
-                   WHEN $payeDataTableName.mar_jobs IS NULL
-                   THEN 0
-                   ELSE $payeDataTableName.mar_jobs
-                 END +
-                 CASE
-                   WHEN $payeDataTableName.june_jobs IS NULL
-                   THEN 0
-                   ELSE $payeDataTableName.june_jobs
-                 END +
-                 CASE
-                    WHEN $payeDataTableName.sept_jobs IS NULL
-                    THEN 0
-                    ELSE $payeDataTableName.sept_jobs
-                 END +
-                 CASE
-                     WHEN $payeDataTableName.dec_jobs IS NULL
-                     THEN 0
-                     ELSE $payeDataTableName.dec_jobs
-                 END) as total_emp_count,
                 CAST(
                (
                 (CASE
