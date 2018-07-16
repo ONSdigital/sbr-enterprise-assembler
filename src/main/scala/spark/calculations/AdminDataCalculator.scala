@@ -1,10 +1,9 @@
 package spark.calculations
 
-import org.apache.spark.rdd.RDD
+import model.domain.LegalUnit
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.explode_outer
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.types._
 import spark.RddLogging
 import spark.extensions.sql._
 
@@ -12,54 +11,34 @@ import spark.extensions.sql._
 trait AdminDataCalculator extends Serializable with RddLogging{
 
 
-  def calculatePaye(dataDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ):DataFrame = {
+/*  def calculatePaye(dataDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ):DataFrame = {
+
+    import spark.implicits._
 
     val payeeRefs: DataFrame = dataDF.withColumn("payeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeref")
-     payeeRefs.printSchema()
-    val calculatedRdd: RDD[Row] = payeDF.rdd.map(calculatePayeRef)
+    payeeRefs.printSchema()
 
-    spark.createDataFrame(calculatedRdd, payeCalculationSchema)
+    payeDF.map(calculatePayeRef).toDF()
+/*    val calculatedRdd: RDD[Row] = payeDF.rdd.map(calculatePayeRef)
+
+    spark.createDataFrame(calculatedRdd, payeCalculationSchema)*/
 
 
-  }
-
-
-  /*def getAvgEmpl(row:Row)(implicit spark: SparkSession ):Row = {
-
-    val marchEmplCount: Option[Long] = row.getString("mar_jobs").map(_.toLong)
-    val juneEmplCount: Option[Long] = row.getString("june_jobs").map(_.toLong)
-    val septEmplCount: Option[Long] = row.getString("sept_jobs").map(_.toLong)
-    val decEmplCount: Option[Long] = row.getString("dec_jobs").map(_.toLong)
-
-    val count = Seq(marchEmplCount,juneEmplCount,septEmplCount,decEmplCount).filter(_.isDefined).length
-    val totalEmps = if (count == 0) None
-    else{
-      val sum = (marchEmplCount.getOrElse(0L) + juneEmplCount.getOrElse(0L) + septEmplCount.getOrElse(0L) + decEmplCount.getOrElse(0L))
-      Some(sum)
-    }
-    val avg =  {
-
-      totalEmps match{
-        case Some(total) => (total / count).toInt
-        case _ => null
-      }
-    }
-
-    new GenericRowWithSchema(Array(
-      row.getString("payeref").get,
-      marchEmplCount.getOrElse(null),
-      juneEmplCount.getOrElse(null),
-      septEmplCount.getOrElse(null),
-      decEmplCount.getOrElse(null),
-      totalEmps.map(_.toInt).getOrElse(null),
-      if (count==0) null else count,
-      avg), payeSchema)
   }*/
+/*
+  def toCalculatedPayes(lus:DataFrame, payeDF:DataFrame)(implicit spark: SparkSession ) = {
+    val payeRefs: DataFrame = lus.withColumn("payeref", explode_outer(lus.apply("PayeRefs"))).select("id","ern", "payeref")
+    payeRefs
+    val calculatedPayeRefs = payeDF.map(calculatePayeRef)
+    calculatedPayeRefs
+
+  }*/
+
  /**
    * calculates paye data (non-null data quarters count, toital employee count, average) for 1 paye ref
    * */
   def calculatePayeRef(payeRow:Row)(implicit spark:SparkSession): GenericRowWithSchema = {
-
+    import spark.implicits._
     val payeRef = payeRow.getString("payeref").get
 
     val q1 = payeRow.getString("mar_jobs").map(_.toInt)
@@ -88,117 +67,128 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
   def calculatePayeWithSQL(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
     import spark.sqlContext.implicits._
-    val res = unitsDF.map(row => {
-      row.getString("id").get
-    })
-    val collectedRes = res.collect()
-    val payes = unitsDF.select("id","VatRefs").withColumn("vatref", explode_outer(unitsDF.apply("VatRefs")))
-
+    printDF("unitsDF",unitsDF)
     val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
 
-    unitsDF.createOrReplaceTempView("UNITS")
+    val luTableName = "LEGAL_UNITS"
+    val payeTableName = "PAYE_DATA"
 
-    val payeRefs = flatUnitDf.select("id","payeref")
+    flatUnitDf.createOrReplaceTempView(luTableName)
+    payeDF.createOrReplaceTempView(payeTableName)
 
-    payeRefs.createOrReplaceTempView("PAYE_UNITS_LINK")
-    payeDF.createOrReplaceTempView("PAYE_DATA")
+    spark.sql(payeSql(luTableName,payeTableName))
 
-    spark.sql(payeSql)
 /*  linkedPayes.show()
     linkedPayes.printSchema()*/
   }
 
-  val payeSql =
-    """
-      SELECT PAYE_UNITS_LINK.id, PAYE_UNITS_LINK.payeref, PAYE_DATA.mar_jobs, PAYE_DATA.june_jobs, PAYE_DATA.sept_jobs, PAYE_DATA.dec_jobs,
+  def getGroupedByPayeRefs(unitsDF:DataFrame, payeDF:DataFrame, quarter:String, luTableName:String = "LEGAL_UNITS", payeDataTableName:String = "PAYE_DATA")(implicit spark: SparkSession ) = {
+
+    val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
+
+    flatUnitDf.createOrReplaceTempView(luTableName)
+    payeDF.createOrReplaceTempView(payeDataTableName)
+
+    val flatPayeDataSql = payeSql(luTableName,payeDataTableName)
+    val sql = s"""
+              SELECT SUM(FLAT.quoter_avg) AS paye_employees, SUM(FLAT.$quarter) AS paye_jobs, FLAT.ern
+              FROM ($flatPayeDataSql) as FLAT
+              GROUP BY FLAT.ern
+            """.stripMargin
+    spark.sql(sql)
+  }
+
+  def payeSql(luTablename:String, payeDataTableName:String) =
+    s"""
+      SELECT $luTablename.*, $payeDataTableName.mar_jobs, $payeDataTableName.june_jobs, $payeDataTableName.sept_jobs, $payeDataTableName.dec_jobs,
                 (CASE
-                  WHEN PAYE_DATA.mar_jobs IS NULL
+                  WHEN $payeDataTableName.mar_jobs IS NULL
                   THEN 0
                   ELSE 1
                 END +
                 CASE
-                  WHEN PAYE_DATA.june_jobs IS NULL
+                  WHEN $payeDataTableName.june_jobs IS NULL
                   THEN 0
                   ELSE 1
                 END +
                 CASE
-                   WHEN PAYE_DATA.sept_jobs IS NULL
+                   WHEN $payeDataTableName.sept_jobs IS NULL
                    THEN 0
                    ELSE 1
                 END +
                 CASE
-                    WHEN PAYE_DATA.dec_jobs IS NULL
+                    WHEN $payeDataTableName.dec_jobs IS NULL
                     THEN 0
                     ELSE 1
                 END) as quarters_count,
                 (CASE
-                   WHEN PAYE_DATA.mar_jobs IS NULL
+                   WHEN $payeDataTableName.mar_jobs IS NULL
                    THEN 0
-                   ELSE PAYE_DATA.mar_jobs
+                   ELSE $payeDataTableName.mar_jobs
                  END +
                  CASE
-                   WHEN PAYE_DATA.june_jobs IS NULL
+                   WHEN $payeDataTableName.june_jobs IS NULL
                    THEN 0
-                   ELSE PAYE_DATA.june_jobs
+                   ELSE $payeDataTableName.june_jobs
                  END +
                  CASE
-                    WHEN PAYE_DATA.sept_jobs IS NULL
+                    WHEN $payeDataTableName.sept_jobs IS NULL
                     THEN 0
-                    ELSE PAYE_DATA.sept_jobs
+                    ELSE $payeDataTableName.sept_jobs
                  END +
                  CASE
-                     WHEN PAYE_DATA.dec_jobs IS NULL
+                     WHEN $payeDataTableName.dec_jobs IS NULL
                      THEN 0
-                     ELSE PAYE_DATA.dec_jobs
+                     ELSE $payeDataTableName.dec_jobs
                  END) as total_emp_count,
                 CAST(
                (
                 (CASE
-                   WHEN PAYE_DATA.mar_jobs IS NULL
+                   WHEN $payeDataTableName.mar_jobs IS NULL
                    THEN 0
-                   ELSE PAYE_DATA.mar_jobs
+                   ELSE $payeDataTableName.mar_jobs
                  END +
                  CASE
-                   WHEN PAYE_DATA.june_jobs IS NULL
+                   WHEN $payeDataTableName.june_jobs IS NULL
                    THEN 0
-                   ELSE PAYE_DATA.june_jobs
+                   ELSE $payeDataTableName.june_jobs
                  END +
                  CASE
-                    WHEN PAYE_DATA.sept_jobs IS NULL
+                    WHEN $payeDataTableName.sept_jobs IS NULL
                     THEN 0
-                    ELSE PAYE_DATA.sept_jobs
+                    ELSE $payeDataTableName.sept_jobs
                  END +
                  CASE
-                     WHEN PAYE_DATA.dec_jobs IS NULL
+                     WHEN $payeDataTableName.dec_jobs IS NULL
                      THEN 0
-                     ELSE PAYE_DATA.dec_jobs
+                     ELSE $payeDataTableName.dec_jobs
                  END)
 
                 ) / (
                 (CASE
-                    WHEN PAYE_DATA.mar_jobs IS NULL
+                    WHEN $payeDataTableName.mar_jobs IS NULL
                     THEN 0
                     ELSE 1
                  END +
                  CASE
-                    WHEN PAYE_DATA.june_jobs IS NULL
+                    WHEN $payeDataTableName.june_jobs IS NULL
                     THEN 0
                     ELSE 1
                  END +
                  CASE
-                    WHEN PAYE_DATA.sept_jobs IS NULL
+                    WHEN $payeDataTableName.sept_jobs IS NULL
                     THEN 0
                     ELSE 1
                  END +
                  CASE
-                   WHEN PAYE_DATA.dec_jobs IS NULL
+                   WHEN $payeDataTableName.dec_jobs IS NULL
                    THEN 0
                    ELSE 1
                  END)
                 ) AS int) as quoter_avg
 
-                FROM PAYE_UNITS_LINK,PAYE_DATA
-                WHERE PAYE_UNITS_LINK.payeref = PAYE_DATA.payeref
+                FROM $luTablename
+                LEFT JOIN $payeDataTableName ON $luTablename.payeref=$payeDataTableName.payeref
         """.stripMargin
 }
 

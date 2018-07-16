@@ -1,5 +1,6 @@
 package calculations
 
+import dao.parquet.ParquetDao
 import global.AppParams
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -9,9 +10,9 @@ import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import utils.{Paths, TestDataUtils}
 
-class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
-   val testDir = "calculations"
+   lazy val testDir = "calculations"
 
    val payeSchema = new StructType()
                         .add(StructField("payeref", StringType,false))
@@ -50,20 +51,24 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
   }*/
-/*
-  "assembler" should {
-    "create hfiles populated with expected enterprise data" in {
+
+/*  "AdminDataCalculator" should {
+    "calculate payeRef data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val payesCalculated: DataFrame = AdminDataCalculator.caclulatePayee(payeFilePath,vatFilePath,jsonFilePath)
+      val legalUnitDF = spark.read.parquet(appConfs.PATH_TO_PARQUET)
+      val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
+      val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
+      val payesCalculated: DataFrame = AdminDataCalculator.calculatePaye(legalUnitDF,payeDF, vatDF)
       payesCalculated.printSchema()
       payesCalculated.show()
       spark.close()
     }
-    }*/
+  }*/
 
 
-  "assembler" should {
+
+/*  "assembler" should {
     "create hfiles populated with expected enterprise data using DataFrame api" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -75,24 +80,24 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
       calculated.printSchema()
       spark.close()
     }
-  }
+  }*/
 
-/*
   "assembler" should {
-    "create hfiles populated with expected enterprise data using SQL api" in {
+    import spark.extensions.sql._
+    "calculate paye average, non-null quarter data count and eployee total using SQL api" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        val unitsDF = spark.read.parquet(appConfs.PATH_TO_PARQUET).castAllToString
+        val unitsDF = spark.read.json(jsonFilePath).castAllToString
 
         val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
         val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
         val calculated: DataFrame = new AdminDataCalculator{}.calculatePayeWithSQL(unitsDF,payeDF,vatDF)
-        calculated.show()
-        calculated.printSchema()
+        val res =  new AdminDataCalculator{}.getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
+        res.show()
+        res.printSchema()
         spark.close()
     }
     }
-*/
 
 
 
