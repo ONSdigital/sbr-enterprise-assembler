@@ -96,7 +96,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
         res.show()
         res.printSchema()
         spark.close()
-      /*
+      /*  Expected:
       * +--------------+---------+----------+
         |paye_employees|paye_jobs|       ern|
         +--------------+---------+----------+
