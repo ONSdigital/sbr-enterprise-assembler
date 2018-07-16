@@ -4,7 +4,7 @@ PAYE:
 
 Variables calculated: 
 
-1. paye_employees: a sum of averages of all Legl Units of the Enterprise
+1. paye_employees: a sum of paye employees averages of all Legal Units of the Enterprise
 2. paye_jobs: a sum of last quarters across all Legal Units of the Enterprice
 
 paye_job calcuation:
@@ -13,6 +13,7 @@ paye_job calcuation:
 
 
 VAT:
+
 Record types:
 0 - Standard
 1 - Representative
@@ -28,7 +29,13 @@ Record types:
      1.3 Ensure relevance of contained_group_turnover by confirming all given vat group lays within one entrprise. If this is the case, continue
      1.4 Return the value of representative turnover
 
- 2. appotioned_turnover: 
-     1.1 Calculate contained_group_turnover
-     1.2 Calculate weights of turnovers across multiple Enterprises belonging to this vat group
+ 2. apportioned_turnover:
+     1.1 Ensure given group belongs involves multiple enterprises
+     1.2 Extract representative turnover of the given group
+     1.3 Calculate weights of turnovers across multiple Enterprises belonging to this vat group:
+         1.2.1 Calculate total group payee_employee by summing paye_employees of all Enterprises of the group
+         1.2.2 Calculate apportioned turnover for each ENT-n of the group: (group_rep_turnover / total group payee_employee) * ENT-n.paye_employees
+
+ 3. ent_turnover:
+    contained_turnover + apportioned_turnover + standard_turnover
 
