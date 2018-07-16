@@ -1,11 +1,9 @@
-package test
+package utils
 
 /**
   *
   */
 trait Paths {this: { val testDir: String } =>
-
-  def testDir:String
 
   val jsonFilePath = s"src/test/resources/data/$testDir/newPeriod.json"
   val linkHfilePath = s"src/test/resources/data/$testDir/links"

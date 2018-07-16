@@ -1,10 +1,7 @@
 package closures
 
-import closures.mocks.MockClosures
-import dao.hbase.{HBaseDao, MockCreateNewPeriodHBaseDao}
+import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
 import dao.parquet.ParquetDao
-import test.data.existing.ExistingData
-import test.data.expected.ExpectedDataForAddNewPeriodScenario
 import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LocalUnit}
 import model.hfile
@@ -15,8 +12,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import spark.extensions.rdd.HBaseDataReader._
-import test.Paths
-import test.utils.TestDataUtils
+import utils.data.existing.ExistingData
+import utils.data.expected.ExpectedDataForAddNewPeriodScenario
+import utils.{Paths, TestDataUtils}
 
 import scala.reflect.io.File
 /**
@@ -25,7 +23,6 @@ import scala.reflect.io.File
 
 
 class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
-  import global.Configs._
 
   lazy val testDir = "newperiod"
 

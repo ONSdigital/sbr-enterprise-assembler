@@ -7,9 +7,8 @@ import model.domain.{Enterprise, HFileRow, LocalUnit}
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
-import test.Paths
-import test.data.expected.ExpectedDataForCreatePopulationScenario
-import test.utils.TestDataUtils
+import utils.{Paths, TestDataUtils}
+import utils.data.expected.ExpectedDataForCreatePopulationScenario
 
 import scala.reflect.io.File
 /**

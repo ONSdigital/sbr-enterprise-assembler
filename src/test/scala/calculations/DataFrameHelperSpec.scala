@@ -1,24 +1,17 @@
-package spark.calculations
+package calculations
 
-
-import dao.parquet.ParquetDao
 import global.AppParams
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.functions.explode_outer
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import spark.extensions.sql._
-import test.Paths
-import test.data.existing.ExistingData
-import test.data.expected.ExpectedDataForAddNewPeriodScenario
-import test.utils.TestDataUtils
-
-import scala.reflect.io.File
+import spark.calculations.AdminDataCalculator
+import utils.data.existing.ExistingData
+import utils.data.expected.ExpectedDataForAddNewPeriodScenario
+import utils.{Paths, TestDataUtils}
 
 class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
-  lazy val testDir = "calculations"
+   val testDir = "calculations"
 
    val payeSchema = new StructType()
                         .add(StructField("payeref", StringType,false))
@@ -77,7 +70,6 @@ class DataFrameHelperSpec extends Paths with WordSpecLike with Matchers with Bef
       val unitsDF = spark.read.parquet(appConfs.PATH_TO_PARQUET)
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-      import spark.sqlContext.implicits._
       val calculated: DataFrame = AdminDataCalculator.calculatePaye(unitsDF,payeDF, vatDF)
       calculated.show()
       calculated.printSchema()

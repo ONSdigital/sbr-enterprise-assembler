@@ -1,4 +1,4 @@
-package test.utils
+package utils
 
 import model.domain.Enterprise
 

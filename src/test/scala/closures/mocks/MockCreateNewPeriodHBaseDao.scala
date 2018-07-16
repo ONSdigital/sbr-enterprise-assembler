@@ -1,5 +1,6 @@
-package dao.hbase
+package closures.mocks
 
+import dao.hbase.HBaseDao
 import global.AppParams
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration

@@ -16,7 +16,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
     val payeeRefs: DataFrame = dataDF.withColumn("payeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeref")
      payeeRefs.printSchema()
-    val calculatedRdd: RDD[Row] = payeDF.rdd.map(calculatePaye)
+    val calculatedRdd: RDD[Row] = payeDF.rdd.map(calculatePayeRef)
 
     spark.createDataFrame(calculatedRdd, payeCalculationSchema)
 
@@ -55,8 +55,10 @@ trait AdminDataCalculator extends Serializable with RddLogging{
       if (count==0) null else count,
       avg), payeSchema)
   }*/
-
-  def calculatePaye(payeRow:Row)(implicit spark:SparkSession): GenericRowWithSchema = {
+ /**
+   * calculates paye data (non-null data quarters count, toital employee count, average) for 1 paye ref
+   * */
+  def calculatePayeRef(payeRow:Row)(implicit spark:SparkSession): GenericRowWithSchema = {
 
     val payeRef = payeRow.getString("payeref").get
 
@@ -68,11 +70,11 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val all_qs = Seq(q1,q2,q3,q4)
 
     val (count,sum): (Int, Int) = all_qs.foldLeft((0,0))((count_and_sum, q) => {
-      val (count,sum) = count_and_sum
+      val (quarters_count,emplTotal) = count_and_sum
       q match{
-        case Some(emplCount) => {
-          if(count==null)
-          (count + 1,sum + emplCount)
+        case Some(currentQuarterEmplCount) => {
+          if(quarters_count==null) (quarters_count + 1,emplTotal + currentQuarterEmplCount)
+          else count_and_sum
         }
         case _ => count_and_sum
       }

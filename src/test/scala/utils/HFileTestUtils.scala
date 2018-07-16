@@ -1,11 +1,9 @@
-package test.utils
+package utils
 
 import global.AppParams
 import model.domain._
 import model.hfile.HFileCell
 import org.apache.spark.rdd.RDD
-
-import scala.util.Try
 /**
   *
   */
