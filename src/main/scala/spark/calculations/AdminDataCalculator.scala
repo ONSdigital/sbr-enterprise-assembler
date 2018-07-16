@@ -2,7 +2,7 @@ package spark.calculations
 
 import model.domain.LegalUnit
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.functions.explode_outer
+import org.apache.spark.sql.functions.{col, explode_outer}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql._
@@ -11,28 +11,10 @@ import spark.extensions.sql._
 trait AdminDataCalculator extends Serializable with RddLogging{
 
 
-/*  def calculatePaye(dataDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ):DataFrame = {
-
-    import spark.implicits._
-
-    val payeeRefs: DataFrame = dataDF.withColumn("payeref", explode_outer(dataDF.apply("PayeRefs"))).select("id","payeref")
-    payeeRefs.printSchema()
-
-    payeDF.map(calculatePayeRef).toDF()
-/*    val calculatedRdd: RDD[Row] = payeDF.rdd.map(calculatePayeRef)
-
-    spark.createDataFrame(calculatedRdd, payeCalculationSchema)*/
-
-
-  }*/
-/*
-  def toCalculatedPayes(lus:DataFrame, payeDF:DataFrame)(implicit spark: SparkSession ) = {
-    val payeRefs: DataFrame = lus.withColumn("payeref", explode_outer(lus.apply("PayeRefs"))).select("id","ern", "payeref")
-    payeRefs
-    val calculatedPayeRefs = payeDF.map(calculatePayeRef)
-    calculatedPayeRefs
-
-  }*/
+  def calculateGroupTurnover(unitsDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+    val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("group",col("vatref").substr(0,6))
+    flatUnitDf
+  }
 
  /**
    * calculates paye data (non-null data quarters count, toital employee count, average) for 1 paye ref
@@ -65,9 +47,9 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     , payeCalculationSchema)
   }
 
-  def calculatePayeWithSQL(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+  def calculatePaye(unitsDF:DataFrame, payeDF:DataFrame)(implicit spark: SparkSession ) = {
     import spark.sqlContext.implicits._
-    printDF("unitsDF",unitsDF)
+    //printDF("unitsDF",unitsDF)
     val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
 
     val luTableName = "LEGAL_UNITS"
@@ -98,7 +80,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     spark.sql(sql)
   }
 
-  def generateCalculateAvgSQL(luTablename:String, payeDataTableName:String) =
+  def generateCalculateAvgSQL(luTablename:String = "LEGAL_UNITS", payeDataTableName:String = "PAYE_DATA") =
     s"""
       SELECT $luTablename.*, $payeDataTableName.mar_jobs, $payeDataTableName.june_jobs, $payeDataTableName.sept_jobs, $payeDataTableName.dec_jobs,
                 CAST(
