@@ -23,7 +23,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   }
 
   def generateWithVatSQL(luTable:String, payeTable:String, vatTable:String) = {
-    s"""SELECT $luTable.ern, $luTable.vat_group, $luTable.vatref, $vatTable.turnover, $vatTable.record_type, $payeTable.paye_employees, $payeTable.paye_jobs
+    s"""SELECT $luTable.vat_group, $luTable.ern,  $luTable.vatref, $vatTable.turnover, $vatTable.record_type, $payeTable.paye_employees, $payeTable.paye_jobs
          FROM $luTable, $vatTable, $payeTable
          WHERE $luTable.vatref=$vatTable.vatref AND $payeTable.ern=$luTable.ern""".stripMargin
   }
@@ -60,7 +60,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   }
 
   def generateCalculateWeightsSQL(vatGroup:String,tableName:String = "LEGAL_UNITS") =
-    s"""SELECT SUM(quoter_avg), vat_group
+    s"""SELECT SUM(quarter_avg), vat_group
        GROUP BY vat_group
     """.stripMargin
 
@@ -121,7 +121,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
     val flatPayeDataSql = generateCalculateAvgSQL(luTableName,payeDataTableName)
     val sql = s"""
-              SELECT SUM(AVG_CALCULATED.quoter_avg) AS paye_employees, CAST(SUM(AVG_CALCULATED.$quarter) AS int) AS paye_jobs, AVG_CALCULATED.ern
+              SELECT SUM(AVG_CALCULATED.quarter_avg) AS paye_employees, CAST(SUM(AVG_CALCULATED.$quarter) AS int) AS paye_jobs, AVG_CALCULATED.ern
               FROM ($flatPayeDataSql) as AVG_CALCULATED
               GROUP BY AVG_CALCULATED.ern
             """.stripMargin
@@ -175,7 +175,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
                    THEN 0
                    ELSE 1
                  END)
-                ) AS int) as quoter_avg
+                ) AS int) as quarter_avg
 
                 FROM $luTablename
                 LEFT JOIN $payeDataTableName ON $luTablename.payeref=$payeDataTableName.payeref
