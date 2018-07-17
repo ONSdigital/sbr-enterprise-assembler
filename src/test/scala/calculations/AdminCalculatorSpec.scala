@@ -152,8 +152,65 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     }*/
 
 
-
   "DataFrameHelper" should {
+    import spark.extensions.sql._
+    "calculate turnovers test DF" in {
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val unitsDF = spark.read.json(jsonFilePath).castAllToString
+
+      val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
+      val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
+      val calculatedPayeDF = AdminDataCalculator.getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
+      /**
+            +--------------+---------+----------+
+            |paye_employees|paye_jobs|       ern|
+            +--------------+---------+----------+
+            |             4|        3|2200000002|
+            |            19|       20|1100000003|
+            |          null|     null|9900000009|
+            |             2|        4|2000000011|
+            |             4|        8|1100000004|
+            +--------------+---------+----------+
+        */
+      val step1DF: DataFrame = new AdminDataCalculator{}.calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
+      /**
+      +----------+---------+------------+--------+-----------+--------------+---------+
+      |       ern|vat_group|      vatref|turnover|record_type|paye_employees|paye_jobs|
+      +----------+---------+------------+--------+-----------+--------------+---------+
+      |2000000011|   123123|123123123000|     390|          0|             2|        4|
+      |1100000003|   111222|111222333000|     585|          1|            19|       20|
+      |1100000003|   111222|111222333001|     590|          3|            19|       20|
+      |1100000004|   555666|555666777000|    1000|          1|             4|        8|
+      |1100000004|   555666|555666777001|     320|          3|             4|        8|
+      |1100000004|   555666|555666777002|     340|          3|             4|        8|
+      |1100000004|   999888|999888777000|     260|          0|             4|        8|
+      |2200000002|   555666|555666777003|     260|          3|             4|        3|
+      |9900000009|   919100|919100010000|      85|          2|          null|     null|
+      +----------+---------+------------+--------+-----------+--------------+---------+
+  */
+      step1DF.show()
+      val res = AdminDataCalculator.executeSql(step1DF,"SELECT DISTINCT ern, paye_employees, vat_group FROM £table")
+      res.show()
+      /** +----------+--------------+---------+
+          |    ern   |paye_employees|vat_group|
+          +----------+--------------+---------+
+          |1100000003|            19|   111222|
+          |9900000009|          null|   919100|
+          |1100000004|             4|   555666|
+          |2000000011|             2|   123123|
+          |1100000004|             4|   999888|
+          |2200000002|             5|   555666|
+          +----------+--------------+---------+
+        */
+/*      val testDF: DataFrame = new AdminDataCalculator{}.calculateTurnoverTest(step1DF,vatDF)
+      testDF.show()
+      testDF.printSchema()*/
+      spark.close()
+
+    }}
+
+
+/*  "DataFrameHelper" should {
     import spark.extensions.sql._
     "calculate turnovers" in {
 
@@ -163,8 +220,8 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
         val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
         val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
         val calculatedPayeDF = AdminDataCalculator.getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
-/*        calculatedPayeDF.show()
-        calculatedPayeDF.printSchema()*/
+        calculatedPayeDF.show()
+        calculatedPayeDF.printSchema()
         val calculatedVat: DataFrame = new AdminDataCalculator{}.calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
         calculatedVat.show()
         calculatedVat.printSchema()
@@ -183,10 +240,10 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
         |2200000002|   555666|555666777003|     260|          3|             4|        3|
         |9900000009|   919100|919100010000|      85|          2|          null|     null|
         +----------+---------+------------+--------+-----------+--------------+---------+
-        * */
+        */
 
     }
-    }
+    }*/
 
 
 

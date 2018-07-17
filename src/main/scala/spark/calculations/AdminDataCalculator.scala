@@ -11,6 +11,41 @@ import spark.extensions.sql._
 trait AdminDataCalculator extends Serializable with RddLogging{
 
 
+  def executeSql(df:DataFrame,sql:String)(implicit spark: SparkSession ) = {
+    df.createOrReplaceTempView("DF")
+    val query = sql.replace("£table","DF")
+    spark.sql(query)
+  }
+
+  def generateWithVatSQL(luTable:String, payeTable:String, vatTable:String) = {
+    s"""SELECT $luTable.ern, $luTable.vat_group, $luTable.vatref, $vatTable.turnover, $vatTable.record_type, $payeTable.paye_employees, $payeTable.paye_jobs
+         FROM $luTable, $vatTable, $payeTable
+         WHERE $luTable.vatref=$vatTable.vatref AND $payeTable.ern=$luTable.ern""".stripMargin
+  }
+
+  def calculateTurnoverTest(withVatDataSQL:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+
+    val luTable = "LEGAL_UNITS_WITH_VAT"
+
+    withVatDataSQL.createOrReplaceTempView(luTable)
+
+    withVatDataSQL.show()
+    withVatDataSQL.printSchema()
+
+    val appTurnover = spark.sql(
+      s"""
+         SELECT t1.*, t2.empl_total
+         FROM $luTable as t1, (SELECT SUM($luTable.paye_employees) as empl_total
+                               FROM (SELECT DISTINCT ern, paye_employees FROM $luTable) as emp_total
+                               WHERE emp_total.ern=t1.ern
+                               GROUP BY $luTable.vat_group
+                               ) as t2
+         WHERE t1.vat_group=t2.vg
+       """.stripMargin
+    )
+    appTurnover
+  }
+
   def calculateGroupTurnover(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
     val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
 
@@ -21,11 +56,8 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     flatUnitDf.createOrReplaceTempView(luTable)
     vatDF.createOrReplaceTempView(vatTable)
     payeCalculatedDF.createOrReplaceTempView(payeTable)
-    //flatUnitDf
-    val joinedDF = spark.sql(
-      s"""SELECT $luTable.ern, $luTable.vat_group, $luTable.vatref, $vatTable.turnover, $vatTable.record_type, $payeTable.paye_employees, $payeTable.paye_jobs
-         FROM $luTable, $vatTable, $payeTable
-         WHERE $luTable.vatref=$vatTable.vatref AND $payeTable.ern=$luTable.ern""".stripMargin)
+    val sql = generateWithVatSQL(luTable,payeTable,vatTable)
+    val joinedDF = spark.sql(sql)
 
     joinedDF
   }

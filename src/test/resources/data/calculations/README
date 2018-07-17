@@ -30,7 +30,7 @@ Record types:
      1.4 Return the value of representative turnover
 
  2. apportioned_turnover:
-     1.1 Ensure given group belongs involves multiple enterprises
+     1.1 Ensure given group includes multiple enterprises
      1.2 Extract representative turnover of the given group
      1.3 Calculate weights of turnovers across multiple Enterprises belonging to this vat group:
          1.2.1 Calculate total group payee_employee by summing paye_employees of all Enterprises of the group
