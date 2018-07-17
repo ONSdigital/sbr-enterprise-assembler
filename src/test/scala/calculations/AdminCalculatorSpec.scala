@@ -184,12 +184,12 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
       |1100000004|   555666|555666777001|     320|          3|             4|        8|
       |1100000004|   555666|555666777002|     340|          3|             4|        8|
       |1100000004|   999888|999888777000|     260|          0|             4|        8|
-      |2200000002|   555666|555666777003|     260|          3|             4|        3|
+      |2200000002|   555666|555666777003|     260|          3|             5|        5|
       |9900000009|   919100|919100010000|      85|          2|          null|     null|
       +----------+---------+------------+--------+-----------+--------------+---------+
   */
       step1DF.show()
-      val res = AdminDataCalculator.executeSql(step1DF,"SELECT DISTINCT ern, paye_employees, vat_group FROM £table")
+/*    val res = AdminDataCalculator.executeSql(step1DF,AdminDataCalculator.selectSumEmployees("DF"))
       res.show()
       /** +----------+--------------+---------+
           |    ern   |paye_employees|vat_group|
@@ -201,9 +201,24 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
           |1100000004|             4|   999888|
           |2200000002|             5|   555666|
           +----------+--------------+---------+
-        */
-/*      val testDF: DataFrame = new AdminDataCalculator{}.calculateTurnoverTest(step1DF,vatDF)
-      testDF.show()
+        */*/
+      val testDF: DataFrame = AdminDataCalculator.calculateTurnoverTest(step1DF,vatDF)
+      /**
+        * +----------+---------+------------+--------+-----------+--------------+---------+----------------+
+        * |       ern|vat_group|      vatref|turnover|record_type|paye_employees|paye_jobs|group_empl_total|
+        * +----------+---------+------------+--------+-----------+--------------+---------+----------------+
+        * |1100000004|   999888|999888777000|     260|          0|             4|        8|               4|
+        * |1100000003|   111222|111222333000|     585|          1|            19|       20|              19|
+        * |1100000003|   111222|111222333001|     590|          3|            19|       20|              19|
+        * |2000000011|   123123|123123123000|     390|          0|             2|        4|               2|
+        * |1100000004|   555666|555666777000|    1000|          1|             4|        8|               9|
+        * |1100000004|   555666|555666777001|     320|          3|             4|        8|               9|
+        * |1100000004|   555666|555666777002|     340|          3|             4|        8|               9|
+        * |2200000002|   555666|555666777003|     260|          3|             5|        5|               9|
+        * |9900000009|   919100|919100010000|      85|          2|          null|     null|            null|
+        * +----------+---------+------------+--------+-----------+--------------+---------+----------------+
+        * */
+      /*testDF.show()
       testDF.printSchema()*/
       spark.close()
 

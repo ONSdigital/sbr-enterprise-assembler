@@ -10,6 +10,11 @@ import spark.extensions.sql._
 
 trait AdminDataCalculator extends Serializable with RddLogging{
 
+  def distinctErnsByPayeEmps(table:String) = s"(SELECT DISTINCT ern, paye_employees,vat_group FROM $table)"
+  def selectSumEmployees(table:String) = s"""(SELECT SUM(emp_total_table.paye_employees) as group_empl_total, emp_total_table.vat_group
+                                                                                FROM ${distinctErnsByPayeEmps(table)} as emp_total_table
+                                                                                GROUP BY emp_total_table.vat_group
+                                                              )"""
 
   def executeSql(df:DataFrame,sql:String)(implicit spark: SparkSession ) = {
     df.createOrReplaceTempView("DF")
@@ -28,19 +33,11 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val luTable = "LEGAL_UNITS_WITH_VAT"
 
     withVatDataSQL.createOrReplaceTempView(luTable)
-
-    withVatDataSQL.show()
-    withVatDataSQL.printSchema()
-
     val appTurnover = spark.sql(
       s"""
-         SELECT t1.*, t2.empl_total
-         FROM $luTable as t1, (SELECT SUM($luTable.paye_employees) as empl_total
-                               FROM (SELECT DISTINCT ern, paye_employees FROM $luTable) as emp_total
-                               WHERE emp_total.ern=t1.ern
-                               GROUP BY $luTable.vat_group
-                               ) as t2
-         WHERE t1.vat_group=t2.vg
+         SELECT t1.*, t2.group_empl_total
+         FROM $luTable as t1, ${selectSumEmployees(luTable)} as t2
+         WHERE t1.vat_group=t2.vat_group
        """.stripMargin
     )
     appTurnover
