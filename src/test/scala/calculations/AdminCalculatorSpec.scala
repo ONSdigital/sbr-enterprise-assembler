@@ -83,7 +83,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     }
   }*/
 
-  "DataFrameHelper.generateCalculateAvgSQL" should {
+/*  "DataFrameHelper.generateCalculateAvgSQL" should {
     import spark.extensions.sql._
     "return sql query string which returns unitsDF with employee average calculated" in {
 
@@ -149,7 +149,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
         +--------------+---------+----------+
       * */
     }
-    }
+    }*/
 
 
 
@@ -162,24 +162,27 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
 
         val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
         val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-        val calculated: DataFrame = new AdminDataCalculator{}.calculateGroupTurnover(unitsDF,vatDF)
-        calculated.show()
-        calculated.printSchema()
+        val calculatedPayeDF = AdminDataCalculator.getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
+/*        calculatedPayeDF.show()
+        calculatedPayeDF.printSchema()*/
+        val calculatedVat: DataFrame = new AdminDataCalculator{}.calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
+        calculatedVat.show()
+        calculatedVat.printSchema()
         spark.close()
       /**expected:
-        * +--------------------+--------------+--------------------+----------+------------+------------+------+
-        * |        BusinessName|      PayeRefs|             VatRefs|       ern|          id|      vatref| group|
-        * +--------------------+--------------+--------------------+----------+------------+------------+------+
-        * |      INDUSTRIES LTD|       [1151L]|      [123123123000]|2000000011|100002826247|123123123000|123123|
-        * |BLACKWELLGROUP LT...|[1152L, 1153L]|      [111222333000]|1100000003|100000246017|111222333000|111222|
-        * |BLACKWELLGROUP LT...|[1154L, 1155L]|      [111222333001]|1100000003|100000827984|111222333001|111222|
-        * |             IBM LTD|[1166L, 1177L]|[555666777000, 55...|1100000004|100000459235|555666777000|555666|
-        * |             IBM LTD|[1166L, 1177L]|[555666777000, 55...|1100000004|100000459235|555666777001|555666|
-        * |         IBM LTD - 2|[1188L, 1199L]|      [555666777002]|1100000004|100000508723|555666777002|555666|
-        * |         IBM LTD - 3|[5555L, 3333L]|      [999888777000]|1100000004|100000508724|999888777000|999888|
-        * |             MBI LTD|       [9876L]|      [555666777003]|2200000002|100000601835|555666777003|555666|
-        * |   NEW ENTERPRISE LU|          null|      [919100010000]|9900000009|999000508999|919100010000|919100|
-        * +--------------------+--------------+--------------------+----------+------------+------------+------+
+        +----------+---------+------------+--------+-----------+--------------+---------+
+        |       ern|vat_group|      vatref|turnover|record_type|paye_employees|paye_jobs|
+        +----------+---------+------------+--------+-----------+--------------+---------+
+        |2000000011|   123123|123123123000|     390|          0|             2|        4|
+        |1100000003|   111222|111222333000|     585|          1|            19|       20|
+        |1100000003|   111222|111222333001|     590|          3|            19|       20|
+        |1100000004|   555666|555666777000|    1000|          1|             4|        8|
+        |1100000004|   555666|555666777001|     320|          3|             4|        8|
+        |1100000004|   555666|555666777002|     340|          3|             4|        8|
+        |1100000004|   999888|999888777000|     260|          0|             4|        8|
+        |2200000002|   555666|555666777003|     260|          3|             4|        3|
+        |9900000009|   919100|919100010000|      85|          2|          null|     null|
+        +----------+---------+------------+--------+-----------+--------------+---------+
         * */
 
     }
