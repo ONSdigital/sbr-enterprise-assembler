@@ -11,6 +11,67 @@ import spark.extensions.sql._
 trait AdminDataCalculator extends Serializable with RddLogging{
 
 
+  def calculate(df:DataFrame)(implicit spark: SparkSession ) = {
+    val t = "CALCULATED"
+    df.createOrReplaceTempView(t)
+
+    val sql = s"""
+
+       SELECT *,
+       CAST((CASE
+           WHEN no_ents_in_group = 1 AND record_type = 1
+           THEN turnover
+           ELSE NULL
+         END
+       ) AS long)as contained_turnover,
+       CAST((
+         CASE
+           WHEN no_ents_in_group > 1 AND record_type = 1
+           THEN turnover * (paye_employees / group_empl_total)
+           ELSE NULL
+         END
+       )  AS long)as apportioned_turnover,
+       CAST(
+       (
+         CASE
+           WHEN record_type = 0 OR record_type = 3
+           THEN turnover
+           ELSE NULL
+         END
+       ) AS long)as standard_turnover
+
+       FROM $t
+           """.stripMargin
+
+    val step1 = spark.sql(sql)
+    val t2 = "AGGREGATED"
+    step1.createOrReplaceTempView(t2)
+    val sql2 = s"SELECT ern,paye_employees, paye_jobs, SUM(contained_turnover) as contained_turnover, SUM(apportioned_turnover) as apportioned_turnover, SUM(standard_turnover) as standard_turnover FROM $t2 GROUP BY ern, paye_employees, paye_jobs"
+    val turnovers = spark.sql(sql2)
+    val t3 = "TURNOVER"
+    turnovers.createOrReplaceTempView(t3)
+    val sql3 =
+      s"""SELECT $t3.*,
+                  ((CASE
+                    WHEN $t3.standard_turnover is NULL
+                    THEN 0
+                    ELSE $t3.standard_turnover
+                  END) +
+                 (CASE
+                   WHEN $t3.contained_turnover is NULL
+                   THEN 0
+                   ELSE $t3.contained_turnover
+                 END) +
+                    (CASE
+                      WHEN $t3.apportioned_turnover is NULL
+                      THEN 0
+                      ELSE $t3.apportioned_turnover
+                    END)
+                     )AS ent_turnover
+         FROM $t3""".stripMargin
+    spark.sql(sql3)
+  }
+
   def executeSql(df:DataFrame,sql:String)(implicit spark: SparkSession ) = {
     df.createOrReplaceTempView("DF")
     val query = sql.replace("£table","DF")

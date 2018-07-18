@@ -218,8 +218,28 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     |   919100|9900000009|919100010000|      85|          2|          null|     null|            null|               1|
     +---------+----------+------------+--------+-----------+--------------+---------+----------------+----------------+
    */
-   testDF.show()
-   testDF.printSchema()
+/*   testDF.show()
+   testDF.printSchema()*/
+
+   val doneDF = AdminDataCalculator.calculate(testDF)
+   doneDF.show()
+   doneDF.printSchema()
+/**
+  * +----------+------------+--------------+---------+------------------+--------------------+-----------------+
+  * |       ern|      vatref|paye_employees|paye_jobs|contained_turnover|apportioned_turnover|standard_turnover|
+  * +----------+------------+--------------+---------+------------------+--------------------+-----------------+
+  * |1100000003|111222333001|            19|       20|              null|                null|             null|
+  * |2000000011|123123123000|             2|        4|              null|                null|            390.0|
+  * |9900000009|919100010000|          null|     null|              null|                null|             null|
+  * |1100000004|555666777001|             4|        8|              null|                null|             null|
+  * |1100000004|555666777000|             4|        8|              null|                 444|             null|
+  * |1100000003|111222333000|            19|       20|             585.0|                null|             null|
+  * |2200000002|555666777003|             5|        5|              null|                null|             null|
+  * |1100000004|555666777002|             4|        8|              null|                null|             null|
+  * |1100000004|999888777000|             4|        8|              null|                null|            260.0|
+  * +----------+------------+--------------+---------+------------------+--------------------+-----------------+
+  * */
+
    spark.close()
 
  }}
