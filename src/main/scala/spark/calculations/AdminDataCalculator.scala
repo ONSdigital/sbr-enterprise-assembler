@@ -10,11 +10,6 @@ import spark.extensions.sql._
 
 trait AdminDataCalculator extends Serializable with RddLogging{
 
-  def distinctErnsByPayeEmps(table:String) = s"(SELECT DISTINCT ern, paye_employees,vat_group FROM $table)"
-  def selectSumEmployees(table:String) = s"""(SELECT SUM(emp_total_table.paye_employees) as group_empl_total, emp_total_table.vat_group
-                                                                                FROM ${distinctErnsByPayeEmps(table)} as emp_total_table
-                                                                                GROUP BY emp_total_table.vat_group
-                                                              )"""
 
   def executeSql(df:DataFrame,sql:String)(implicit spark: SparkSession ) = {
     df.createOrReplaceTempView("DF")
@@ -35,13 +30,19 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     withVatDataSQL.createOrReplaceTempView(luTable)
     val appTurnover = spark.sql(
       s"""
-         SELECT t1.*, t2.group_empl_total
+         SELECT t1.*, t2.group_empl_total, t2.no_ents_in_group
          FROM $luTable as t1, ${selectSumEmployees(luTable)} as t2
          WHERE t1.vat_group=t2.vat_group
        """.stripMargin
     )
     appTurnover
   }
+
+  def distinctErnsByPayeEmps(table:String) = s"(SELECT DISTINCT ern, paye_employees,vat_group FROM $table)"
+  def selectSumEmployees(table:String) = s"""(SELECT SUM(emp_total_table.paye_employees) as group_empl_total, COUNT(emp_total_table.ern) as no_ents_in_group, emp_total_table.vat_group
+                                                                                FROM ${distinctErnsByPayeEmps(table)} as emp_total_table
+                                                                                GROUP BY emp_total_table.vat_group
+                                                              )"""
 
   def calculateGroupTurnover(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
     val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
