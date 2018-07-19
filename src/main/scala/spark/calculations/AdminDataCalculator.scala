@@ -46,7 +46,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val step1 = spark.sql(sql)
     val t2 = "AGGREGATED"
     step1.createOrReplaceTempView(t2)
-    val sql2 = s"SELECT ern,paye_employees, paye_jobs, SUM(contained_turnover) as contained_turnover, SUM(apportioned_turnover) as apportioned_turnover, SUM(standard_turnover) as standard_turnover FROM $t2 GROUP BY ern, paye_employees, paye_jobs"
+    val sql2 = s"SELECT ern,paye_employees, paye_jobs, grp_turnover, SUM(contained_turnover) as contained_turnover, SUM(apportioned_turnover) as apportioned_turnover, SUM(standard_turnover) as standard_turnover FROM $t2 GROUP BY ern, paye_employees, paye_jobs, grp_turnover"
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
     turnovers.createOrReplaceTempView(t3)
@@ -96,9 +96,21 @@ trait AdminDataCalculator extends Serializable with RddLogging{
          WHERE t1.vat_group=t2.vat_group
        """.stripMargin
     )
-    appTurnover
+    val groupTurnovers = spark.sql(groupRepresentativeTurnover(luTable))
+    appTurnover.createOrReplaceTempView("APPTURNOVER")
+    appTurnover.show()
+    groupTurnovers.createOrReplaceTempView("GRPTURNOVER")
+    groupTurnovers.show()
+    val res = spark.sql(
+      s"""
+         SELECT APPTURNOVER.* , GRPTURNOVER.grp_turnover
+         FROM APPTURNOVER
+         LEFT JOIN GRPTURNOVER ON APPTURNOVER.vat_group = GRPTURNOVER.vg
+       """.stripMargin
+    )
+    res
   }
-
+  def groupRepresentativeTurnover(table:String) = s"(SELECT SUM(turnover) as grp_turnover, vat_group AS vg FROM $table WHERE record_type = 1 GROUP BY vat_group)"
   def distinctErnsByPayeEmps(table:String) = s"(SELECT DISTINCT ern, paye_employees,vat_group FROM $table)"
   def selectSumEmployees(table:String) = s"""(SELECT SUM(emp_total_table.paye_employees) as group_empl_total, COUNT(emp_total_table.ern) as no_ents_in_group, emp_total_table.vat_group
                                                                                 FROM ${distinctErnsByPayeEmps(table)} as emp_total_table
