@@ -1,5 +1,6 @@
 package spark.calculations
 
+import global.AppParams
 import model.domain.LegalUnit
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, explode_outer}
@@ -10,8 +11,23 @@ import spark.extensions.sql._
 
 trait AdminDataCalculator extends Serializable with RddLogging{
 
+  def calculate(unitsDF:DataFrame,appConfs:AppParams)(implicit spark: SparkSession ) = {
+    val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
+    val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
+    //unitsDF.show()
+    val calculatedPayeDF = getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
+    //printDF("calculatedPayeDF",calculatedPayeDF)
+    val calculatedWithVatAndPaye = calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
+    //printDF("calculatedWithVatAndPaye",calculatedWithVatAndPaye)
+    val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye,vatDF)
+    printDF("calculatedTurnovers",calculatedTurnovers)
+    val res = aggregateDF(calculatedTurnovers)
+    printDF("res",res)
+    res
 
-  def calculate(df:DataFrame)(implicit spark: SparkSession ) = {
+  }
+
+  def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {
     val t = "CALCULATED"
     df.createOrReplaceTempView(t)
 
@@ -78,13 +94,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     spark.sql(query)
   }
 
-  def generateWithVatSQL(luTable:String, payeTable:String, vatTable:String) = {
-    s"""SELECT $luTable.vat_group, $luTable.ern,  $luTable.vatref, $vatTable.turnover, $vatTable.record_type, $payeTable.paye_employees, $payeTable.paye_jobs
-         FROM $luTable, $vatTable, $payeTable
-         WHERE $luTable.vatref=$vatTable.vatref AND $payeTable.ern=$luTable.ern""".stripMargin
-  }
-
-  def calculateTurnoverTest(withVatDataSQL:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+  def calculateTurnovers(withVatDataSQL:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
 
     val luTable = "LEGAL_UNITS_WITH_VAT"
 
@@ -107,7 +117,10 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
   def calculateGroupTurnover(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
     val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
-
+/*    unitsDF.show()
+    flatUnitDf.show()
+    vatDF.show()
+    payeCalculatedDF.show()*/
     val luTable = "LEGAL_UNITS"
     val vatTable = "VAT_DATA"
     val payeTable = "PAYE_DATA"
@@ -120,6 +133,14 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
     joinedDF
   }
+
+
+  def generateWithVatSQL(luTable:String, payeTable:String, vatTable:String) = {
+    s"""SELECT $luTable.vat_group, $luTable.ern,  $luTable.vatref, $vatTable.turnover, $vatTable.record_type, $payeTable.paye_employees, $payeTable.paye_jobs
+         FROM $luTable, $vatTable, $payeTable
+         WHERE $luTable.vatref=$vatTable.vatref AND $payeTable.ern=$luTable.ern""".stripMargin
+  }
+
 
   def generateCalculateWeightsSQL(vatGroup:String,tableName:String = "LEGAL_UNITS") =
     s"""SELECT SUM(quarter_avg), vat_group

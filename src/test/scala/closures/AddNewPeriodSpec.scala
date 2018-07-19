@@ -54,9 +54,9 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    createRecords(confs)(spark)
+    //createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     /*val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
@@ -64,13 +64,13 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     spark.stop()
   }
 
-  override def afterAll() = {
+/*  override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }
+  }*/
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -87,7 +87,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }
 
 
-  "assembler" should {
+ /* "assembler" should {
     "create hfiles populated with expected local units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -115,7 +115,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.close()
 
     }
-  }
+  }*/
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)

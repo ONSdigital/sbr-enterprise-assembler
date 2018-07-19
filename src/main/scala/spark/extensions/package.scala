@@ -22,6 +22,12 @@ package object sql {
     .add(StructField("VatRefs", ArrayType(StringType,true),true))
     .add(StructField("id", StringType,false))
 
+  val preCalculateDfSchema = new StructType()
+    .add(StructField("ern", StringType,true))
+    .add(StructField("id", StringType,true))
+    .add(StructField("PayeRefs", ArrayType(StringType,true),true))
+    .add(StructField("VatRefs", ArrayType(StringType,true),true))
+
   val luRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,true))

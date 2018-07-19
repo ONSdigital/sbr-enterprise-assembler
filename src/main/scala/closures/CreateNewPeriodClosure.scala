@@ -14,7 +14,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.RddLogging
-import spark.calculations.DataFrameHelper
+import spark.calculations.{AdminDataCalculator, DataFrameHelper}
 import spark.extensions.sql._
 
 import scala.util.Try
@@ -62,7 +62,7 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     val numOfPartitions = updatesRdd.getNumPartitions
 
     val joined: RDD[(String, (Option[Cells], Option[Cells]))] = updatesRdd.fullOuterJoin(existingLuRdd, numOfPartitions)
-
+    joined.cache()
  // printRdd("links record updates rdd joined with existing LUs rdd",joined,"Tuple (String,Tuple(option[Iterable[KVCells]],option[Iterable[KVCells]])")
 
     /*
@@ -83,6 +83,18 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     val existingLinksEnts: RDD[HFileRow] = joined.collect { case (key, (None, Some(oldCells))) if(key.endsWith(s"ENT~${appconf.TIME_PERIOD}"))=> HFileRow(key, oldCells) }
  // printCount(existingLinksEnts,"existing Enterprises: ")
     //printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
+
+    val preCalculatedLUs: RDD[Row] = NewPeriodWithCalculations.getAllLUs(joined)
+    printRddOfRows("preCalculatedLUs", preCalculatedLUs)
+    val preCalculatedDF = spark.createDataFrame(preCalculatedLUs,preCalculateDfSchema)
+
+    preCalculatedDF.cache()
+    val calculatedDF = AdminDataCalculator.calculate(preCalculatedDF,appconf).cache()
+
+    calculatedDF.show()
+    calculatedDF.printSchema()
+    preCalculatedDF.unpersist()
+    joined.unpersist()
 
     //new Records
     val newLuIds: RDD[(String, Row)] = newLUs.filter(_.key.endsWith(s"~LEU~${appconf.TIME_PERIOD}")).collect{case HFileRow(key,_) if(key.endsWith(s"~${appconf.TIME_PERIOD}")) => (key.stripSuffix(s"~LEU~${appconf.TIME_PERIOD}"),Row.empty)}

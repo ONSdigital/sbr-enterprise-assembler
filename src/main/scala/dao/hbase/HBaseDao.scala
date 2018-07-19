@@ -217,7 +217,7 @@ trait HBaseDao extends Serializable{
       classOf[TableInputFormat],
       classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable],
       classOf[org.apache.hadoop.hbase.client.Result])
-      .map(_._2).map(HFileRow(_))
+      .map(row => HFileRow(row._2))
   }
 
   def copyExistingRecordsToHFiles(appParams:AppParams,dirName:String = "existing")(implicit spark:SparkSession) = {
