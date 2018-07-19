@@ -72,11 +72,11 @@ trait NewPeriodWithCalculations extends WithConversionHelper with DataFrameHelpe
     val payeRefs = cells.collect{case KVCell(key,"PAYE") => key.replace(childPrefix, "")}
     val vatRefs = cells.collect{case KVCell(key,"VAT") => key.replace(childPrefix, "")}
     new GenericRowWithSchema(Array(
-      ern,
-      id,
-      payeRefs,
-      vatRefs
-    ), preCalculateDfSchema)
+                                  ern,
+                                  id,
+                                  payeRefs,
+                                  vatRefs
+                                ), preCalculateDfSchema)
   }
 
  /* def getNewLUsPreCalculatedDF(joinedLUs: RDD[(String, (Option[Cells], Option[Cells]))])(implicit spark: SparkSession) = {
