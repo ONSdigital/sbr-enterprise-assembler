@@ -1,7 +1,7 @@
 package closures
 
 import dao.hbase.HBaseDao
-import dao.hbase.converter.WithConversionHelper
+import dao.hbase.converter.{UnitRowConverter, WithConversionHelper}
 import global.{AppParams, Configs}
 import model.domain.{HFileRow, KVCell}
 import model.hfile
@@ -16,11 +16,12 @@ import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.RddLogging
 import spark.calculations.{AdminDataCalculator, DataFrameHelper}
 import spark.extensions.sql._
+import org.apache.spark.sql.functions._
 
 import scala.util.Try
 
 
-trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper with RddLogging with Serializable{
+trait CreateNewPeriodClosure extends WithConversionHelper with UnitRowConverter with DataFrameHelper with AdminDataCalculator with RddLogging with Serializable{
 
   val hbaseDao: HBaseDao = HBaseDao
 
@@ -85,14 +86,14 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     //printRdd("existingLinksEnts",existingLinksEnts,"HFileRow") //all strings: existingLinksEnts
 
     val preCalculatedLUs: RDD[Row] = NewPeriodWithCalculations.getAllLUs(joined)
-    printRddOfRows("preCalculatedLUs", preCalculatedLUs)
+    //printRddOfRows("preCalculatedLUs", preCalculatedLUs)
     val preCalculatedDF = spark.createDataFrame(preCalculatedLUs,preCalculateDfSchema)
 
     preCalculatedDF.cache()
     val calculatedDF = AdminDataCalculator.calculate(preCalculatedDF,appconf).cache()
 
-    calculatedDF.show()
-    calculatedDF.printSchema()
+    //calculatedDF.show()
+    //calculatedDF.printSchema()
     preCalculatedDF.unpersist()
     joined.unpersist()
 
@@ -103,7 +104,7 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
 
     val joinedParquetRows: RDD[(String, (Row, Option[Row]))] = newLuIds.leftOuterJoin(rowMapByKey,numOfPartitions)
 
-    //printRdd("joinedParquetRows",joinedParquetRows,"(String, (Row, Option[Row]))")
+
 
     val newLUParquetRows: RDD[Row] = joinedParquetRows.collect{  case (key,(oldRow,Some(newRow))) => {
       new GenericRowWithSchema(Array(
@@ -125,109 +126,61 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     } }
 
 
-    //printRddOfRows("newLUParquetRows",newLUParquetRows)
-
     val newRowsDf: DataFrame = spark.createDataFrame(newLUParquetRows,parquetRowSchema)
 
-    //printDF("newRowsDf",newRowsDf)
+
 
     val pathToPaye = appconf.PATH_TO_PAYE
-    //// println(s"extracting paye file from path: $pathToPaye")
-
     val pathToVat = appconf.PATH_TO_VAT
 
     val payeDf = spark.read.option("header", "true").csv(pathToPaye)
-    // printDF("payeDf",payeDf)
+
 
     val vatDf = spark.read.option("header", "true").csv(pathToVat)
 
-    /*printDF("newRowsDf",newRowsDf)
-    printDF("payeDf",payeDf)
-    printDF("vatDf",vatDf)*/
-
-    val newEntTree: RDD[hfile.Tables] = adminCalculations(newRowsDf, payeDf, vatDf).rdd.map(row => toNewEnterpriseRecordsWithLou(row,appconf))
-
-    //println("PARTITIONS OF newEntTree: "+newEntTree.getNumPartitions)
-
-      //printRdd("newEntTree",newEntTree,"hfile.Tables")
-
-     newEntTree.cache()
-
-    val newEnts: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.enterprises) //break into cells
-    //printRdd("newEnts",newEnts,"(String, HFileCell)")
 
 
+    /**
+      * new ent row AND new LINKS row
+      * */
+    val newEntWithLinks: DataFrame = newRowsDf.map(row => biRowToEnt(row)).toDF()
 
-    val newLinks: RDD[(String, HFileCell)] =  newEntTree.flatMap(_.links) //break into cells
-    //printRdd("newLinks",newLinks,"(String, HFileCell)")
-    //newEntTree.unpersist()
-    //existing records:
-    val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
-    val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
-    val entHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex)
-    //printRdd("entHFileRowRdd",entHFileRowRdd,"HFileRow")
-    val existingEntRdd: RDD[Row] = entHFileRowRdd.map(_.toEntRow)
-    //printRddOfRows("existingEntRdd",existingEntRdd)
-    val existingEntDF: DataFrame = spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
-    //printDF("existingEntDF",existingEntDF)
+     newEntWithLinks.cache()
+     val newEntDF = newEntWithLinks.select(
+                                          "ern", "entref", "name", "trading_style",
+                                          "address1", "address2", "address3", "address4", "address5",
+                                          "postcode", "sic07", "legal_status"
+                                         )
 
 
-    val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)//.map(row => row.copy())
- // printRddOfRows("luRows",luRows)
+    val newLinksDF =  newEntWithLinks.select("ubrn", "CompanyNo", "PayeRefs", "VatRefs")
 
-    val ernWithPayesAndVats: RDD[Row] = luRows.collect{
+    val existingEntDF: DataFrame = getExistingEntsDF(appconf,confs)
 
-      case row if(row.getStringSeq("PayeRefs").isDefined || row.getStringSeq("VatRefs").isDefined) => Row(
-        row.getString("ern").get,
-        row.getStringSeq("PayeRefs").getOrElse(null),
-        row.getStringSeq("VatRefs").getOrElse(null)
-      )
-    }
+    val allEnts = newEntDF.union(existingEntDF)
+    val calculatedEnts = allEnts.join(calculatedDF, col("ern"), "left_outer")
 
-    // printRddOfRows("ernWithPayesAndVats", ernWithPayesAndVats)
+    val luRows: RDD[Row] = updatedExistingLUs.map(_.toLuRow)
 
-    val ernWithEmployeesdata: DataFrame = spark.createDataFrame(ernWithPayesAndVats,ernToEmployeesSchema) //DataFrame("ern":String, "payeRefs":Array[String],"VatRefs":Array[String])  DataFrame(ern, employees, jobs)
-    //printDF("ernWithEmployeesdata",ernWithEmployeesdata)
-
-    val payeDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
-    //printDF("payeDF", payeDF)
-
-    val vatDF: DataFrame = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
-    //printDF("vatDF", vatDF)
-    //// print("ernWithEmployeesdata>>NUM OF PARTITIONS: "+ernWithEmployeesdata.rdd.getNumPartitions)
-
-    val ernPayeCalculatedDF: DataFrame = adminCalculationsEnt(ernWithEmployeesdata,payeDF, vatDF,"ern")
-    //printDF("ernPayeCalculatedDF", ernPayeCalculatedDF)
-    val completeExistingEnts: DataFrame = existingEntDF.join(ernPayeCalculatedDF,Seq("ern"),"leftOuter")//.rdd.coalesce(numOfPartitions) //ready to go to rowToEnterprise(_,ern,_)
-    completeExistingEnts.cache()
-    //printDF("existingEntDF", existingEntDF)
-    //printDF("completeExistingEnts", completeExistingEnts)
 
 
     /**
       * add new + existing enterprises and save to hfile
       * */
-    val existingEntsCells: RDD[(String, HFileCell)] = {
-      val ss = completeExistingEnts.sparkSession
+    val allCompleteEnts: RDD[(String, HFileCell)] = {
+      val ss = calculatedEnts.sparkSession
       import ss.implicits._
-      completeExistingEnts.map(row => rowToFullEnterprise(row,appconf)).flatMap(identity).rdd
+      calculatedEnts.map(row => rowToFullEnterprise(row,appconf)).flatMap(identity).rdd
     }
-    //printRdd("existingEntsCells", existingEntsCells, "(String,HFileCell)")
-    val allEnts: RDD[(String, HFileCell)] = newEnts.union(existingEntsCells)
-    //printRdd("allEnts",allEnts,"(String, HFileCell)")
 
-   val entsWithMissingLous: RDD[Row] = getEntsWithMissingLous(completeExistingEnts,appconf,confs)
-   //entsWithMissingLous.cache()
+   val entsWithMissingLous: RDD[Row] = getEntsWithMissingLous(allEnts,appconf,confs)
 
    val missingLousData: RDD[Tables]= entsWithMissingLous.map(row => entToLocalUnits(row,appconf))
    missingLousData.cache()
-   //printRdd("missingLousData:",missingLousData,"[(Seq[(String, HFileCell)], Seq[(String, HFileCell)])]")
-   val missingLousLinks: RDD[(String, HFileCell)] =  missingLousData.flatMap(_.links)
-   //missingLousLinks.cache()
-   //printRdd("missingLousLinks:",missingLousLinks,"[(String, HFileCell)]")
+
+
    val missingLous: RDD[(String, HFileCell)] =  missingLousData.flatMap(_.localUnits)
-   //missingLous.cache()
-   //printRdd("missingLous:",missingLous,"[(String, HFileCell)]")
+
 
    /**
    * add new + existing links and save to hfile
@@ -238,6 +191,8 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
   val existingLinkCells: RDD[(String, HFileCell)] = luRows.flatMap(r => rowToLegalUnitLinks("ubrn",r,appconf)).union(existingEntLinkRefs).union(existingLousCells)
 
   //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
+
+  val newLinks = newLinksDF
 
   val allLinks: RDD[(String, HFileCell)] = existingLinkCells.union(newLinks).union(missingLousLinks).coalesce(numOfPartitions)
 
@@ -251,9 +206,9 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
 
 
 
-    //printRdd("allEnts",allEnts,"(String, HFileCell)")
+    //printRdd("allCompleteEnts",allCompleteEnts,"(String, HFileCell)")
 
-  allEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
+  allCompleteEnts.sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
 
@@ -265,6 +220,16 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
    completeExistingEnts.unpersist()
    newEntTree.unpersist()
 
+  }
+
+  def getExistingEntsDF(appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+    val entRegex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"$"
+    val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
+    val entHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, entTableName, entRegex)
+    //printRdd("entHFileRowRdd",entHFileRowRdd,"HFileRow")
+    val existingEntRdd: RDD[Row] = entHFileRowRdd.map(_.toEntRow)
+    //printRddOfRows("existingEntRdd",existingEntRdd)
+    spark.createDataFrame(existingEntRdd,entRowSchema) //ENT record to DF  --- no paye
   }
 
   def saveAllLocalUnits(newLous:RDD[(String, HFileCell)],appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
@@ -294,17 +259,6 @@ trait CreateNewPeriodClosure extends WithConversionHelper with DataFrameHelper w
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
     val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
     val lous: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex)
-    /*//this bit below is also working:
-    val existingLouRdd: RDD[(String, Row)] = lous.map(hFileRow => {
-      val row = hFileRow.toLouRow
-      (row.getString("ern").get,Row(Array(
-        row.getString("lurn").get)))
-
-    })
-
-    val existingEntsTuples: RDD[(String, Row)] = completeExistingEnts.rdd.map(row => (row.getString("ern").get,row))
-    val joined = existingEntsTuples.leftOuterJoin(existingLouRdd)
-    joined.collect { case (ern, (row, None)) => row}*/
 
 
     val louRows: RDD[Row] = lous.map(hfileRow => {

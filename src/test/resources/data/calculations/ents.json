@@ -1,0 +1,123 @@
+[
+  {
+    "BusinessName": "INDUSTRIES LTD",
+    "id": 1100000002,
+    "paye_empees": 2.5,
+    "paye_jobs": 1,
+    "ent_turnover": 390,
+    "std_turnover": 390,
+    "grp_turnover": null,
+    "cntd_turnover": null,
+    "app_turnover": null
+  },
+  {
+    "BusinessName": "BLACKWELLGROUP LTD",
+    "id": 1100000003,
+    "paye_empees": 17.75,
+    "paye_jobs": 26,
+    "ent_turnover": 585,
+    "std_turnover": null,
+    "grp_turnover": 585,
+    "cntd_turnover": 585,
+    "app_turnover": null
+  },
+  {
+    "BusinessName": "IBM LTD",
+    "id": 1100000004,
+    "paye_empees": 5.5,
+    "paye_jobs": 4,
+    "ent_turnover": 810,
+    "std_turnover": 260,
+    "grp_turnover": 1000,
+    "cntd_turnover": null,
+    "app_turnover": 550
+  },
+  {
+    "BusinessName": "MBI LTD",
+    "id": 1100000005,
+    "paye_empees": 4.5,
+    "paye_jobs": 6,
+    "ent_turnover": 450,
+    "std_turnover": null,
+    "grp_turnover": 1000,
+    "cntd_turnover": null,
+    "app_turnover": 450
+  },
+  {
+    "BusinessName": "NEW ENTERPRISE LU",
+    "id": 1100000006,
+    "paye_empees": null,
+    "paye_jobs": null,
+    "ent_turnover": 85,
+    "std_turnover": 85,
+    "grp_turnover": null,
+    "cntd_turnover": null,
+    "app_turnover": null
+  },
+  {
+    "BusinessName": "ABC LTD",
+    "id": 1100000007,
+    "paye_empees": 6,
+    "paye_jobs": 7,
+    "ent_turnover": 701,
+    "std_turnover": 260,
+    "grp_turnover": 900,
+    "cntd_turnover": null,
+    "app_turnover": 441
+  },
+  {
+    "BusinessName": "DEF LTD",
+    "id": 1100000008,
+    "paye_empees": 2,
+    "paye_jobs": 2,
+    "ent_turnover": 147,
+    "std_turnover": null,
+    "grp_turnover": 900,
+    "cntd_turnover": null,
+    "app_turnover": 147
+  },
+  {
+    "BusinessName": "GHI LTD",
+    "id": 1100000009,
+    "paye_empees": 4.25,
+    "paye_jobs": 5,
+    "ent_turnover": 474,
+    "std_turnover": null,
+    "grp_turnover": 1200,
+    "cntd_turnover": null,
+    "app_turnover": 474
+  },
+  {
+    "BusinessName": "JKL LTD",
+    "id": 1100000010,
+    "paye_empees": 6.25,
+    "paye_jobs": 7,
+    "ent_turnover": 238,
+    "std_turnover": null,
+    "grp_turnover": 400,
+    "cntd_turnover": null,
+    "app_turnover": 238
+  },
+  {
+    "BusinessName": "MNO LTD",
+    "id": 1100000011,
+    "paye_empees": 3,
+    "paye_jobs": 3,
+    "ent_turnover": null,
+    "std_turnover": null,
+    "grp_turnover": 700,
+    "cntd_turnover": null,
+    "app_turnover": null
+  },
+  {
+    "BusinessName": "PQR LTD",
+    "id": 1100000012,
+    "paye_empees": null,
+    "paye_jobs": null,
+    "ent_turnover": null,
+    "std_turnover": null,
+    "grp_turnover": 700,
+    "cntd_turnover": null,
+    "app_turnover": null
+  }
+]
