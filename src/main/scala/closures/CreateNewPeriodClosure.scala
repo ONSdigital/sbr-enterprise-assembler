@@ -110,7 +110,6 @@ trait CreateNewPeriodClosure extends WithConversionHelper with UnitRowConverter 
       new GenericRowWithSchema(Array(
                 newRow.getAs[String]("BusinessName"),
                 newRow.getAs[String]("CompanyNo"),
-                newRow.getAs[String]("EmploymentBands"),
                 Try{newRow.getAs[String]("IndustryCode")}.getOrElse(""),
                 newRow.getAs[String]("LegalStatus"),
                 newRow.getAs[Seq[String]]("PayeRefs"),

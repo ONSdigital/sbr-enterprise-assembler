@@ -41,16 +41,35 @@ trait NewPeriodWithCalculations extends WithConversionHelper with DataFrameHelpe
     val preCalculatedLuDF = AdminDataCalculator.aggregateDF(allLUsDF)
 
     preCalculatedLuDF
-
-
   }
 
-  def getAllLUs(joinedLUs: RDD[(String, (Option[Cells], Option[Cells]))])(implicit spark: SparkSession) = joinedLUs.collect {
+  def getAllLUs(joinedLUs: DataFrame)(implicit spark: SparkSession) = {
+    val dataset: Dataset[Row] = joinedLUs.map{
+      case row if(Try{row.getAs[String]("ern")}.isFailure) => {
+        val ern = generateErn(null,null)
+        Row(Array(
+          ern,
+          row.getAs[String]("id"),
+          row.getAs[String]("BusinessName"),
+          row.getAs[String]("IndustryCode"),
+          row.getAs[String]("LegalStatus"),
+          row.getAs[String]("PostCode"),
+          row.getAs[String]("TradingStatus"),
+          row.getAs[String]("Turnover"),
+          row.getAs[String]("UPRN"),
+          row.getAs[String]("CompanyNo"),
+          row.getAs[Seq[String]]("PayeRefs"),
+          row.getAs[Seq[String]]("VatRefs")
+        ))
+
+      }}
+    spark.createDataFrame(dataset.rdd,biWithErnSchema)
+  } /*{
 
       case (key, (Some(newCells), Some(oldCells))) => toRow(key,newCells,oldCells)
       case (key, (Some(newCells), None)) if(key.contains("~LEU~")) => toRow(key,newCells)
     }
-
+*/
   def toRow(key:String, newCells:Cells, oldCells:Cells):Row = {
 
     val cells = newCells ++ oldCells.find(_.column=="p_ENT").map(ernCell => Seq(ernCell)).getOrElse(Seq.empty)

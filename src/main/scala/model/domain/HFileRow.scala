@@ -56,6 +56,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
        getCellValue("legal_status")
        ),entRowSchema)
    }
+
   
      def toLuRow = {
        import spark.extensions.sql._
@@ -70,6 +71,14 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
          Try{getCellArrayValue("PAYE").map(paye => if(paye.startsWith("c_")){paye.substring(2)} else paye)}.getOrElse(null),
          Try{getCellArrayValue("VAT").map(vat => if(vat.startsWith("c_")){vat.substring(2)} else vat)}.getOrElse(null)
      ),luRowSchema)
+   }
+     def toUbrnErnRow = {
+       import spark.extensions.sql._
+
+       new GenericRowWithSchema(Array(
+         getId,
+         getCellValue("p_ENT")
+     ),existingLuBiRowSchema)
    }
   
   def toLouRow = {
