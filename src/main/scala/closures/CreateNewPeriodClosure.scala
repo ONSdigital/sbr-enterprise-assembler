@@ -288,5 +288,5 @@ trait CreateNewPeriodClosure extends WithConversionHelper /*with UnitRowConverte
 
 }
 
-object CreateNewPeriodClosure extends NewCreateClosure
+object CreateNewPeriodClosure extends CreateNewPeriodClosure
 

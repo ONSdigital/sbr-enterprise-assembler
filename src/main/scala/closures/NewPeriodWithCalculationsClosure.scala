@@ -17,21 +17,21 @@ import spark.extensions.sql._
 
 import scala.util.Try
 
-trait NewCreateClosure extends AdminDataCalculator with HFileUtils with RddLogging with Serializable{
+trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with HFileUtils with RddLogging with Serializable{
 
   val hbaseDao: HBaseDao = HBaseDao
 
   def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession): Unit = {
     val confs = Configs.conf
-    
+
     /**
       * Fields:
-      * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,   
+      * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,
       * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
       * */
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
-    
-    
+
+
     /**
       * id, ern
       * */
@@ -64,8 +64,8 @@ trait NewCreateClosure extends AdminDataCalculator with HFileUtils with RddLoggi
       * ern,vatref, paye_employees, paye_jobs, contained_turnover, apportioned_turnover, standard_turnover
       * */
     val calculatedDF = calculate(allLUsDF,appconf).cache()
-    
-    
+
+
 /**
   * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
   * */
@@ -200,13 +200,13 @@ trait NewCreateClosure extends AdminDataCalculator with HFileUtils with RddLoggi
                                                                 ))
                               ),completeEntSchema)
 
-  
+
   def getExistingLOUsDF(appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
     val regex = ".*~"+{appconf.PREVIOUS_TIME_PERIOD}+"~.*"
     val louHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs,appconf, localUnitsTableName, regex)
     val existingLouRdd: RDD[Row] = louHFileRowRdd.map(_.toLouRow)
-    spark.createDataFrame(existingLouRdd,louRowSchema)   
+    spark.createDataFrame(existingLouRdd,louRowSchema)
   }
 
   def getExistingEntsDF(appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
@@ -232,7 +232,7 @@ trait NewCreateClosure extends AdminDataCalculator with HFileUtils with RddLoggi
   }
 /**
   * Fields:
-  * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,   
+  * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,
   * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
   * */
   def getIncomingBiData(appconf: AppParams)(implicit spark: SparkSession) = {
@@ -264,4 +264,4 @@ trait NewCreateClosure extends AdminDataCalculator with HFileUtils with RddLoggi
     spark.createDataFrame(rows,biWithErnSchema)
   }
 }
-object NewCreateClosure extends NewCreateClosure
+object NewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure

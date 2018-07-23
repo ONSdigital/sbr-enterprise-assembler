@@ -26,7 +26,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
   lazy val testDir = "newperiod"
 
-  object MockCreateNewPeriodClosure extends NewCreateClosure with MockClosures{
+  object MockCreateNewPeriodClosureWithCalculations$ extends NewCreateClosureWithCalculations$ with MockClosures{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
@@ -60,7 +60,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     /*val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
-    MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+    MockCreateNewPeriodClosureWithCalculations$.addNewPeriodData(appConfs)(spark)
     spark.stop()
   }
 
