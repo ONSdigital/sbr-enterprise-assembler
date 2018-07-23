@@ -75,8 +75,6 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable{
     val newLEUsCalculatedDF = newLEUsDF.join(allLUsDF, col("ern"),"left_outer")
     /**
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
-      *
-      * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
       * */
     val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
 
@@ -86,7 +84,7 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable{
 
     /**
       * Fields:
-      * lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5, postcode, sic07, employees,
+      * lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5, postcode, sic07, employees
       * */
 
     val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
