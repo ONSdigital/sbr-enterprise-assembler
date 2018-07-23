@@ -265,4 +265,4 @@ trait AdminDataCalculator extends Serializable with RddLogging{
         """.stripMargin
 }
 
-object AdminDataCalculator extends AdminDataCalculator
+//object AdminDataCalculator extends AdminDataCalculator

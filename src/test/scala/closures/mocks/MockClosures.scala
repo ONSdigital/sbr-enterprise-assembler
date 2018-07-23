@@ -1,6 +1,7 @@
 package closures.mocks
 
 import closures.CreateClosures
+import dao.hbase.HFileUtils
 import dao.hbase.converter.WithConversionHelper
 import global.AppParams
 import model.hfile.Tables
@@ -8,7 +9,7 @@ import org.apache.spark.sql.Row
 import spark.extensions.sql.SqlRowExtensions
 
 
-trait MockClosures{this:WithConversionHelper =>
+trait MockClosures{this:HFileUtils =>
 
   val ernMapping: Map[String, String] = Map(
     ("5TH PROPERTY TRADING LIMITED" ->  "111111111-TEST-ERN"),

@@ -24,7 +24,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
 
   lazy val testDir = "missinglou"
 
-  object MockCreateNewPeriodClosure extends CreateNewPeriodClosure with MockClosures {
+  object MockCreateNewPeriodClosure extends NewCreateClosure with MockClosures {
 
     override val hbaseDao: HBaseDao = MockCreateNewPeriodHBaseDao
 

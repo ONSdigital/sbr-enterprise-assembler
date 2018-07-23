@@ -21,9 +21,9 @@ import org.apache.spark.sql.functions._
 import scala.util.Try
 
 
-trait CreateNewPeriodClosure extends WithConversionHelper with UnitRowConverter with DataFrameHelper with AdminDataCalculator with RddLogging with Serializable{
+trait CreateNewPeriodClosure extends WithConversionHelper /*with UnitRowConverter*/ with DataFrameHelper with AdminDataCalculator with RddLogging with Serializable{
 
-  val hbaseDao: HBaseDao = HBaseDao
+  /*val hbaseDao: HBaseDao = HBaseDao
 
   type Cells = Iterable[KVCell[String, String]]
   type Record = (String, Cells)
@@ -90,7 +90,7 @@ trait CreateNewPeriodClosure extends WithConversionHelper with UnitRowConverter 
     val preCalculatedDF = spark.createDataFrame(preCalculatedLUs,preCalculateDfSchema)
 
     preCalculatedDF.cache()
-    val calculatedDF = AdminDataCalculator.calculate(preCalculatedDF,appconf).cache()
+    val calculatedDF = calculate(preCalculatedDF,appconf).cache()
 
     //calculatedDF.show()
     //calculatedDF.printSchema()
@@ -191,8 +191,6 @@ trait CreateNewPeriodClosure extends WithConversionHelper with UnitRowConverter 
 
   //printRdd("existingLusCells",existingLusCells,"(String, HFileCell)")
 
-  val newLinks = newLinksDF
-
   val allLinks: RDD[(String, HFileCell)] = existingLinkCells.union(newLinks).union(missingLousLinks).coalesce(numOfPartitions)
 
   //printRdd("allLus",allLus,"(String, HFileCell)")
@@ -286,9 +284,9 @@ trait CreateNewPeriodClosure extends WithConversionHelper with UnitRowConverter 
     new GenericRowWithSchema(Array(
       ern,lurn
     ),louIdsSchema)
-  }
+  }*/
 
 }
 
-object CreateNewPeriodClosure extends CreateNewPeriodClosure
+object CreateNewPeriodClosure extends NewCreateClosure
 

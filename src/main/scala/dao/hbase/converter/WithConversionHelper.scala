@@ -113,7 +113,6 @@ trait WithConversionHelper {
   }
 
 /*
-
   def toEnterpriseRecords(row:Row, appParams:AppParams): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
