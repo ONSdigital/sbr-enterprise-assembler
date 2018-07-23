@@ -11,6 +11,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
+import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader._
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
@@ -26,7 +27,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
   lazy val testDir = "newperiod"
 
-  object MockCreateNewPeriodClosureWithCalculations$ extends NewCreateClosureWithCalculations$ with MockClosures{
+  object NewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure with MockClosures{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
@@ -60,7 +61,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     /*val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
-    MockCreateNewPeriodClosureWithCalculations$.addNewPeriodData(appConfs)(spark)
+    NewPeriodWithCalculationsClosure.addNewPeriodData(appConfs)(spark)
     spark.stop()
   }
 

@@ -160,7 +160,8 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
 
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-      val calculatedPayeDF = AdminDataCalculator.getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
+      val calculator = new AdminDataCalculator(){}
+      val calculatedPayeDF = calculator.getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
       /**
             +--------------+---------+----------+
             |paye_employees|paye_jobs|       ern|
@@ -172,7 +173,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
             |             4|        8|1100000004|
             +--------------+---------+----------+
         */
-      val step1DF: DataFrame = new AdminDataCalculator{}.calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
+      val step1DF: DataFrame = new AdminDataCalculator{}.calculate(unitsDF,appConfs)
       /**
       +----------+---------+------------+--------+-----------+--------------+---------+
       |       ern|vat_group|      vatref|turnover|record_type|paye_employees|paye_jobs|
@@ -202,7 +203,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
        |2200000002|             5|   555666|
        +----------+--------------+---------+
      */*/
-   val testDF: DataFrame = AdminDataCalculator.calculateTurnovers(step1DF,vatDF)
+   val testDF: DataFrame = AdminDataCalculator.calculate(step1DF,vatDF)
    /**
     +---------+----------+------------+--------+-----------+--------------+---------+----------------+----------------+
     |vat_group|       ern|      vatref|turnover|record_type|paye_employees|paye_jobs|group_empl_total|no_ents_in_group|
