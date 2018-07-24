@@ -5,6 +5,7 @@ package utils
   */
 trait Paths {this: { val testDir: String } =>
 
+  val jsonOrigFilePath = s"src/test/resources/data/$testDir/newPeriod-orig.json"
   val jsonFilePath = s"src/test/resources/data/$testDir/newPeriod.json"
   val linkHfilePath = s"src/test/resources/data/$testDir/links"
   val entHfilePath = s"src/test/resources/data/$testDir/enterprise"

@@ -64,6 +64,13 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     Enterprise(newEntErn,Some("9999999999"),"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,Some("85"),Some("85"),None,None)
   )
 
+  val newPeriodEntsWithoutCalculations = List(
+    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"34567","1",None,None,None,None,None,None,None),
+    Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",None,None,None,None,None,None,None),
+    Enterprise(entWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"12345","1",None,None,None,None,None,None,None),
+    Enterprise(newEntErn_2,Some("9999999999"),"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,None,None,None,None)
+  )
+
   val newPeriodLocalUnits = List(
     LocalUnit("200000099",Some("100002826247"),entWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD",None,"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345","2"),
     LocalUnit("300000088",Some("100000827984"),"3000000011",Some("9900000126"),"2-ND LU OF BLACKWELLGROUP LTD",None,"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122","2"),

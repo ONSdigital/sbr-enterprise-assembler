@@ -17,17 +17,20 @@ import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import spark.extensions.sql.existingLuBiRowSchema
 import utils.{Paths, TestDataUtils}
 import utils.data.existing.ExistingData
+import utils.data.expected.ExpectedDataForAddNewPeriodScenario
+
+import scala.collection.immutable
 
 /**
   *
   *
   */
-class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with TestDataUtils{
+class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
   lazy val testDir = "calculations"
 
   object MockNewPeriodClosure extends MockNewPeriodClosure{
-    lazy val testDir = "calculations"
+           lazy val testDir = "calculations"
   }
 
   val appConfs = AppParams(
@@ -47,28 +50,36 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
     val confs = appConfs
     //createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-    /*val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-    val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-    val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
+    //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+    //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
+    //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
+    //ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
     MockNewPeriodClosure.addNewPeriodData(appConfs)(spark)
     spark.stop()
   }
 
+  /*  override def afterAll() = {
+    File(parquetPath).deleteRecursively()
+    File(linkHfilePath).deleteRecursively()
+    File(entHfilePath).deleteRecursively()
+    File(louHfilePath).deleteRecursively()
+    File(existingRecordsDir).deleteRecursively()
+  }*/
 
-  "assembler" should {
-    "create hfiles populated with expected enterprise data" in {
+      "assembler" should {
+        "create hfiles populated with expected enterprise data" in {
 
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-      val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
-      val actual = actualRows.map(Enterprise(_)).sortBy(_.ern)
-      val expected: List[Enterprise] = List.empty[Enterprise]//newPeriodEnts.sortBy(_.ern)
-      actual shouldBe expected
-      spark.stop()
+          implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+          val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
+          val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
+          val actual: List[Enterprise] = actualRows.map(Enterprise(_)).sortBy(_.ern)
+          val expected: List[Enterprise] = newPeriodEntsWithoutCalculations.sortBy(_.ern)
+          actual shouldBe expected
+          spark.stop()
 
-    }
-  }
+        }
+      }
+
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
