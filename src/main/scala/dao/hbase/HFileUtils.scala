@@ -31,7 +31,6 @@ trait HFileUtils extends Serializable{
 
   def leuToLinks(row: Row, appParams: AppParams) = {
     val ubrn = getString(row,"id").get
-    val lurn = getString(row,"lurn").get
     val ern = getString(row,"ern").get
     val entKey = generateLinkKey(ern,enterprise,appParams)
     val luKey = generateLinkKey(ern,legalUnit,appParams)
