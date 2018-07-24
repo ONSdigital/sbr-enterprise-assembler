@@ -1,6 +1,7 @@
 package closures
 
 import closures.mocks.MockClosures
+import dao.hbase.HFileUtils
 import dao.parquet.ParquetDao
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, LocalUnit}
@@ -18,7 +19,7 @@ class CreateInitialPopulationSpec extends Paths with WordSpecLike with Matchers 
 
   lazy val testDir = "create"
 
-  object MockCreateNewPopulationClosure extends CreateClosures with MockClosures
+  object MockCreateNewPopulationClosure extends CreateClosures// with HFileUtils with MockClosures
 
   val appConfs = AppParams((Array[String](
                                       "LINKS", "ons", "l", linkHfilePath,

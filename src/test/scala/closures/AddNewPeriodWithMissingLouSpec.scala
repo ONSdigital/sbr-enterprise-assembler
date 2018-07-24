@@ -12,6 +12,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader._
 import utils.{HFileTestUtils, Paths}
 import utils.data.existing.ExistingData
@@ -24,7 +25,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
 
   lazy val testDir = "missinglou"
 
-  object MockCreateNewPeriodClosureWithCalculations$ extends NewCreateClosureWithCalculations$ with MockClosures {
+  object MockNewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure with MockClosures {
 
     override val hbaseDao: HBaseDao = MockCreateNewPeriodHBaseDao
 
@@ -55,7 +56,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockCreateNewPeriodClosureWithCalculations$.addNewPeriodData(appConfs)(spark)
+        MockNewPeriodWithCalculationsClosure.addNewPeriodData(appConfs)(spark)
         spark.stop()
   }
 

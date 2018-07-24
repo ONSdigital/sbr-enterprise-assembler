@@ -203,7 +203,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
        |2200000002|             5|   555666|
        +----------+--------------+---------+
      */*/
-   val testDF: DataFrame = AdminDataCalculator.calculate(step1DF,vatDF)
+   val testDF: DataFrame = new AdminDataCalculator(){}.calculate(step1DF,appConfs)
    /**
     +---------+----------+------------+--------+-----------+--------------+---------+----------------+----------------+
     |vat_group|       ern|      vatref|turnover|record_type|paye_employees|paye_jobs|group_empl_total|no_ents_in_group|
@@ -222,7 +222,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
 /*   testDF.show()
    testDF.printSchema()*/
 
-   val doneDF = AdminDataCalculator.aggregateDF(testDF)
+   val doneDF = new AdminDataCalculator(){}.aggregateDF(testDF)
    doneDF.show()
    doneDF.printSchema()
 /**

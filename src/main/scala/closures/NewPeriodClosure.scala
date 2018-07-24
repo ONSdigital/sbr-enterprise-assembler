@@ -32,13 +32,13 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable{
       * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
       * */
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
-
+    incomingBiDataDF.show()
 
     /**
       * id, ern
       * */
     val existingLEsDF: DataFrame = getExistingLEs(appconf,confs)
-
+    existingLEsDF.show()
 
     /**
       * Assigns ERNs to existing LEUs
@@ -47,9 +47,9 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable{
       * BusinessName, CompanyNo, IndustryCode, LegalStatus,
       * PayeRefs, PostCode, TradingStatus, Turnover, UPRN, VatRefs, id, ern
       * */
-    val joinedLUs = existingLEsDF.join(incomingBiDataDF,col("id"),"full_outer")
+    val joinedLUs = existingLEsDF.join(incomingBiDataDF,Seq("id"),"full_outer")
     joinedLUs.cache()
-
+    joinedLUs.show()
 
     /**
       * Generate ERNs for new BI Units
@@ -59,35 +59,40 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable{
       * */
     val allLUsDF: DataFrame = getAllLUs(joinedLUs)
     allLUsDF.cache()
-
+    allLUsDF.show()
     /**
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       * */
     val existingEntDF = getExistingEntsDF(appconf,confs)
-
+    existingEntDF.show()
     val existingEntCalculatedDF = existingEntDF.join(allLUsDF,col("ern"), "left_outer")
 
     /**
       * ern, id, BusinessName, IndustryCode, LegalStatus, PostCode, TradingStatus Turnover, UPRN, CompanyNo, PayeRefs, VatRefs
       * */
     val newLEUsDF = allLUsDF.join(existingEntDF.select(col("ern")),col("ern"),"left_anti")
-
+    newLEUsDF.show()
     val newLEUsCalculatedDF = newLEUsDF.join(allLUsDF, col("ern"),"left_outer")
+    newLEUsCalculatedDF.show()
     /**
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       * */
     val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
+    newEntsCalculatedDF.show()
 
     val allEntsErns = allLUsDF.select(col("ern")).distinct
+    allEntsErns.show()
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
-
+    allEntsDF.show()
     /**
       * Fields:
       * lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5, postcode, sic07, employees
       * */
 
     val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
+    allLOUs.show()
+
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
     saveLinks(allEntsDF,allLOUs,allLUsDF,appconf)
