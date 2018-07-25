@@ -28,7 +28,7 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
 
     def loadNewPeriodWithCalculationsData(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
 
-      NewPeriodWithCalculationsClosure.addNewPeriodData(appconf)
+      NewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appconf)
 
         withHbaseConnection{implicit con:Connection =>
 
