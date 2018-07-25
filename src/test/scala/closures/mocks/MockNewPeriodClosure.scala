@@ -19,7 +19,7 @@ trait MockNewPeriodClosure extends NewPeriodClosure with MockClosures  with Expe
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
 
-    override def getExistingLEs(appconf:AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+    override def getExistingLeusDF(appconf:AppParams, confs:Configuration)(implicit spark: SparkSession) = {
       val hfileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
       val existingLeus: Seq[Row] = hfileRows.filter(_.key.contains("~LEU~")).map(row => Row(
         row.key.split("~").head,
@@ -52,7 +52,7 @@ trait MockNewPeriodClosure extends NewPeriodClosure with MockClosures  with Expe
      existingEntsDF
   }
 //existingLousRecordHFiles
-  override def getExistingLOUsDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+  override def getExistingLousDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
     val hfileRows: RDD[HFileRow] = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).sortBy(_.key)
     val existingLouRdd = hfileRows.map(row =>
                  Row(
