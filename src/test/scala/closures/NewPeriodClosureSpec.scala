@@ -48,12 +48,12 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
   override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    //createRecords(confs)(spark)
+    createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
     //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-    //ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
+    ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
     MockNewPeriodClosure.addNewPeriodData(appConfs)(spark)
     spark.stop()
   }
