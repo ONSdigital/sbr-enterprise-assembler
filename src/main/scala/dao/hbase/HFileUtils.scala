@@ -21,6 +21,32 @@ trait HFileUtils extends Serializable{
   val childPrefix = "c_"
   val parentPrefix = "p_"
 
+
+  def rowToEntCalculations(row:Row,appParams:AppParams) = {
+    val ern = getString(row,"ern").get
+    val entKey = generateEntKey(ern,appParams)
+    Seq(
+          getString(row,"paye_empees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
+          getString(row,"paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
+          getString(row,"app_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+          getString(row,"ent_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+          getString(row,"cntd_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
+          getString(row,"std_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+          getString(row,"grp_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
+      ).collect { case Some(v) => v }
+  }
+
+
+  def rowToLouCalculations(row:Row,appParams:AppParams) = {
+    val lurn = getString(row,"lurn").get
+    val ern = getString(row,"ern").get
+    val entKey = generateLocalUnitKey(lurn,ern,appParams)
+    getString(row,"paye_empees").map(employees => createEnterpriseCell(ern, "employees", employees, appParams))
+  }
+
+
+
+
   def entToLinks(row:Row,appParams:AppParams):Seq[(String, HFileCell)] = {
     val ern = getString(row,"ern").get
     val entKey = generateEntKey(ern,appParams)

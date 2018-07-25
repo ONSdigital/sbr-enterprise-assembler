@@ -8,7 +8,7 @@ import service._
 import scala.reflect.io.File
 
 
-object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService with DataIntegrityReportService{
+object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService with DataIntegrityReportService with AdminCalculationService{
 
   def main(args: Array[String]) {
 
@@ -22,6 +22,7 @@ try{
     appParams.ACTION match{
 
       case "addperiod" => loadNewPeriodData(appParams)
+      case "calculate" => addCalculations(appParams)
       case "refresh" => loadRefreshFromParquet(appParams)
       case "create" => createNewPopulationFromParquet(appParams)
       case "deleteperiod" => deletePeriod(appParams)

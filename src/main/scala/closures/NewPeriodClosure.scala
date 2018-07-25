@@ -19,9 +19,7 @@ import scala.util.Try
 /**
   *No calculations added
   */
-class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
-
-  val hbaseDao: HBaseDao = HBaseDao
+class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with Serializable {
 
   def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession): Unit = {
     val confs = Configs.conf
@@ -38,7 +36,7 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
     /**
       * id, ern
       **/
-    val existingLEsDF: DataFrame = getExistingLEs(appconf, confs)
+    val existingLEsDF: DataFrame = getExistingLeusDF(appconf, confs)
 
     /*existingLEsDF.show()
     existingLEsDF.printSchema()*/
@@ -105,44 +103,9 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
     joinedLUs.unpersist()
   }
 
-  def saveLinks(entDF: DataFrame, louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
-    import spark.implicits._
-    val entLinks: RDD[(String, hfile.HFileCell)] = entDF.map(row => entToLinks(row, appconf)).flatMap(identity(_)).rdd
-    val lousLinks = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
-    val restOfLinks = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
-    val allLinks: RDD[(String, hfile.HFileCell)] = entLinks.union(lousLinks).union(restOfLinks)
-    allLinks.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
-  }
-
-  def saveEnts(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
-    val hfileCells: RDD[(String, hfile.HFileCell)] = getEntHFileCells(entsDF, appconf)
-    hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_ENTERPRISE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
-  }
-
-
-  def saveLous(lousDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
-    import spark.implicits._
-    val hfileCells = lousDF.map(row => rowToLocalUnit(row, appconf)).flatMap(identity(_)).rdd
-    hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
-  }
-
-
-  def getEntHFileCells(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession): RDD[(String, hfile.HFileCell)] = {
-    import spark.implicits._
-    val res: RDD[(String, hfile.HFileCell)] = entsDF.map(row => rowToEnt(row, appconf)).flatMap(identity).rdd
-    res
-  }
-
-
   def getAllLOUs(allEntsDF: DataFrame, appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
 
-    val existingLOUs: DataFrame = getExistingLOUsDF(appconf, confs)
+    val existingLOUs: DataFrame = getExistingLousDF(appconf, confs)
     val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"), Seq("ern"), "left_anti")
     val newAndMissingLOUsDF: DataFrame = createNewAndMissingLOUs(entsWithoutLOUs,appconf)
     val allLOUs = existingLOUs.union(newAndMissingLOUsDF)
@@ -218,44 +181,6 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
       row.getAs[String]("LegalStatus")
     )
     ), entRowSchema)
-
-
-  def getExistingLOUsDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-
-    val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
-    val regex = ".*~" + {
-      appconf.PREVIOUS_TIME_PERIOD
-    } + "~.*"
-    val louHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs, appconf, localUnitsTableName, regex)
-    val existingLouRdd: RDD[Row] = louHFileRowRdd.map(_.toLouRow)
-    spark.createDataFrame(existingLouRdd, louRowSchema)
-  }
-
-  def getExistingEntsDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val entRegex = ".*~" + {
-      appconf.PREVIOUS_TIME_PERIOD
-    } + "$"
-    val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
-    val entHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs, appconf, entTableName, entRegex)
-    val existingEntRdd: RDD[Row] = entHFileRowRdd.map(_.toEntRow)
-    spark.createDataFrame(existingEntRdd, entRowSchema)
-  }
-
-  /**
-    * returns existing ~LEU~ links DF
-    * fields:
-    * id:String,
-    * ern:String
-    **/
-  def getExistingLEs(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val linksTableName = s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}"
-    val luRegex = ".*(LEU)~" + {
-      appconf.PREVIOUS_TIME_PERIOD
-    } + "$"
-    val existingLinks: RDD[Row] = hbaseDao.readTableWithKeyFilter(confs, appconf, linksTableName, luRegex).map(_.toUbrnErnRow)
-    val existingLinksDF: DataFrame = spark.createDataFrame(existingLinks, existingLuBiRowSchema)
-    existingLinksDF
-  }
 
   /**
     * Fields:
