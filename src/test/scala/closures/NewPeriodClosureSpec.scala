@@ -20,6 +20,7 @@ import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.collection.immutable
+import scala.reflect.io.File
 
 /**
   *
@@ -58,13 +59,13 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
     spark.stop()
   }
 
-  /*  override def afterAll() = {
+    override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
       "assembler" should {
         "create hfiles populated with expected enterprise data" in {

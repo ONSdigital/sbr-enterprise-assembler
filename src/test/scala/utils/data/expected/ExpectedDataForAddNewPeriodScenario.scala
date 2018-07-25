@@ -68,7 +68,7 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"34567","1",None,None,None,None,None,None,None),
     Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",None,None,None,None,None,None,None),
     Enterprise(entWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"12345","1",None,None,None,None,None,None,None),
-    Enterprise(newEntErn_2,Some(""),"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,None,None,None,None)
+    Enterprise(newEntErn_2,None,"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,None,None,None,None)
   )
 
   val newPeriodLocalUnits = List(

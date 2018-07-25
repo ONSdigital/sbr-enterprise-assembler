@@ -32,8 +32,8 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
       **/
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
 
-    incomingBiDataDF.show()
-    incomingBiDataDF.printSchema()
+    /*incomingBiDataDF.show()
+    incomingBiDataDF.printSchema()*/
 
     /**
       * id, ern
@@ -87,7 +87,7 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
     //allEntsErns.show()
 
     val allEntsDF = existingEntDF.union(newEntDF)
-    allEntsDF.show()
+    //allEntsDF.show()
     /**
       * Fields:
       * lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5, postcode, sic07, employees
@@ -208,7 +208,7 @@ class NewPeriodClosure extends HFileUtils with RddLogging with Serializable {
   def createNewEntsWithoutCalculations(newLEUs: DataFrame)(implicit spark: SparkSession) = spark.createDataFrame(
     newLEUs.rdd.map(row => Row(
       row.getAs[String]("ern"),
-      Try {row.getAs[String]("entref")}.getOrElse(""),
+      Try {row.getAs[String]("entref")}.getOrElse(null),
       row.getAs[String]("BusinessName"),
       null, //trading_style
       Try {row.getAs[String]("address1")}.getOrElse(""),
