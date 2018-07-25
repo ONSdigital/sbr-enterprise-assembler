@@ -21,6 +21,7 @@ object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefre
 try{
     appParams.ACTION match{
 
+      case "add-calculated-period" => loadNewPeriodWithCalculationsData(appParams)
       case "addperiod" => loadNewPeriodData(appParams)
       case "calculate" => addCalculations(appParams)
       case "refresh" => loadRefreshFromParquet(appParams)
