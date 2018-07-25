@@ -152,7 +152,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     }*/
 
 
-  "DataFrameHelper" should {
+  "AdminDataCalculator" should {
     import spark.extensions.sql._
     "aggregateDF turnovers test DF" in {
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -173,7 +173,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
             |             4|        8|1100000004|
             +--------------+---------+----------+
         */
-      val step1DF: DataFrame = new AdminDataCalculator{}.calculate(unitsDF,appConfs)
+      val step1DF: DataFrame = calculator.calculate(unitsDF,appConfs)
       /**
       +----------+---------+------------+--------+-----------+--------------+---------+
       |       ern|vat_group|      vatref|turnover|record_type|paye_employees|paye_jobs|
@@ -203,7 +203,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
        |2200000002|             5|   555666|
        +----------+--------------+---------+
      */*/
-   val testDF: DataFrame = new AdminDataCalculator(){}.calculate(step1DF,appConfs)
+   val testDF: DataFrame = calculator.calculate(step1DF,appConfs)
    /**
     +---------+----------+------------+--------+-----------+--------------+---------+----------------+----------------+
     |vat_group|       ern|      vatref|turnover|record_type|paye_employees|paye_jobs|group_empl_total|no_ents_in_group|
@@ -222,7 +222,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
 /*   testDF.show()
    testDF.printSchema()*/
 
-   val doneDF = new AdminDataCalculator(){}.aggregateDF(testDF)
+   val doneDF = calculator.aggregateDF(testDF)
    doneDF.show()
    doneDF.printSchema()
 /**
