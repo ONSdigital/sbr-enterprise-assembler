@@ -1,6 +1,5 @@
 package closures
 
-import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import model.domain.HFileRow
 import model.hfile
@@ -8,7 +7,7 @@ import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader
@@ -20,7 +19,7 @@ trait CalculateClosure extends AdminDataCalculator with BaseClosure with  RddLog
 
   val confs = Configs.conf
 
-  def calculate(appconf:global.AppParams)(implicit spark:SparkSession) = {
+  def updateCalculations(appconf:global.AppParams)(implicit spark:SparkSession) = {
     val allLUsDF: DataFrame = getExistingLousDF(appconf,confs)
     val allEntsDF: DataFrame = getExistingEntsDF(appconf,confs)
     val allLousDF: DataFrame = getExistingLousDF(appconf,confs)
