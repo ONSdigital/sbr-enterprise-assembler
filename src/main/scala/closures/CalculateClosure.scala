@@ -28,7 +28,8 @@ trait CalculateClosure extends AdminDataCalculator with BaseClosure with  RddLog
     saveLouCalculations(calculatedDF,appconf)
   }
 
-  def saveLouCalculations(calculationsDF:DataFrame,appconf:AppParams) = {
+  def saveLouCalculations(calculationsDF:DataFrame,appconf:AppParams)(implicit spark:SparkSession) = {
+    import spark.implicits._
     val hfileCells: RDD[(String, hfile.HFileCell)] = calculationsDF.map(row => rowToLouCalculations(row,appconf)).flatMap(identity(_)).rdd
     hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -36,7 +37,8 @@ trait CalculateClosure extends AdminDataCalculator with BaseClosure with  RddLog
   }
 
 
-  def saveEntCalculations(calculationsDF:DataFrame,appconf:AppParams) = {
+  def saveEntCalculations(calculationsDF:DataFrame,appconf:AppParams)(implicit spark:SparkSession) = {
+    import spark.implicits._
     val hfileCells: RDD[(String, hfile.HFileCell)] = calculationsDF.map(row => rowToEntCalculations(row,appconf)).flatMap(identity(_)).rdd
     hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
