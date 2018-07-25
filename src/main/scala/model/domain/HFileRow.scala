@@ -20,8 +20,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
 
   def getId = key.split("~").head
 
-  def getCellValue(key:String, byKey:Boolean=true) = if(byKey) cells.collect{case KVCell(`key`,value) => value}.headOption.getOrElse(null)
-                                                                  else cells.collect{case KVCell(value,`key`) => value}.headOption.getOrElse(null)
+  def getCellValue(key:String, byKey:Boolean=true, default:String = "") = if(byKey) cells.collect{case KVCell(`key`,value) => if(value==null) default else value}.headOption.getOrElse(null)
+                                                                                  else cells.collect{case KVCell(value,`key`) => if(value==null) default else value}.headOption.getOrElse(null)
 
   def getCellArrayValue(key:String) = {
 
@@ -89,6 +89,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
       getCellValue("luref"),
       getCellValue("ern"),
       getCellValue("name"),
+      getCellValue("entref"),
       getCellValue("tradingstyle"),
       getCellValue("address1"),
       getCellValue("address2"),
@@ -97,8 +98,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]){
       getCellValue("address5"),
       getCellValue("postcode"),
       getCellValue("sic07"),
-      getCellValue("employees"),
-      getCellValue("")
+      cells.find(_.column == "employees").map(_.value).getOrElse(null)//getCellValue("employees")
     ),louRowSchema)
   }
 

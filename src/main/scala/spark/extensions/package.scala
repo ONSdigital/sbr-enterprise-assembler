@@ -59,8 +59,8 @@ package object sql {
     .add(StructField("lurn", StringType,false))
     .add(StructField("luref", StringType,true))
     .add(StructField("ern", StringType,true))
-    .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,false))
+    .add(StructField("entref", StringType,true))
     .add(StructField("tradingstyle", StringType,true))
     .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
@@ -183,7 +183,15 @@ val payeCalculationSchema = new StructType()
     .add(StructField("std_turnover", StringType,true))
     .add(StructField("grp_turnover", StringType,true))
 
-
+val calculationsSchema = new StructType()
+  .add(StructField("ern", StringType,true))
+  .add(StructField("paye_empees", StringType,true))
+  .add(StructField("paye_jobs", StringType,true))
+  .add(StructField("app_turnover", StringType,true))
+  .add(StructField("ent_turnover", StringType,true))
+  .add(StructField("cntd_turnover", StringType,true))
+  .add(StructField("std_turnover", StringType,true))
+  .add(StructField("grp_turnover", StringType,true))
 
   implicit class DataFrameExtensions(df:DataFrame){
 

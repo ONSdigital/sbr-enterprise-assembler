@@ -178,8 +178,15 @@ trait HFileUtils extends Serializable{
   private def generateLinkKey(id:String, suffix:String, appParams:AppParams) = {
     s"$id~$suffix~${appParams.TIME_PERIOD}"
   }
+
   def getString(row:Row,name:String) = {
-    Try{row.getAs[String](name)}.toOption
+    Try{
+      val value = row.getAs[String](name)
+      if(value==null) {
+        throw new NullPointerException(s"value of field $name is null")
+      }
+      else value
+    }.toOption
   }
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
