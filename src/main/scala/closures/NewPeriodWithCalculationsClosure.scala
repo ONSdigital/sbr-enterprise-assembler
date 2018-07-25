@@ -20,7 +20,7 @@ import scala.util.Try
 trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  def addNewPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
     val confs = Configs.conf
 
     /**
@@ -46,7 +46,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       * */
     val joinedLUs = incomingBiDataDF.join(
                       existingLEsDF.withColumnRenamed("ubrn", "id").select("id","ern"),
-                      col("id"),
+                      Seq("id"),
                       "left_outer")
     joinedLUs.cache()
 
@@ -57,7 +57,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     * Fields:
     * ern, id, BusinessName, IndustryCode, LegalStatus, PostCode, TradingStatus Turnover, UPRN, CompanyNo, PayeRefs, VatRefs
     * */
-    val allLUsDF: DataFrame = getAllLUs(joinedLUs)
+    val allLUsDF: DataFrame = getAllLUs(joinedLUs,appconf)
     allLUsDF.cache()
 
     /**
@@ -73,14 +73,14 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
   * */
     val existingEntDF = getExistingEntsDF(appconf,confs)
 
-    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,col("ern"), "left_outer")
+    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
 
     /**
       * ern, id, BusinessName, IndustryCode, LegalStatus, PostCode, TradingStatus Turnover, UPRN, CompanyNo, PayeRefs, VatRefs
       * */
-    val newLEUsDF = allLUsDF.join(existingEntDF.select(col("ern")),col("ern"),"left_anti")
+    val newLEUsDF = allLUsDF.join(existingEntDF.select(col("ern")),Seq("ern"),"left_anti")
 
-    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, col("ern"),"left_outer")
+    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
     /**
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       *
@@ -111,7 +111,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
   def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
     val existingLOUs: DataFrame = getExistingLousDF(appconf,confs)
 
-    val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"),col("ern"),"left_anti")
+    val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"),Seq("ern"),"left_anti")
 
     val newAndMissingLOUsDF: DataFrame =  createNewAndMissingLOUs(entsWithoutLOUs,appconf)
 
@@ -181,27 +181,27 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     parquetDF.castAllToString
   }
 
-  def getAllLUs(joinedLUs: DataFrame)(implicit spark: SparkSession) = {
-    val rows: RDD[Row] = joinedLUs.rdd.map{
-      case row if(Try{row.getAs[String]("ern")}.isFailure) => {
-        val ern = generateErn(null,null)
-        Row(Array(
-          ern,
-          row.getAs[String]("id"),
-          row.getAs[String]("BusinessName"),
-          row.getAs[String]("IndustryCode"),
-          row.getAs[String]("LegalStatus"),
-          row.getAs[String]("PostCode"),
-          row.getAs[String]("TradingStatus"),
-          row.getAs[String]("Turnover"),
-          row.getAs[String]("UPRN"),
-          row.getAs[String]("CompanyNo"),
-          row.getAs[Seq[String]]("PayeRefs"),
-          row.getAs[Seq[String]]("VatRefs")
-        ))
+  def getAllLUs(joinedLUs: DataFrame,appconf:AppParams)(implicit spark: SparkSession) = {
 
-      }}
-    spark.createDataFrame(rows,biWithErnSchema)
+    val rows = joinedLUs.rdd.map { row => {
+      val ern = if (row.isNull("ern")) generateErn(row, appconf) else row.getAs[String]("ern")
+
+      Row(
+        ern,
+        row.getAs[String]("id"),
+        row.getAs[String]("BusinessName"),
+        row.getAs[String]("IndustryCode"),
+        row.getAs[String]("LegalStatus"),
+        row.getAs[String]("PostCode"),
+        row.getAs[String]("TradingStatus"),
+        row.getAs[String]("Turnover"),
+        row.getAs[String]("UPRN"),
+        row.getAs[String]("CompanyNo"),
+        row.getAs[Seq[String]]("PayeRefs"),
+        row.getAs[Seq[String]]("VatRefs")
+      )}}
+    //printRddOfRows("rows",rows)
+    spark.createDataFrame(rows, biWithErnSchema)
   }
 }
 object NewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure

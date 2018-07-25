@@ -61,7 +61,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     /*val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)*/
-    NewPeriodWithCalculationsClosure.addNewPeriodData(appConfs)(spark)
+    NewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
   }
 

@@ -56,7 +56,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockNewPeriodWithCalculationsClosure.addNewPeriodData(appConfs)(spark)
+        MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
         spark.stop()
   }
 
