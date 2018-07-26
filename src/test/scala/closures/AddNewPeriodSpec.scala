@@ -27,7 +27,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
   lazy val testDir = "newperiod"
 
-  object NewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure with MockClosures{
+  object MockNewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure with MockClosures{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
@@ -52,18 +52,18 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "addperiod"
     )))
 
-  override def beforeAll() = {
+  /*override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    //createRecords(confs)(spark)
+    createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
     //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-    NewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+    MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
-  }
+  }*/
 
 /*  override def afterAll() = {
     File(parquetPath).deleteRecursively()
@@ -73,26 +73,25 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     File(existingRecordsDir).deleteRecursively()
   }*/
 
-  "assembler" should {
+/*  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
       val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
       val actual = actualRows.map(Enterprise(_)).sortBy(_.ern)
-      val expected: List[Enterprise] = newPeriodEnts.sortBy(_.ern)
+      val expected  = newPeriodEnts.sortBy(_.ern)
       actual shouldBe expected
       spark.stop()
 
     }
-  }
+  }*/
 
 
- /* "assembler" should {
+/* "assembler" should {
     "create hfiles populated with expected local units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val hasLettersAndNumbersRegex = "^.*(?=.{4,10})(?=.*\\d)(?=.*[a-zA-Z]).*$"
       //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
       val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
       val expected: List[LocalUnit] = newPeriodLocalUnits.sortBy(_.lurn)
@@ -100,23 +99,32 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.stop()
 
     }
-  }
+  }*/
 
 
-  "assembler" should {
+   "assembler" should {
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
       val confs = appConfs
       val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-      //print(existing)
-      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
-      val expected: Seq[HFileRow] = newPeriodLinks.sortBy(_.key)
+      val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
+      val expected: Seq[HFileRow] = newPeriodLinks.sortBy(sortByKeyAndEntityName)
       actual shouldBe expected
       spark.close()
 
     }
-  }*/
+  }
+
+  def sortByKeyAndEntityName(row:HFileRow) = {
+
+      val keyBlocks= row.key.split("~")
+      val id = keyBlocks.head
+      val entityName = keyBlocks.tail.head
+      entityName+id
+
+  }
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)

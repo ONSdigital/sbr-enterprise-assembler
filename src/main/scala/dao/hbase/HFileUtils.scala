@@ -44,9 +44,6 @@ trait HFileUtils extends Serializable{
     getString(row,"paye_empees").map(employees => createEnterpriseCell(ern, "employees", employees, appParams))
   }
 
-
-
-
   def entToLinks(row:Row,appParams:AppParams):Seq[(String, HFileCell)] = {
     val ern = getString(row,"ern").get
     val entKey = generateEntKey(ern,appParams)
@@ -59,7 +56,7 @@ trait HFileUtils extends Serializable{
     val ubrn = getString(row,"id").get
     val ern = getString(row,"ern").get
     val entKey = generateLinkKey(ern,enterprise,appParams)
-    val luKey = generateLinkKey(ern,legalUnit,appParams)
+    val luKey = generateLinkKey(ubrn,legalUnit,appParams)
     val leLinks = rowToLegalUnitLinks(entKey,ubrn,ern,appParams)
     val chVatPaye = (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
     val all = leLinks ++ chVatPaye
@@ -79,9 +76,9 @@ trait HFileUtils extends Serializable{
 
 
   def rowToLegalUnitLinks(entKey:String,ubrn:String, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
-    val loKey = generateLegalUnitLinksKey(ubrn,appParams)
+    val leuKey = generateLegalUnitLinksKey(ubrn,appParams)
     Seq(
-      createLinksRecord(ubrn,s"$parentPrefix$enterprise",ern,appParams),
+      createLinksRecord(leuKey,s"$parentPrefix$enterprise",ern,appParams),
       createLinksRecord(entKey,s"$childPrefix$ubrn",legalUnit,appParams)
     )
   }
@@ -173,6 +170,9 @@ trait HFileUtils extends Serializable{
 
   private def generateEntKey(ern:String,appParams:AppParams) = {
     s"${ern.reverse}~${appParams.TIME_PERIOD}"
+  }
+  private def generateEntLinkKey(ern:String,appParams:AppParams) = {
+    s"${ern.reverse}~ENT~${appParams.TIME_PERIOD}"
   }
 
   private def generateLinkKey(id:String, suffix:String, appParams:AppParams) = {

@@ -121,7 +121,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
       * */
     val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
-    newEntsCalculatedDF.show()
+    //newEntsCalculatedDF.show()
     //val allEntsErns = allLUsDF.select(col("ern")).distinct
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
@@ -132,10 +132,10 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
   * */
 
     val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
-    allLOUs.show()
-    saveEnts(allEntsDF,appconf)
-    saveLous(allLOUs,appconf)
-    saveLinks(allEntsDF,allLOUs,allLUsDF,appconf)
+    //allLOUs.show()
+    saveLinks(allLOUs,allLUsDF,appconf)
+/*    saveEnts(allEntsDF,appconf)
+    saveLous(allLOUs,appconf)*/
     //calculatedDF.show()
     //calculatedDF.printSchema()
     allLUsDF.unpersist()

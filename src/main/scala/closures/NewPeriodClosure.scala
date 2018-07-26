@@ -96,7 +96,7 @@ class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with 
 
     saveEnts(allEntsDF, appconf)
     saveLous(allLOUs, appconf)
-    saveLinks(allEntsDF, allLOUs, allLUsDF, appconf)
+    saveLinks(allLOUs, allLUsDF, appconf)
     //calculatedDF.show()
     //calculatedDF.printSchema()
     allLUsDF.unpersist()

@@ -4,6 +4,8 @@ import model.domain.{Enterprise, HFileRow, KVCell, LocalUnit}
 import utils.data.TestIds
 
 trait ExpectedDataForAddNewPeriodScenario extends TestIds{
+  
+  
 
   val newPeriodLinks = List(
     HFileRow("00012345~CH~201804",List(KVCell("p_LEU","100000508724"))),
@@ -58,10 +60,10 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
   )
 
   val newPeriodEnts = List(
-    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"34567","1",Some("4"),Some("8"),None,Some("840"),Some("180"),Some("660"),None),
-    Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",Some("19"),Some("20"),None,Some("1175"),Some("585"),Some("590"),None),
-    Enterprise(entWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"12345","1",Some("2"),Some("4"),None,Some("390"),None,Some("390"),None),
-    Enterprise(newEntErn,None,"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,Some("85"),Some("85"),None,None)
+    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("NORTH HARBOUR"),"PO6 3AU",Some("C"),"34567","1",Some("4"),Some("8"),Some("0"),Some("180"),Some("840"),Some("660"),None),
+    Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",Some("19"),Some("20"),Some("0"),Some("585"),Some("1175"),Some("590"),None),
+    Enterprise(entWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("REDDITCH"),"B22 2TL",Some("A"),"12345","1",Some("2"),Some("4"),Some("0"),Some("0"),Some("390"),Some("390"),None),
+    Enterprise(newEntErn,None,"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",Some("3"),Some("5"),Some("0"),Some("85"),Some("85"),Some("0"),None)
   )
 
   val newPeriodEntsWithoutCalculations = List(

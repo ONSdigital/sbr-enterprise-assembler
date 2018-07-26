@@ -4,6 +4,8 @@ import model.domain.Enterprise
 
 trait TestDataUtils extends HFileTestUtils{
 
+
+
   def replaceDynamiclyGeneratedErns(ents:Seq[Enterprise] ) = {
 
     def getKeyByName(name:String): String =
