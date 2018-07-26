@@ -60,28 +60,13 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
       val legalUnitDF = spark.read.parquet(appConfs.PATH_TO_PARQUET)
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
-      val payesCalculated: DataFrame = AdminDataCalculator.calculatePaye(legalUnitDF,payeDF, vatDF)
+      val payesCalculated: DataFrame = new AdminDataCalculator(){}.calculatePaye(legalUnitDF,payeDF)
       payesCalculated.printSchema()
       payesCalculated.show()
       spark.close()
     }
   }*/
 
-
-
-/*  "assembler" should {
-    "create hfiles populated with expected enterprise data using DataFrame api" in {
-
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val unitsDF = spark.read.parquet(appConfs.PATH_TO_PARQUET)
-      val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
-      val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-      val calculated: DataFrame = AdminDataCalculator.calculatePaye(unitsDF,payeDF, vatDF)
-      calculated.show()
-      calculated.printSchema()
-      spark.close()
-    }
-  }*/
 
 /*  "DataFrameHelper.generateCalculateAvgSQL" should {
     import spark.extensions.sql._
@@ -157,7 +142,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     "aggregateDF turnovers test DF" in {
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val unitsDF = spark.read.json(jsonFilePath).castAllToString
-
+      unitsDF.show()
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
       val calculator = new AdminDataCalculator(){}
@@ -203,7 +188,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
        |2200000002|             5|   555666|
        +----------+--------------+---------+
      */*/
-   val testDF: DataFrame = calculator.calculate(step1DF,appConfs)
+   //val testDF: DataFrame = calculator.calculate(step1DF,appConfs)
    /**
     +---------+----------+------------+--------+-----------+--------------+---------+----------------+----------------+
     |vat_group|       ern|      vatref|turnover|record_type|paye_employees|paye_jobs|group_empl_total|no_ents_in_group|
@@ -222,9 +207,9 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
 /*   testDF.show()
    testDF.printSchema()*/
 
-   val doneDF = calculator.aggregateDF(testDF)
+/*   val doneDF = calculator.aggregateDF(testDF)
    doneDF.show()
-   doneDF.printSchema()
+   doneDF.printSchema()*/
 /**
   * +----------+------------+--------------+---------+------------------+--------------------+-----------------+
   * |       ern|      vatref|paye_employees|paye_jobs|contained_turnover|apportioned_turnover|standard_turnover|

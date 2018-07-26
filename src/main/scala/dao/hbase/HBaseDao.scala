@@ -41,9 +41,6 @@ trait HBaseDao extends Serializable{
     loadDeleteLousHFile
   }
 
-
-
-
   def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
     val localConfCopy = conf
     val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)

@@ -52,18 +52,18 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "addperiod"
     )))
 
- /*override def beforeAll() = {
+ override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    //createRecords(confs)(spark)
+    createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-    //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
     MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
-  }*/
+  }
 
 /*  override def afterAll() = {
     File(parquetPath).deleteRecursively()
@@ -73,7 +73,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     File(existingRecordsDir).deleteRecursively()
   }*/
 
-/*  "assembler" should {
+  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -85,7 +85,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.stop()
 
     }
-  }*/
+  }
 
 
 /* "assembler" should {
@@ -102,7 +102,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }*/
 
 
-   "assembler" should {
+/*   "assembler" should {
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -115,7 +115,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.close()
 
     }
-  }
+  }*/
 
   def sortByKeyAndEntityName(row:HFileRow) = {
 

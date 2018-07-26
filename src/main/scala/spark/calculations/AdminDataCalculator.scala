@@ -70,13 +70,33 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val step1 = spark.sql(sql)
     val t2 = "AGGREGATED"
     step1.createOrReplaceTempView(t2)
+
+    val groupTurnoverSQL =
+      s""" SELECT vat_group, SUM(app_turnover) AS grp_turnover
+           FROM $t2
+           WHERE record_type = 1
+           GROUP BY vat_group
+            """.stripMargin
+    val grpTurnoversTable = "GRP_TURNOVERS"
+    val grpTr = spark.sql(groupTurnoverSQL)
+    grpTr.createOrReplaceTempView(grpTurnoversTable)
+    val allTurnoversSQL =
+      s"""
+         SELECT $t2.*, $grpTurnoversTable.grp_turnover
+         FROM $t2
+         LEFT JOIN $grpTurnoversTable ON $t2.vat_group = $grpTurnoversTable.vat_group
+       """.stripMargin
+    val withGrpTr = spark.sql(allTurnoversSQL)
+    val withGrpTrvr = "CALCULATED_WITH_GRP_TRVR"
+    withGrpTr.createOrReplaceTempView(withGrpTrvr)
+
     /**
       * /**
       * * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       *   paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
       * * */
       * */
-    val sql2 = s"SELECT ern,$employees, $jobs, SUM($contained) as $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard FROM $t2 GROUP BY ern, $employees, $jobs"
+    val sql2 = s"SELECT ern,$employees, $jobs, SUM($contained) as $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard, grp_turnover FROM $withGrpTrvr GROUP BY ern, grp_turnover, $employees, $jobs"
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
     turnovers.createOrReplaceTempView(t3)
@@ -99,7 +119,11 @@ trait AdminDataCalculator extends Serializable with RddLogging{
                     END)
                      )AS $ent
          FROM $t3""".stripMargin
-    spark.sql(sql3)
+
+    val turnoversCalculatedTable = "TURNOVERS"
+    val addedEntTurnover = spark.sql(sql3)
+    addedEntTurnover
+
   }
 
 
@@ -151,33 +175,6 @@ trait AdminDataCalculator extends Serializable with RddLogging{
  /**
    * calculates paye data (non-null data quarters count, total employee count, average) for 1 paye ref
    * */
-  def calculatePayeRef(payeRow:Row)(implicit spark:SparkSession): GenericRowWithSchema = {
-    import spark.implicits._
-    val payeRef = payeRow.getString("payeref").get
-
-    val q1 = payeRow.getString("mar_jobs").map(_.toInt)
-    val q2 = payeRow.getString("june_jobs").map(_.toInt)
-    val q3 = payeRow.getString("sept_jobs").map(_.toInt)
-    val q4 = payeRow.getString("dec_jobs").map(_.toInt)
-
-    val all_qs = Seq(q1,q2,q3,q4)
-
-    val (count,sum): (Int, Int) = all_qs.foldLeft((0,0))((count_and_sum, q) => {
-      val (quarters_count,emplTotal) = count_and_sum
-      q match{
-        case Some(currentQuarterEmplCount) => {
-          if(quarters_count==null) (quarters_count + 1,emplTotal + currentQuarterEmplCount)
-          else count_and_sum
-        }
-        case _ => count_and_sum
-      }
-    })
-
-    val avg = if(count.isValidInt && count!=0) (sum / count) else null
-
-    new GenericRowWithSchema(payeRef+:all_qs.toArray.map(_.getOrElse(null)):+count:+sum:+avg
-    , payeCalculationSchema)
-  }
 
   def calculatePaye(unitsDF:DataFrame, payeDF:DataFrame)(implicit spark: SparkSession ) = {
     import spark.sqlContext.implicits._
@@ -197,7 +194,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   }
 
   def getGroupedByPayeRefs(unitsDF:DataFrame, payeDF:DataFrame, quarter:String, luTableName:String = "LEGAL_UNITS", payeDataTableName:String = "PAYE_DATA")(implicit spark: SparkSession ) = {
-
+    //unitsDF.show()
     val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
 
     flatUnitDf.createOrReplaceTempView(luTableName)

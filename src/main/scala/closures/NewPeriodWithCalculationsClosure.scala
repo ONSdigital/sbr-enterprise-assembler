@@ -107,7 +107,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       * paye_employees, paye_jobs, contained_turnover, apportioned_turnover, standard_turnover
       * */
-    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer").withColumn("grp_turnover", lit(null))
+    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
     //existingEntCalculatedDF.show()
     /**
       * ern, id, BusinessName, IndustryCode, LegalStatus, PostCode, TradingStatus Turnover, UPRN, CompanyNo, PayeRefs, VatRefs
@@ -132,7 +132,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
   * */
 
     val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
-    allLOUs.show()
+    //allLOUs.show()
     saveLinks(allLOUs,allLUsDF,appconf)
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
@@ -172,16 +172,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
         Try {row.getAs[String]("address3")}.getOrElse (null),
         Try {row.getAs[String]("address4")}.getOrElse (null),
         Try {row.getAs[String]("address5")}.getOrElse (null),
-        Try {
-          try{
-            row.getAs[String]("postcode")
-          }catch {
-            case e: Exception => {
-              println(s"postcode is null with ern: ${row.getAs[String]("ern")}")
-              throw e
-            }
-          }
-        }.getOrElse ("NOT-PROVIDED"),
+        row.getAs[String]("postcode"),
         row.getAs[String]("sic07"),
         Try {row.getAs[Long]("paye_empees")}.getOrElse("")
       )), louRowSchema)
