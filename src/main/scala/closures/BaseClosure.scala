@@ -31,7 +31,14 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
     val entHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs, appconf, entTableName, entRegex)
     val existingEntRdd: RDD[Row] = entHFileRowRdd.map(_.toEntRow)
-    spark.createDataFrame(existingEntRdd, entRowSchema)
+    try{
+      spark.createDataFrame(existingEntRdd, entRowSchema)
+    }catch {
+      case e: Exception => {
+        println(s"Exception reading enterprise row in getExistingEntsDF")
+        throw e
+      }
+    }
   }
 
   /**

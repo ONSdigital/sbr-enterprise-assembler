@@ -132,10 +132,10 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
   * */
 
     val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
-    //allLOUs.show()
+    allLOUs.show()
     saveLinks(allLOUs,allLUsDF,appconf)
-/*    saveEnts(allEntsDF,appconf)
-    saveLous(allLOUs,appconf)*/
+    saveEnts(allEntsDF,appconf)
+    saveLous(allLOUs,appconf)
     //calculatedDF.show()
     //calculatedDF.printSchema()
     allLUsDF.unpersist()
@@ -172,7 +172,16 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
         Try {row.getAs[String]("address3")}.getOrElse (null),
         Try {row.getAs[String]("address4")}.getOrElse (null),
         Try {row.getAs[String]("address5")}.getOrElse (null),
-        Try {row.getAs[String]("postcode")}.getOrElse (null),
+        Try {
+          try{
+            row.getAs[String]("postcode")
+          }catch {
+            case e: Exception => {
+              println(s"postcode is null with ern: ${row.getAs[String]("ern")}")
+              throw e
+            }
+          }
+        }.getOrElse (null),
         row.getAs[String]("sic07"),
         Try {row.getAs[Long]("paye_empees")}.getOrElse("")
       )), louRowSchema)

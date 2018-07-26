@@ -52,16 +52,16 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "addperiod"
     )))
 
-  /*override def beforeAll() = {
+ /*override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    createRecords(confs)(spark)
+    //createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
     //ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-    //MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+    MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
   }*/
 
