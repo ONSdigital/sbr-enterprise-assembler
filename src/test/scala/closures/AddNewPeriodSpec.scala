@@ -52,7 +52,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "addperiod"
     )))
 
- override def beforeAll() = {
+ /*override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
     createRecords(confs)(spark)
@@ -63,7 +63,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
     MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
-  }
+  }*/
 
 /*  override def afterAll() = {
     File(parquetPath).deleteRecursively()
@@ -88,7 +88,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }
 
 
-/* "assembler" should {
+ "assembler" should {
     "create hfiles populated with expected local units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -99,7 +99,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.stop()
 
     }
-  }*/
+  }
 
 
 /*   "assembler" should {
