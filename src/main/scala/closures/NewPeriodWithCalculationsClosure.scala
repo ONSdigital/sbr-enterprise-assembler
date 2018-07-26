@@ -181,7 +181,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
               throw e
             }
           }
-        }.getOrElse (null),
+        }.getOrElse ("NOT-PROVIDED"),
         row.getAs[String]("sic07"),
         Try {row.getAs[Long]("paye_empees")}.getOrElse("")
       )), louRowSchema)
