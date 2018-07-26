@@ -23,7 +23,14 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val regex = ".*~" + {appconf.PREVIOUS_TIME_PERIOD} + "~.*"
     val louHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs, appconf, localUnitsTableName, regex)
     val existingLouRdd: RDD[Row] = louHFileRowRdd.map(_.toLouRow)
-    spark.createDataFrame(existingLouRdd, louRowSchema)
+    try{
+      spark.createDataFrame(existingLouRdd, louRowSchema)
+    }catch {
+      case e: java.lang.RuntimeException => {
+        println(s"(getExistingLousDF)Exception reading enterprise row")
+        throw e
+      }
+    }
   }
 
   def getExistingEntsDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
