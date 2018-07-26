@@ -61,7 +61,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-    MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+    //MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
   }*/
 
@@ -135,9 +135,9 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }
 
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
-    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
-    saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
+    saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
+    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
   }
 
 }
