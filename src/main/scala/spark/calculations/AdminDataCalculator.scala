@@ -102,11 +102,6 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     spark.sql(sql3)
   }
 
-  def executeSql(df:DataFrame,sql:String)(implicit spark: SparkSession ) = {
-    df.createOrReplaceTempView("DF")
-    val query = sql.replace("£table","DF")
-    spark.sql(query)
-  }
 
   def calculateTurnovers(withVatDataSQL:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
 
@@ -131,10 +126,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
   def calculateGroupTurnover(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
     val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
-/*    unitsDF.show()
-    flatUnitDf.show()
-    vatDF.show()
-    payeCalculatedDF.show()*/
+
     val luTable = "LEGAL_UNITS"
     val vatTable = "VAT_DATA"
     val payeTable = "PAYE_DATA"
@@ -155,11 +147,6 @@ trait AdminDataCalculator extends Serializable with RddLogging{
          WHERE $luTable.vatref=$vatTable.vatref AND $payeTable.ern=$luTable.ern""".stripMargin
   }
 
-
-  def generateCalculateWeightsSQL(vatGroup:String,tableName:String = "LEGAL_UNITS") =
-    s"""SELECT SUM(quarter_avg), vat_group
-       GROUP BY vat_group
-    """.stripMargin
 
  /**
    * calculates paye data (non-null data quarters count, total employee count, average) for 1 paye ref
@@ -279,4 +266,4 @@ trait AdminDataCalculator extends Serializable with RddLogging{
         """.stripMargin
 }
 
-//object AdminDataCalculator extends AdminDataCalculator
+object AdminDataCalculator extends AdminDataCalculator
