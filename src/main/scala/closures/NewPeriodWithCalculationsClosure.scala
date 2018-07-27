@@ -141,7 +141,11 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
         Try {row.getAs[String]("address5")}.getOrElse (null),
         row.getAs[String]("postcode"),
         row.getAs[String]("sic07"),
-        Try {row.getAs[String]("paye_empees")}.getOrElse("")
+        Try{
+          val empl = row.getAs[String]("paye_empees")
+          empl.size //just to ensure Some(null) not returned
+          empl
+        }.getOrElse("")
       )), louRowSchema)
   }
   /**
