@@ -35,6 +35,7 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     HFileRow("1177L~PAYE~201804",List(KVCell("p_LEU","100000459235"))),
     HFileRow("1188L~PAYE~201804",List(KVCell("p_LEU","100000508723"))),
     HFileRow("1199L~PAYE~201804",List(KVCell("p_LEU","100000508723"))),
+    HFileRow("1999Z~PAYE~201804",List(KVCell("p_LEU","999000508999"))), //new, added with new LEU(and hence ENT and LOU)
     HFileRow("123123123~VAT~201804",List(KVCell("p_LEU","100002826247"))),
     HFileRow(s"$entWithMissingLouId~ENT~201804",List(KVCell("c_100002826247","LEU"), KVCell(s"c_$missingLouLurn","LOU")).sortBy(_.column)),
     HFileRow(s"$missingLouLurn~LOU~201804",List(KVCell("p_ENT",entWithMissingLouId))),
@@ -55,7 +56,7 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     HFileRow("555666777~VAT~201804",List(KVCell("p_LEU","100000459235"))),
     HFileRow("919100010~VAT~201804",List(KVCell("p_LEU","999000508999"))), //new, added with new LEU(and hence ENT and LOU)
     /// CH c_33322444 added with update, see line 48
-    HFileRow("999000508999~LEU~201804",List(KVCell("c_33322444","CH"), KVCell("c_919100010","VAT"), KVCell("p_ENT",newEntErn)).sortBy(_.column)), // new LEU
+    HFileRow("999000508999~LEU~201804",List(KVCell("c_33322444","CH"), KVCell("c_919100010","VAT"), KVCell("c_1999Z","PAY"), KVCell("p_ENT",newEntErn)).sortBy(_.column)), // new LEU
     HFileRow("999888777~VAT~201804",List(KVCell("p_LEU","100000508724")))
   )
 
