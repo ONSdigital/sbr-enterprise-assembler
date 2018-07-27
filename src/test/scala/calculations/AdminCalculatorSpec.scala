@@ -158,7 +158,16 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
             |             4|        8|1100000004|
             +--------------+---------+----------+
         */
-      val step1DF: DataFrame = calculator.calculate(unitsDF,appConfs)
+
+      val calculatedWithVatAndPaye = calculator.calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
+      calculatedWithVatAndPaye.show()
+      //printDF("calculatedWithVatAndPaye",calculatedWithVatAndPaye)
+      val calculatedGroupEmployeeTotalAndNoEntInGroup = calculator.calculateTurnovers(calculatedWithVatAndPaye,vatDF)
+      calculatedGroupEmployeeTotalAndNoEntInGroup.show()
+      //printDF("calculatedGroupEmployeeTotalAndNoEntInGroup",calculatedGroupEmployeeTotalAndNoEntInGroup)
+      val res = calculator.aggregateDF(calculatedGroupEmployeeTotalAndNoEntInGroup)
+      res.show()
+      //val step1DF: DataFrame = calculator.calculate(unitsDF,appConfs)
       /**
       +----------+---------+------------+--------+-----------+--------------+---------+
       |       ern|vat_group|      vatref|turnover|record_type|paye_employees|paye_jobs|

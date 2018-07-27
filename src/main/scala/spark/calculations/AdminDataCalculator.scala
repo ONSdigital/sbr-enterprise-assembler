@@ -32,7 +32,22 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
   }
 
-  def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {
+  def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {//TODO:
+    /**
+      *
+      * to be added another aggregation on top og this:
+      * +----------+-----------+---------+-------------+------------+------------+------------+------------+
+      * |       ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover|
+      * +----------+-----------+---------+-------------+------------+------------+------------+------------+
+      * |2000000011|          2|        4|         null|        null|         390|        null|         390|
+      * |1100000004|          4|        8|         null|        null|         260|        null|         260|
+      * |2200000002|          5|        5|         null|        null|        null|         444|           0|
+      * |9900000009|       null|     null|         null|        null|          85|        null|          85|
+      * |1100000004|          4|        8|         null|         444|        null|         444|         444|
+      * |1100000003|         19|       20|          585|        null|        null|        null|         585|
+      * +----------+-----------+---------+-------------+------------+------------+------------+------------+
+      * to sum up ents in different groups to complete std_turnover and app_turnover which are sums of the fields across multiple groups (check ern: 1100000004)
+      * */
     val t = "CALCULATED"
     df.createOrReplaceTempView(t)
 
