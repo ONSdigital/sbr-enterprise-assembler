@@ -140,7 +140,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     "aggregateDF turnovers test DF" in {
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val unitsDF = spark.read.json(jsonFilePath).castAllToString
-      unitsDF.show()
+      //unitsDF.show()
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
       val calculator = new AdminDataCalculator(){}
@@ -158,13 +158,13 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
         */
 
       val calculatedWithVatAndPaye = calculator.calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
-      calculatedWithVatAndPaye.show()
+      //calculatedWithVatAndPaye.show()
       //printDF("calculatedWithVatAndPaye",calculatedWithVatAndPaye)
       val calculatedGroupEmployeeTotalAndNoEntInGroup = calculator.calculateTurnovers(calculatedWithVatAndPaye,vatDF)
-      calculatedGroupEmployeeTotalAndNoEntInGroup.show()
+      //calculatedGroupEmployeeTotalAndNoEntInGroup.show()
       //printDF("calculatedGroupEmployeeTotalAndNoEntInGroup",calculatedGroupEmployeeTotalAndNoEntInGroup)
       val res = calculator.aggregateDF(calculatedGroupEmployeeTotalAndNoEntInGroup)
-      res.show()
+      //res.show()
       //val step1DF: DataFrame = calculator.calculate(unitsDF,appConfs)
       /**
       +----------+---------+------------+--------+-----------+--------------+---------+

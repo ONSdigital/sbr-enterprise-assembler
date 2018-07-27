@@ -14,8 +14,8 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   val contained = "cntd_turnover"
   val ent = "ent_turnover"
   val standard = "std_turnover"
-  val group = "grp_turnover"
-  
+  val group_turnover = "grp_turnover"
+
   def calculate(unitsDF:DataFrame,appConfs:AppParams)(implicit spark: SparkSession ) = {
     val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
     val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
@@ -32,22 +32,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
   }
 
-  def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {//TODO:
-    /**
-      *
-      * to be added another aggregation on top og this:
-      * +----------+-----------+---------+-------------+------------+------------+------------+------------+
-      * |       ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover|
-      * +----------+-----------+---------+-------------+------------+------------+------------+------------+
-      * |2000000011|          2|        4|         null|        null|         390|        null|         390|
-      * |1100000004|          4|        8|         null|        null|         260|        null|         260|
-      * |2200000002|          5|        5|         null|        null|        null|         444|           0|
-      * |9900000009|       null|     null|         null|        null|          85|        null|          85|
-      * |1100000004|          4|        8|         null|         444|        null|         444|         444|
-      * |1100000003|         19|       20|          585|        null|        null|        null|         585|
-      * +----------+-----------+---------+-------------+------------+------------+------------+------------+
-      * to sum up ents in different groups to complete std_turnover and app_turnover which are sums of the fields across multiple groups (check ern: 1100000004)
-      * */
+  def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {
     val t = "CALCULATED"
     df.createOrReplaceTempView(t)
 
@@ -108,7 +93,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
       *   paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
       * * */
       * */
-    val sql2 = s"SELECT ern,$employees, $jobs, SUM($contained) as $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard, grp_turnover FROM $withGrpTrvr GROUP BY ern, grp_turnover, $employees, $jobs"
+    val sql2 = s"SELECT ern,$employees, $jobs, SUM($contained) as $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard, $group_turnover FROM $withGrpTrvr GROUP BY ern, grp_turnover, $employees, $jobs"
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
     turnovers.createOrReplaceTempView(t3)
@@ -132,9 +117,17 @@ trait AdminDataCalculator extends Serializable with RddLogging{
                      )AS $ent
          FROM $t3""".stripMargin
 
-    val turnoversCalculatedTable = "TURNOVERS"
     val addedEntTurnover = spark.sql(sql3)
-    addedEntTurnover
+    val addedEntTurnoverTable = "COMPLETE_TURNOVERS"
+    addedEntTurnover.createOrReplaceTempView(addedEntTurnoverTable)
+    val finalSQL =
+      s"""
+         SELECT ern,$employees, $jobs, $contained, SUM($apportioned) as $apportioned,SUM($standard) as $standard, SUM($group_turnover) as $group_turnover, SUM($ent) as $ent
+         FROM $addedEntTurnoverTable
+         GROUP BY ern,$employees, $jobs, $contained
+       """.stripMargin
+    val finalCalculations = spark.sql(finalSQL)
+    finalCalculations
 
   }
 
