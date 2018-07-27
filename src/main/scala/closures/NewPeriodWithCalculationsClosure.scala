@@ -64,7 +64,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     val calculatedDF = calculationsWithNumbers.castAllToString
 
 
-      calculatedDF.cache()
+    calculatedDF.cache()
 
 
 /**
@@ -85,6 +85,8 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     val newLEUsDF = allLUsDF.join(existingEntDF.select(col("ern")),Seq("ern"),"left_anti")
 
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
+
+    calculatedDF.unpersist()
     /**
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       *
