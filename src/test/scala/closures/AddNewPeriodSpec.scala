@@ -55,7 +55,8 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
    override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
-    createRecords(confs)(spark)/ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+    createRecords(confs)(spark)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
   }
