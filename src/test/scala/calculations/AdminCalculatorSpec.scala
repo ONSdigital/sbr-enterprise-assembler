@@ -1,6 +1,5 @@
 package calculations
 
-import dao.parquet.ParquetDao
 import global.AppParams
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -9,7 +8,6 @@ import spark.calculations.AdminDataCalculator
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import utils.{Paths, TestDataUtils}
-import org.apache.spark.sql.functions.{col, explode_outer}
 
 class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
