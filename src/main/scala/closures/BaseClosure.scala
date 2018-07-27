@@ -13,6 +13,8 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql._
 
+import scala.util.Try
+
 trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
   val hbaseDao: HBaseDao = HBaseDao
@@ -78,4 +80,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val res: RDD[(String, hfile.HFileCell)] = entsDF.map(row => rowToEnt(row, appconf)).flatMap(identity).rdd
     res
   }
+  def getValueOrEmptyStr(row:Row, fieldName:String) = Try{
+    val value = row.getAs[String](fieldName)
+    value.size //just to trigger NullPointerException if is null
+    value
+  }.getOrElse("")
 }

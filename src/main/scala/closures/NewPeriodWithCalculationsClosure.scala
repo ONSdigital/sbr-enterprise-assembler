@@ -139,18 +139,9 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
         Try {row.getAs[String]("address3")}.getOrElse (null),
         Try {row.getAs[String]("address4")}.getOrElse (null),
         Try {row.getAs[String]("address5")}.getOrElse (null),
-        row.getAs[String]("postcode"),
-        //row.getAs[String]("sic07"),
-        Try{
-          val empl = row.getAs[String]("sic07")
-          empl.size //just to ensure Some(null) not returned
-          empl
-        }.getOrElse(""),
-        Try{
-          val empl = row.getAs[String]("paye_empees")
-          empl.size //just to ensure Some(null) not returned
-          empl
-        }.getOrElse("")
+        getValueOrEmptyStr(row,"postcode"),
+        getValueOrEmptyStr(row,"sic07"),
+        getValueOrEmptyStr(row,"paye_empees")
       )), louRowSchema)
   }
   /**
@@ -202,7 +193,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
         row.getAs[String]("BusinessName"),
         row.getAs[String]("IndustryCode"),
         row.getAs[String]("LegalStatus"),
-        row.getAs[String]("PostCode"),
+        getValueOrEmptyStr(row,"PostCode"),
         row.getAs[String]("TradingStatus"),
         row.getAs[String]("Turnover"),
         row.getAs[String]("UPRN"),
@@ -212,5 +203,6 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       )}}
     spark.createDataFrame(rows, biWithErnSchema)
   }
+
 }
 object NewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure
