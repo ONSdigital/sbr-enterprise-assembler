@@ -81,15 +81,6 @@ package object sql {
     .add(StructField("ern", StringType,true))
     .add(StructField("lurn", StringType,true))
 
-val payeCalculationSchema = new StructType()
-  .add(StructField("payeref", StringType,false))
-  .add(StructField("q1", IntegerType,true))
-  .add(StructField("q2", IntegerType,true))
-  .add(StructField("q3", IntegerType,true))
-  .add(StructField("q4", IntegerType,true))
-  .add(StructField("total_emp_count", IntegerType,true))
-  .add(StructField("quarters_count", IntegerType,true))
-  .add(StructField("quoter_avg", IntegerType,true))
 
   val entRowSchema = new StructType()
     .add(StructField("ern", StringType,false))

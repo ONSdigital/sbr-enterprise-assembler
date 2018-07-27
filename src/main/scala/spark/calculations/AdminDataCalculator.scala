@@ -1,12 +1,9 @@
 package spark.calculations
 
 import global.AppParams
-import model.domain.LegalUnit
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, explode_outer}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import spark.RddLogging
-import spark.extensions.sql._
 
 
 trait AdminDataCalculator extends Serializable with RddLogging{
@@ -177,7 +174,6 @@ trait AdminDataCalculator extends Serializable with RddLogging{
    * */
 
   def calculatePaye(unitsDF:DataFrame, payeDF:DataFrame)(implicit spark: SparkSession ) = {
-    import spark.sqlContext.implicits._
     //printDF("unitsDF",unitsDF)
     val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
 
