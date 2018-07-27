@@ -1,17 +1,10 @@
 package closures
 
-import dao.hbase.{HBaseDao, HFileUtils}
+import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
-import model.domain.HFileRow
-import model.hfile
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{NullType, StringType}
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
@@ -132,12 +125,9 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
   * */
 
     val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
-    //allLOUs.show()
     saveLinks(allLOUs,allLUsDF,appconf)
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
-    //calculatedDF.show()
-    //calculatedDF.printSchema()
     allLUsDF.unpersist()
     joinedLUs.unpersist()
   }
@@ -152,11 +142,9 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     val newAndMissingLOUsDF: DataFrame =  createNewAndMissingLOUs(entsWithoutLOUs,appconf)
 
     val allLOUs = existingLOUs.union(newAndMissingLOUsDF)
-    //allLOUs.show()
     allLOUs
   }
 
-//ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
   def createNewAndMissingLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 
     spark.createDataFrame(
@@ -234,7 +222,6 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
         row.getAs[Seq[String]]("PayeRefs"),
         row.getAs[Seq[String]]("VatRefs")
       )}}
-    //printRddOfRows("rows",rows)
     spark.createDataFrame(rows, biWithErnSchema)
   }
 }
