@@ -3,7 +3,7 @@ package closures
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
 import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
-import model.domain.{Enterprise, HFileRow, LocalUnit}
+import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -52,26 +52,22 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "addperiod"
     )))
 
- /*override def beforeAll() = {
+ override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     val confs = appConfs
     createRecords(confs)(spark)
-    //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-    //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-    //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-    //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
     MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
-  }*/
+  }
 
-/*  override def afterAll() = {
+  override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -102,20 +98,22 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }
 
 
-/*   "assembler" should {
+   "assembler" should {
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
       val confs = appConfs
       val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
       val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-      val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
-      val expected: Seq[HFileRow] = newPeriodLinks.sortBy(sortByKeyAndEntityName)
-      actual shouldBe expected
+      val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
+      val actualLinksRecords: Seq[LinkRecord] = LinkRecord.getLinkRecords(actualHFileRows).sortBy(_.ern)
+      val expectedHFileRows: Seq[HFileRow] = newPeriodLinks.sortBy(sortByKeyAndEntityName)
+      val expectedlLinksRecords: Seq[LinkRecord] = LinkRecord.getLinkRecords(expectedHFileRows).sortBy(_.ern)
+      actualLinksRecords shouldBe expectedlLinksRecords
       spark.close()
 
     }
-  }*/
+  }
 
   def sortByKeyAndEntityName(row:HFileRow) = {
 
