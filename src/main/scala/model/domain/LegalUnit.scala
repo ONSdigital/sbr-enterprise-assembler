@@ -13,92 +13,29 @@ object VatData{
   def apply(vatRef:String) = new VatData(vatRef,None,None)
 }
 
-case class LegalUnit(
-                       id:String,
-                       ern:String,
-                       businessName:String,
-                       postCode:String,
-                       industryCode:String,
-                       uprn:Option[String],
-                       legalStatus:Option[String],
-                       tradingStatus:Option[String],
-                       turnover:Option[String],
-                       employmentBands:Option[String],
-                       vatRefs: Seq[String],
-                       payeRefs: Seq[String],
-                       companyNo:Option[String]
-                    )
 
-case class LegalUnitWithCalculations(
-                                id:String,
-                                ern:String,
-                                businessName:String,
-                                postCode:String,
-                                industryCode:String,
-                                uprn:Option[String],
-                                legalStatus:Option[String],
-                                tradingStatus:Option[String],
-                                turnover:Option[String],
-                                employmentBands:Option[String],
-                                vatRefs: Seq[VatData],
-                                payeRefs: Seq[PayeData],
-                                companyNo:Option[String],
 
-                                payeEmployees:Option[String],
-                                payeJobs:Option[String],
-                                apportionedTurnover:Option[String],
-                                totalTurnover:Option[String],
-                                containedTurnover:Option[String],
-                                standardTurnover:Option[String],
-                                groupTurnover:Option[String]
-                              )
-object LegalUnitWithCalculations{
+case class LegalUnitLink(ubrn:String, ch:Option[String], payeRefs:Seq[String], varRefs:Seq[String])
 
-  def apply(lu:LegalUnit) = new LegalUnitWithCalculations(
-                                                    lu.id,
-                                                    lu.ern,
-                                                    lu.businessName,
-                                                    lu.postCode,
-                                                    lu.industryCode,
-                                                    lu.uprn,
-                                                    lu.legalStatus,
-                                                    lu.tradingStatus,
-                                                    lu.turnover,
-                                                    lu.employmentBands,
-                                                    lu.vatRefs.map(VatData(_)),
-                                                    lu.payeRefs.map(PayeData(_)),
-                                                    lu.companyNo,
-                                                     None,None,None,None,None,None,None)
+case class LinkRecord(ern:String, lurns:Seq[String], leus:Seq[LegalUnitLink])
 
-  def apply(    lu:LegalUnit,
-                payeEmployees:Option[String],
-                payeJobs:Option[String],
-                apportionedTurnover:Option[String],
-                totalTurnover:Option[String],
-                containedTurnover:Option[String],
-                standardTurnover:Option[String],
-                groupTurnover:Option[String]
-           ) = new LegalUnitWithCalculations(
-                                              lu.id,
-                                              lu.ern,
-                                              lu.businessName,
-                                              lu.postCode,
-                                              lu.industryCode,
-                                              lu.uprn,
-                                              lu.legalStatus,
-                                              lu.tradingStatus,
-                                              lu.turnover,
-                                              lu.employmentBands,
-                                              lu.vatRefs.map(VatData(_)),
-                                              lu.payeRefs.map(PayeData(_)),
-                                              lu.companyNo,
-                                              payeEmployees,
-                                              payeJobs,
-                                              apportionedTurnover,
-                                              totalTurnover,
-                                              containedTurnover,
-                                              standardTurnover,
-                                              groupTurnover
-                                       )
+object LinkRecord{
 
+  //def getId(rows:Seq[String], unitCode:String) = rows.collect{case HFileRow(key,cells) if(key.contains(s"~$unitCode~")) => key.split("~").head}
+
+  def getLinkRecords(rows:Seq[HFileRow]) = {
+    val erns: Seq[String] = rows.collect{case HFileRow(key,cells) if(key.contains("~ENT~")) => key.split("~").head}
+    erns.map(ern => {
+      val ubrns = rows.collect{case HFileRow(key,cells) if(key.contains("~LEU~") && cells.find(_.value==ern).isDefined) => key.split("~").head}.sortBy(identity(_))
+      val leus = ubrns.map(ubrn => {
+        val ch = rows.collect{case HFileRow(key,cells) if(key.contains("~CH~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.headOption
+        val payeRefs = rows.collect{case HFileRow(key,cells) if(key.contains("~PAYE~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.sortBy(identity(_))
+        val vatRefs = rows.collect{case HFileRow(key,cells) if(key.contains("~VAT~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.sortBy(identity(_))
+        LegalUnitLink(ubrn,ch,payeRefs, vatRefs)
+      }).sortBy(_.ubrn)
+
+      val lurns = rows.collect{case HFileRow(key,cells) if(key.contains(s"$ern~ENT~")) => cells.collect{case cell if (cell.value=="LEU") => cell.column.replace("c_","")}}.flatten.sortBy(identity(_))
+      new LinkRecord(ern, lurns, leus)}
+    ).sortBy(_.ern)
+  }
 }
