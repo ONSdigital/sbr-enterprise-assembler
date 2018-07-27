@@ -55,7 +55,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
        CAST(
        (
          CASE
-           WHEN record_type = 0 OR record_type = 3
+           WHEN record_type = 0 OR record_type = 2
            THEN turnover
            ELSE NULL
          END
