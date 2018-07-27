@@ -61,30 +61,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       **/
     val calculationsWithNumbers = calculate(allLUsDF,appconf)
 
-    val calculatedDF = spark.createDataFrame(
-                          calculationsWithNumbers.rdd.map(row => Row(
-                            row.getAs[String]("ern"),
-                            Try {
-                              row.getAs[Long]("paye_empees")
-                            }.map(_.toString).getOrElse(null),
-                            Try {
-                              row.getAs[Int]("paye_jobs")
-                            }.map(_.toString).getOrElse(null),
-                            Try {
-                              row.getAs[Long]("app_turnover")
-                            }.map(_.toString).getOrElse(null),
-                            Try {
-                              row.getAs[Long]("cntd_turnover")
-                            }.map(_.toString).getOrElse(null),
-                            Try {
-                              row.getAs[Long]("ent_turnover")
-                            }.map(_.toString).getOrElse(null),
-                            Try {
-                              row.getAs[Long]("std_turnover")
-                            }.map(_.toString).getOrElse(null),
-                            null //grp_turnover
-
-                          )), calculationsSchema)
+    val calculatedDF = calculationsWithNumbers.castAllToString
 
 
       calculatedDF.cache()

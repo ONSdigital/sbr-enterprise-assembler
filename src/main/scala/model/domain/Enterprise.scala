@@ -108,7 +108,6 @@ object Enterprise{
         case opt@Some(str) if (str.trim().nonEmpty) => opt
         case _ => None
       }
-
     }
     val ern = entry._2.find(_._1=="ern").get._2
 //ern	entref	name	trading_style	address1	address2	address3	address4	address5	postcode	legal_status	sic07
