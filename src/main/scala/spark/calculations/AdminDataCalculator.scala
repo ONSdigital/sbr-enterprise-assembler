@@ -27,7 +27,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye,vatDF)
     //printDF("calculatedTurnovers",calculatedTurnovers)
     val res = aggregateDF(calculatedTurnovers)
-    //printDF("res",res)
+    //res.show()
     res
 
   }
@@ -126,8 +126,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
          FROM $addedEntTurnoverTable
          GROUP BY ern,$employees, $jobs, $contained
        """.stripMargin
-    val finalCalculations = spark.sql(finalSQL)
-    finalCalculations
+    spark.sql(finalSQL)
 
   }
 
