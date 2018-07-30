@@ -181,7 +181,15 @@ val calculationsSchema = new StructType()
       if (v.isDefined && v==null) None
       else v
     }
-
+/**
+  * returns option of value
+  * Retruns None if field is present but value is null, if field is not present
+  * returns Some(VALUE_OF_THE_FIELD) otherwise
+  * */
+    def getOption[T](field:String)= {
+      if(row.isNull(field)) None
+      else Option[T](row.getAs[T](field))
+    }
 
     def getString(field:String): Option[String] = getValue[String](field)
 
