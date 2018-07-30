@@ -25,7 +25,7 @@ trait ExpectedCalculations {
     Calculations("1100000004",Some(4L),Some(8),None,Some(444L),Some(260L),Some(444L),Some(704L)),
     Calculations("2000000011",Some(2L),Some(4),None,None,Some(390L),None,Some(390L)),
     Calculations("2200000002",Some(5L),Some(5),None,None,None,Some(444L),Some(0)),
-    Calculations("9900000009",None,None,None,None,Some(85L),None,Some(85L))
+    Calculations("9900000009",Some(3L),Some(5),Some(85L),None,None,None,Some(85L))
 
   )
 
