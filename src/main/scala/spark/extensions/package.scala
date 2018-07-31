@@ -113,7 +113,6 @@ package object sql {
     .add(StructField("paye_employees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
 
-
   val completeEntSchema = new StructType()
     .add(StructField("ern", StringType,false))
     .add(StructField("entref", StringType,true))
@@ -129,28 +128,12 @@ package object sql {
     .add(StructField("legal_status", StringType,true))
     .add(StructField("paye_empees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
-    .add(StructField("app_turnover", StringType,true))
-    .add(StructField("ent_turnover", StringType,true))
     .add(StructField("cntd_turnover", StringType,true))
+    .add(StructField("app_turnover", StringType,true))
     .add(StructField("std_turnover", StringType,true))
     .add(StructField("grp_turnover", StringType,true))
-
-
-  val completeNewEntSchema = new StructType()
-    .add(StructField("ern", StringType,false))
-    .add(StructField("entref", StringType,true))
-    .add(StructField("name", StringType,true))
-    .add(StructField("address1", StringType,true))
-    .add(StructField("postcode", StringType,true))
-    .add(StructField("sic07", StringType,true))
-    .add(StructField("legal_status", StringType,true))
-    .add(StructField("paye_empees", StringType,true))
-    .add(StructField("paye_jobs", StringType,true))
-    .add(StructField("app_turnover", StringType,true))
     .add(StructField("ent_turnover", StringType,true))
-    .add(StructField("cntd_turnover", StringType,true))
-    .add(StructField("std_turnover", StringType,true))
-    .add(StructField("grp_turnover", StringType,true))
+
 
 val calculationsSchema = new StructType()
   .add(StructField("ern", StringType,true))

@@ -59,9 +59,9 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       * Fields:
       * ern,vatref, paye_employees, paye_jobs, contained_turnover, apportioned_turnover, standard_turnover
       **/
-    val calculationsWithNumbers = calculate(allLUsDF,appconf)
+    //val calculationsWithNumbers = calculate(allLUsDF,appconf)
 
-    val calculatedDF = calculationsWithNumbers.castAllToString
+    val calculatedDF = calculate(allLUsDF,appconf).castAllToString
 
 
     calculatedDF.cache()
@@ -86,7 +86,6 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
 
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
-    calculatedDF.unpersist()
     /**
       * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       *
@@ -97,7 +96,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     //val allEntsErns = allLUsDF.select(col("ern")).distinct
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
-
+    calculatedDF.unpersist()
 /**
   * Fields:
   * lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5, postcode, sic07, employees,
@@ -151,6 +150,7 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     * AND calculations:
     * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
     * */
+  //paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
   def createNewEnts(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = spark.createDataFrame(
     newLEUsCalculatedDF.rdd.map(row => Row(
       row.getAs[String]("ern"),
@@ -164,11 +164,11 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
       row.getAs[String]("LegalStatus"),
       Try {row.getAs[String]("paye_empees")}.getOrElse(null),
       Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
-      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("ent_turnover")}.getOrElse(null),
       Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
       Try {row.getAs[String]("std_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("grp_turnover")}.getOrElse(null)
+      Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
     )
     ), completeEntSchema)
 /**

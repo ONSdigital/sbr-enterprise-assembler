@@ -83,7 +83,7 @@ object Enterprise{
         address2.map(_.value),
         address3.map(_.value),
         address4.map(_.value),
-        address4.map(_.value),
+        address5.map(_.value),
         postcode.get.value,
         tradingStyle.map(_.value),
         sic07.get.value,

@@ -49,31 +49,30 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "201804",payeFilePath,
       vatFilePath,
       "local",
-      "addperiod"
+      "add-calculated-period"
     )))
 
    override def beforeAll() = {
-    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-    val confs = appConfs
-    createRecords(confs)(spark)
-    ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-    MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
-    spark.stop()
+        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+        val confs = appConfs
+         createRecords(confs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+        MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+        spark.stop()
   }
 
   override def afterAll() = {
-    File(parquetPath).deleteRecursively()
-    File(linkHfilePath).deleteRecursively()
-    File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()
-    File(existingRecordsDir).deleteRecursively()
+        File(parquetPath).deleteRecursively()
+        File(linkHfilePath).deleteRecursively()
+        File(entHfilePath).deleteRecursively()
+        File(louHfilePath).deleteRecursively()
+        File(existingRecordsDir).deleteRecursively()
   }
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
       val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
       val actual = actualRows.map(Enterprise(_)).sortBy(_.ern)
       val expected  = newPeriodEnts.sortBy(_.ern)
@@ -82,9 +81,19 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
     }
   }
+/**
+  * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
+  * |               ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover|
+  * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
+  * |        2000000011|          2|        4|         null|        null|         390|        null|         390|
+  * |        5000000011|          5|        5|         null|        null|        null|         444|           0|
+  * |        4000000011|          4|        8|         null|         444|        null|         444|         444|
+  * |        3000000011|         19|       20|          585|        null|        null|        null|         585|
+  * |111111111-TEST-ERN|          3|        5|           85|        null|        null|        null|          85|
+  * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
+  * */
 
-
- "assembler" should {
+ /*"assembler" should {
     "create hfiles populated with expected local units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -113,7 +122,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.close()
 
     }
-  }
+  }*/
 
   def sortByKeyAndEntityName(row:HFileRow) = {
 
