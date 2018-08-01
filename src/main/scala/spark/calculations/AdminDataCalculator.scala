@@ -24,11 +24,10 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     //printDF("calculatedPayeDF",calculatedPayeDF)
     val calculatedWithVatAndPaye = calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
     //printDF("calculatedWithVatAndPaye",calculatedWithVatAndPaye)
-    val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye,vatDF)
+    val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye)
     //printDF("calculatedTurnovers",calculatedTurnovers)
-    val res = aggregateDF(calculatedTurnovers)
-    //res.show()
-    res
+    aggregateDF(calculatedTurnovers)
+
 
   }
 
@@ -47,8 +46,8 @@ trait AdminDataCalculator extends Serializable with RddLogging{
        ) AS long)as $contained,
        CAST((
          CASE
-           WHEN no_ents_in_group > 1 AND record_type = 1
-           THEN turnover * ($employees / group_empl_total)
+           WHEN no_ents_in_group > 1
+           THEN grp_turnover * ($employees / group_empl_total)
            ELSE NULL
          END
        )  AS long)as $apportioned,
@@ -65,35 +64,31 @@ trait AdminDataCalculator extends Serializable with RddLogging{
            """.stripMargin
 
     val step1 = spark.sql(sql)
-    val t2 = "AGGREGATED"
-    step1.createOrReplaceTempView(t2)
+    val step1Table = "TEMP"
+    step1.createOrReplaceTempView(step1Table)
 
-    val groupTurnoverSQL =
-      s""" SELECT vat_group, SUM(app_turnover) AS grp_turnover
-           FROM $t2
-           WHERE record_type = 1
-           GROUP BY vat_group
-            """.stripMargin
-    val grpTurnoversTable = "GRP_TURNOVERS"
-    val grpTr = spark.sql(groupTurnoverSQL)
-    grpTr.createOrReplaceTempView(grpTurnoversTable)
-    val allTurnoversSQL =
-      s"""
-         SELECT $t2.*, $grpTurnoversTable.grp_turnover
-         FROM $t2
-         LEFT JOIN $grpTurnoversTable ON $t2.vat_group = $grpTurnoversTable.vat_group
-       """.stripMargin
-    val withGrpTr = spark.sql(allTurnoversSQL)
-    val withGrpTrvr = "CALCULATED_WITH_GRP_TRVR"
-    withGrpTr.createOrReplaceTempView(withGrpTrvr)
 
+    /**
+      * Sums app_turnovers for every enterprise
+      * */
+    val app_aggregated = spark.sql(
+      s"""SELECT temp.vat_group,temp.ern, SUM(temp.$apportioned) as $apportioned
+          FROM (SELECT vat_group, ern,$apportioned from $step1Table GROUP BY vat_group,ern,$apportioned) AS temp
+          GROUP BY temp.vat_group,temp.ern""".stripMargin)
+    val distinctsTable = "APPAGGREGATED"
+    app_aggregated.createOrReplaceTempView(distinctsTable)
+
+
+    val aggregated = step1.drop(col(apportioned)).join(app_aggregated,Seq("vat_group","ern"),"leftouter")
+    val withAggregatedApp = "WITHAPPAGGR"
+    aggregated.createOrReplaceTempView(withAggregatedApp)
     /**
       * /**
       * * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
       *   paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
       * * */
       * */
-    val sql2 = s"SELECT ern,$employees, $jobs, SUM($contained) as $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard, $group_turnover FROM $withGrpTrvr GROUP BY ern, grp_turnover, $employees, $jobs"
+    val sql2 = s"SELECT vat_group, ern,$employees, $jobs, SUM($contained) as $contained, SUM($standard) as $standard, $apportioned, $group_turnover FROM $withAggregatedApp GROUP BY vat_group, ern, $employees, $jobs, $group_turnover, $apportioned "
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
     turnovers.createOrReplaceTempView(t3)
@@ -122,7 +117,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     addedEntTurnover.createOrReplaceTempView(addedEntTurnoverTable)
     val finalSQL =
       s"""
-         SELECT ern,$employees, $jobs, $contained, SUM($apportioned) as $apportioned,SUM($standard) as $standard, SUM($group_turnover) as $group_turnover, SUM($ent) as $ent
+         SELECT ern,$employees, $jobs, $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard, CAST(SUM($group_turnover) as long) as $group_turnover, SUM($ent) as $ent
          FROM $addedEntTurnoverTable
          GROUP BY ern,$employees, $jobs, $contained
        """.stripMargin
@@ -131,7 +126,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   }
 
 
-  def calculateTurnovers(withVatDataSQL:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+  def calculateTurnovers(withVatDataSQL:DataFrame)(implicit spark: SparkSession ) = {
 
     val luTable = "LEGAL_UNITS_WITH_VAT"
 
@@ -143,9 +138,13 @@ trait AdminDataCalculator extends Serializable with RddLogging{
          WHERE t1.vat_group=t2.vat_group
        """.stripMargin
     )
-    appTurnover
+    val appTurnoverTable = "TURNOVERS"
+    appTurnover.createOrReplaceTempView(appTurnoverTable)
+    val groupReprTurnovers = spark.sql(groupReprTurnoversSQL(appTurnoverTable))
+    appTurnover.join(groupReprTurnovers,Seq("vat_group"),"leftouter")
   }
 
+  def groupReprTurnoversSQL(table:String) = s"SELECT vat_group, turnover as $group_turnover FROM $table WHERE record_type=1 AND no_ents_in_group>1"
   def distinctErnsByPayeEmps(table:String) = s"(SELECT DISTINCT ern, $employees,vat_group FROM $table)"
   def selectSumEmployees(table:String) = s"""(SELECT SUM(emp_total_table.$employees) as group_empl_total, COUNT(emp_total_table.ern) as no_ents_in_group, emp_total_table.vat_group
                                                                                 FROM ${distinctErnsByPayeEmps(table)} as emp_total_table
@@ -264,6 +263,15 @@ trait AdminDataCalculator extends Serializable with RddLogging{
                 FROM $luTablename
                 LEFT JOIN $payeDataTableName ON $luTablename.payeref=$payeDataTableName.payeref
         """.stripMargin
+
+  def readSql(df:DataFrame,sql:(String) => String)(implicit spark:SparkSession) = {
+    val tablename = "DFTEMP"
+    df.createOrReplaceTempView(tablename)
+    val query = sql(tablename)
+    val res = spark.sql(query)
+    res
+  }
+
 }
 
 object AdminDataCalculator extends AdminDataCalculator
