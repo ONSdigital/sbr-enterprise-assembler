@@ -39,19 +39,15 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     )))
 
 
-/*  override def beforeAll() = {
+  override def beforeAll() = {
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
     spark.stop()
+  }
 
-  }*/
-
-/*  override def afterAll() = {
+  override def afterAll() = {
     File(parquetPath).deleteRecursively()
-    File(linkHfilePath).deleteRecursively()
-    File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()
-  }*/
+  }
 
   "AdminDataCalculator" should {
     "aggregateDF payeRef data" in {
