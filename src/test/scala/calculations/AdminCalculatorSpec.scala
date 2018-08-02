@@ -4,13 +4,13 @@ import dao.parquet.ParquetDao
 import global.AppParams
 import model.domain.Calculations
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
+import utils.Paths
 import utils.data.existing.ExistingData
 import utils.data.expected.{ExpectedCalculations, ExpectedDataForAddNewPeriodScenario}
-import utils.{Paths, TestDataUtils}
 
 import scala.reflect.io.File
 
