@@ -31,7 +31,7 @@ trait HBaseDao extends Serializable{
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
-    loadLousDeletePeriodHFile
+    loadLousHFile
   }
 
 

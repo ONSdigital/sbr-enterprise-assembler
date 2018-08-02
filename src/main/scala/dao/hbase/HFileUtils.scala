@@ -193,5 +193,5 @@ trait HFileUtils extends Serializable{
   def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey
 
-  def generateUniqueKey = "TEST"+Random.alphanumeric.take(14).mkString
+  def generateUniqueKey = "N"+Random.alphanumeric.take(17).mkString
 }

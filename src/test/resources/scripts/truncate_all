@@ -1,0 +1,3 @@
+truncate 'ons:ENT'
+truncate 'ons:LINKS'
+truncate 'ons:LOU'

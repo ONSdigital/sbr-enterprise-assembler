@@ -117,7 +117,7 @@ object Enterprise{
       ern,
       getValue("entref"),
       getValue("name").get,
-      getValue("address1").get,
+      getValue("address1").getOrElse(""),
       getValue("address2"),
       getValue("address3"),
       getValue("address4"),

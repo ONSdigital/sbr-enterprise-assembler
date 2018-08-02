@@ -14,100 +14,55 @@ import scala.util.Try
 trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
+
+
   def addNewPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
-    val confs = Configs.conf
 
-    /**
-      * Fields:
-      * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,
-      * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
-      **/
-    val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
+    val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 
 
-    /**
-      * ubrn, ern, CompanyNo, PayeRefs, VatRefs
-      **/
-    val existingLEsDF: DataFrame = getExistingLeusDF(appconf, confs)
+    val allEntsDF =  getAllEntsCalculated(allLUsDF,appconf).cache()
 
 
-    /**
-      * Assigns ERNs to existing LEUs
-      * leaving ERN field with null values for new LEUs
-      * Fields:
-      * BusinessName, CompanyNo, IndustryCode, LegalStatus,
-      * PayeRefs, PostCode, TradingStatus, Turnover, UPRN, VatRefs, id, ern
-      **/
-    val joinedLUs = incomingBiDataDF.join(
-      existingLEsDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
-      Seq("id"),
-      "left_outer")
-    joinedLUs.cache()
+    val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,Configs.conf).cache()
 
 
-    /**
-      * Generate ERNs for new BI Units
-      * Resulting dataset with all LEUs (new and existing) with erns
-      * Fields:
-      * ern, id, BusinessName, IndustryCode, LegalStatus, PostCode, TradingStatus Turnover, UPRN, CompanyNo, PayeRefs, VatRefs
-      **/
-    val allLUsDF: DataFrame = getAllLUs(joinedLUs, appconf)
-    allLUsDF.cache()
-
-    /**
-      * Calculates admin data
-      * Fields:
-      * ern,vatref, paye_employees, paye_jobs, contained_turnover, apportioned_turnover, standard_turnover
-      **/
-    //val calculationsWithNumbers = calculate(allLUsDF,appconf)
-
-    val calculatedDF = calculate(allLUsDF,appconf).castAllToString
-
-
-    calculatedDF.cache()
-
-
-/**
-  * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
-  * */
-    val existingEntDF = getExistingEntsDF(appconf,confs)
-
-
-    /**
-      * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
-      * paye_employees, paye_jobs, contained_turnover, apportioned_turnover, standard_turnover
-      * */
-    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
-    //existingEntCalculatedDF.show()
-    /**
-      * ern, id, BusinessName, IndustryCode, LegalStatus, PostCode, TradingStatus Turnover, UPRN, CompanyNo, PayeRefs, VatRefs
-      * */
-    val newLEUsDF = allLUsDF.join(existingEntDF.select(col("ern")),Seq("ern"),"left_anti")
-
-    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
-
-    /**
-      * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
-      *
-      * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
-      * */
-    val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
-    //newEntsCalculatedDF.show()
-    //val allEntsErns = allLUsDF.select(col("ern")).distinct
-
-    val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
-    calculatedDF.unpersist()
-/**
-  * Fields:
-  * lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5, postcode, sic07, employees,
-  * */
-
-    val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,confs)
     saveLinks(allLOUs,allLUsDF,appconf)
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
     allLUsDF.unpersist()
-    joinedLUs.unpersist()
+    allLOUs.unpersist()
+  }
+
+
+  def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession) = {
+
+    val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
+
+    val existingLEsDF: DataFrame = getExistingLeusDF(appconf, Configs.conf)
+
+
+    val joinedLUs = incomingBiDataDF.join(
+      existingLEsDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
+      Seq("id"), "left_outer")
+
+    getAllLUs(joinedLUs, appconf)
+
+  }
+
+  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+
+    val calculatedDF = calculate(allLUsDF,appconf).castAllToString
+    calculatedDF.cache()
+
+    val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
+    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
+    val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
+    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
+    val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
+    val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
+
+    calculatedDF.unpersist()
   }
 
 
@@ -120,7 +75,6 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
     val newAndMissingLOUsDF: DataFrame =  createNewAndMissingLOUs(entsWithoutLOUs,appconf)
 
     val allLOUs = existingLOUs.union(newAndMissingLOUsDF)
-    allLOUs
   }
 
   def createNewAndMissingLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {

@@ -34,7 +34,7 @@ object LinkRecord{
         LegalUnitLink(ubrn,ch,payeRefs, vatRefs)
       }).sortBy(_.ubrn)
 
-      val lurns = rows.collect{case HFileRow(key,cells) if(key.contains(s"$ern~ENT~")) => cells.collect{case cell if (cell.value=="LEU") => cell.column.replace("c_","")}}.flatten.sortBy(identity(_))
+      val lurns = rows.collect{case HFileRow(key,cells) if(key.contains(s"$ern~ENT~")) => cells.collect{case cell if (cell.value=="LOU") => cell.column.replace("c_","")}}.flatten.sortBy(identity(_))
       new LinkRecord(ern, lurns, leus)}
     ).sortBy(_.ern)
   }

@@ -1,17 +1,19 @@
 package closures
 
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
+import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
+import global.Configs.conf
 import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
-import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader._
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
@@ -52,15 +54,20 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       "add-calculated-period"
     )))
 
+
+
+
    override def beforeAll() = {
+     doFullCycleWithHBase
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
-         createRecords(confs)(spark)
+        createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
+        conf.set("hbase.zookeeper.quorum", "localhost")
+        conf.set("hbase.zookeeper.property.clientPort", "2181")
         MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
         spark.stop()
   }
-
   override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
@@ -68,6 +75,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
         File(louHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
   }
+
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -93,7 +101,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
   * */
 
- /*"assembler" should {
+"assembler" should {
     "create hfiles populated with expected local units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -107,7 +115,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }
 
 
-   "assembler" should {
+    "assembler" should {
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -122,7 +130,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       spark.close()
 
     }
-  }*/
+  }
 
   def sortByKeyAndEntityName(row:HFileRow) = {
 
@@ -145,6 +153,46 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
     saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
+  }
+
+  def loadExistingHFilesToHBase = {
+    conf.set("hbase.zookeeper.quorum", "localhost")
+    conf.set("hbase.zookeeper.property.clientPort", "2181")
+    val confs = AppParams(
+      (Array[String](
+        "LINKS", "ons", "l", existingLinksRecordHFiles,
+        "ENT", "ons", "d",existingEntRecordHFiles,
+        "LOU", "ons", "d",existingLousRecordHFiles,
+        "",
+        "201804","",
+        "",
+        "local",
+        "addperiod"
+      )))
+    val connManager = new HBaseConnectionManager{}
+    connManager.withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,confs)}
+  }
+
+
+
+  def loadNewPeriodHFilesToHBase = {
+    conf.set("hbase.zookeeper.quorum", "localhost")
+    conf.set("hbase.zookeeper.property.clientPort", "2181")
+    val connManager = new HBaseConnectionManager{}
+    connManager.withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appConfs)}
+  }
+
+
+  def doFullCycleWithHBase() = {
+    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    //createRecords(appConfs)(spark)
+    loadExistingHFilesToHBase
+    //ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+    conf.set("hbase.zookeeper.quorum", "localhost")
+    conf.set("hbase.zookeeper.property.clientPort", "2181")
+    NewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+    spark.stop()
+    loadNewPeriodHFilesToHBase
   }
 
 }
