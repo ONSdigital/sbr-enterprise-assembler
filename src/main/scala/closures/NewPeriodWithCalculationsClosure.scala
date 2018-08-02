@@ -41,10 +41,11 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
 
     val existingLEsDF: DataFrame = getExistingLeusDF(appconf, Configs.conf)
 
+    val numOfPartitions = existingLEsDF.rdd.getNumPartitions
 
     val joinedLUs = incomingBiDataDF.join(
       existingLEsDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
-      Seq("id"), "left_outer")
+      Seq("id"), "left_outer").repartition(numOfPartitions)
 
     getAllLUs(joinedLUs, appconf)
 
@@ -52,29 +53,33 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
 
   def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
+    val numOfPartitions = allLUsDF.rdd.getNumPartitions
+
     val calculatedDF = calculate(allLUsDF,appconf).castAllToString
     calculatedDF.cache()
 
+
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
-    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
-    val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
-    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
+    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer").repartition(numOfPartitions)
+    val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti").repartition(numOfPartitions)
+    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer").repartition(numOfPartitions)
     val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
-
     calculatedDF.unpersist()
+    allEntsDF
   }
 
 
   def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+    val numOfPartitions = allEntsDF.rdd.getNumPartitions
 
     val existingLOUs: DataFrame = getExistingLousDF(appconf,confs)
 
-    val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"),Seq("ern"),"left_anti")
+    val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"),Seq("ern"),"left_anti").repartition(numOfPartitions)
 
     val newAndMissingLOUsDF: DataFrame =  createNewAndMissingLOUs(entsWithoutLOUs,appconf)
 
-    val allLOUs = existingLOUs.union(newAndMissingLOUsDF)
+    existingLOUs.union(newAndMissingLOUsDF)
   }
 
   def createNewAndMissingLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {

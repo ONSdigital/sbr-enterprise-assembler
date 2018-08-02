@@ -1,25 +1,23 @@
 package closures
 
-import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
+import closures.mocks.MockCreateNewPeriodHBaseDao
 import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
-import global.Configs.conf
 import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
-import utils.{Paths, TestDataUtils}
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
+import utils.{Paths, TestDataUtils}
 
-import scala.collection.immutable
 import scala.reflect.io.File
-import scala.util.Try
 
 /**
   *
@@ -32,6 +30,30 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
+/*    override def  getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+      val numberOfPartitions = allEntsDF.rdd.getNumPartitions
+      val res = super.getAllLOUs(allEntsDF,appconf,confs)
+      res.coalesce(numberOfPartitions)
+    }
+
+    override def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession) = {
+
+      val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
+      val numberOfPartitions = incomingBiDataDF.rdd.getNumPartitions
+      val existingLEsDF: DataFrame = getExistingLeusDF(appconf, Configs.conf)
+
+
+      val joinedLUs = incomingBiDataDF.join(
+        existingLEsDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
+        Seq("id"), "left_outer")
+
+      getAllLUs(joinedLUs, appconf).coalesce(numberOfPartitions)
+    }
+
+    override def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+      val numberOfPartitions = allLUsDF.rdd.getNumPartitions
+      super.getAllEntsCalculated(allLUsDF, appconf).coalesce(numberOfPartitions)
+    }*/
   }
 
   val appConfs = AppParams(
