@@ -68,20 +68,20 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
       "add-calculated-period"
     )))
 
-  override def beforeAll() = {
+/*  override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     createRecords(appConfs)(spark)
     ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
     MockCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
     spark.stop()
   }
-  override def afterAll() = {
+    override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }
+  }*/
 
 
 
@@ -93,9 +93,28 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
       val links: Seq[LinkRecord] = readLinks
       val lous: Seq[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList
       spark.stop()
+      val r = areAllIdsMatch(ents,links,lous)
       checkIntegrity(ents,links,lous)
 
     }
+  }
+
+  def areAllIdsMatch(ents: Seq[Enterprise], links: Seq[LinkRecord], lous: Seq[LocalUnit]) = {
+    val entsErns: Seq[String] = ents.map(_.ern).sorted
+    val louLurns: Seq[String] = lous.map(_.lurn).sorted
+    val louErns: Seq[String] = lous.map(_.ern).distinct.sorted
+    val linksErns: Seq[String] = links.map(_.ern).distinct.sorted
+    val linksLurns: Seq[String]  = links.map(_.lurns).flatten.distinct.sorted
+
+    val r1 = entsErns==louErns
+    val r2 = louErns==linksErns
+    val r3 = entsErns==linksErns
+
+    val areErnsGood = r1 && r2 && r3
+    val areLurnsGood = louLurns==linksLurns
+
+    areErnsGood && areLurnsGood
+
   }
 
   def checkIntegrity(ents: Seq[Enterprise],links: Seq[LinkRecord],lous: Seq[LocalUnit]) = {

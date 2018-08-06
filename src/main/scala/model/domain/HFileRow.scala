@@ -8,6 +8,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import spark.extensions.rdd.HBaseDataReader
 
 import scala.util.Try
 
@@ -199,25 +200,11 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 }
 object HFileRow {
 
-  def getKeyValue[T <: Cell](kv: T): (String, (String, String)) = {
-
-    val key = Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength)
-
-    val column = Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset,
-      kv.getQualifierOffset + kv.getQualifierLength)
-
-    val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset,
-      kv.getValueOffset + kv.getValueLength)
-
-    (key, (column, value))
-  }
-
-
   def apply(entry: (String, Iterable[(String, String)])) = new HFileRow(entry._1, entry._2.map(c => KVCell(c)).toSeq)
 
   def apply(result: Result) = {
     val rowKey = Bytes.toString(result.getRow)
-    val cells: Array[(String, String)] = result.rawCells().map(c => getKeyValue(c)._2)
+    val cells: Array[(String, String)] = result.rawCells().map(c => HBaseDataReader.getKeyValue(c)._2)
     new HFileRow(rowKey, cells.map(cell => KVCell(cell._1.trim(), cell._2.trim())))
   }
 

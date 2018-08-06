@@ -4,14 +4,73 @@ import dao.hbase.HBaseDao
 import global.{AppParams, Configs}
 import model.domain.HFileRow
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
-import spark.{RddLogging, SparkSessionManager}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import spark.RddLogging
+import spark.extensions.sql._
 
 
 
 case class DataReport(entCount:Long, lusCount:Long, losCount:Long, childlessEntErns:Seq[String], entsWithBrokenkeys:Seq[(String, String)],lusOrphans:Seq[(String,(String,String))], losOrphans:Seq[(String,(String,String))])
 
 object InputAnalyser extends RddLogging{
+
+  def getDfFormatData(appconf:AppParams)(implicit spark: SparkSession):Unit =  {
+
+    /**
+      * +----------+----------+------------------+-------------+---------------+----------------+----------+-------------+--------------+--------+-----+------------+
+      * |       ern|    entref|              name|trading_style|       address1|        address2|  address3|     address4|      address5|postcode|sic07|legal_status|
+      * +----------+----------+------------------+-------------+---------------+----------------+----------+-------------+--------------+--------+-----+------------+
+      * |2000000011|9900000009|    INDUSTRIES LTD|            A|     P O BOX 22|INDUSTRIES HOUSE|WHITE LANE|     REDDITCH|WORCESTERSHIRE| B22 2TL|12345|           1|
+      * |3000000011|9900000126|BLACKWELLGROUP LTD|            B|COGGESHALL ROAD|     EARLS COLNE|COLCHESTER|         null|          null| CO6 2JX|23456|           1|
+      * |4000000011|9900000242|           IBM LTD|            C|     BSTER DEPT|   MAILPOINT A1F|P O BOX 41|NORTH HARBOUR|    PORTSMOUTH| PO6 3AU|34567|           1|
+      * +----------+----------+------------------+-------------+---------------+----------------+----------+-------------+--------------+--------+-----+------------+
+      * */
+    val ents = getEntsDF(appconf)
+
+    /**
+      * +------------+----------+---------+--------------+--------------------+
+      * |        ubrn|       ern|CompanyNo|      PayeRefs|             VatRefs|
+      * +------------+----------+---------+--------------+--------------------+
+      * |100000246017|3000000011| 00032262|[1152L, 1153L]|         [111222333]|
+      * |100000459235|4000000011| 04223164|       [1166L]|[222666000, 55566...|
+      * |100000508723|4000000011| 04223165|[1188L, 1199L]|         [111000111]|
+      * |100000508724|4000000011| 00012345|       [5555L]|         [999888777]|
+      * |100000827984|3000000011| 00032263|[1154L, 1155L]|         [222333444]|
+      * |100002826247|2000000011| 00032261|       [1151L]|         [123123123]|
+      * +------------+----------+---------+--------------+--------------------+
+      * */
+
+    val lus = getLegalUnitDF(appconf)
+
+    /**
+      * +---------+------------+----------+--------------------+----------+------------+-----------------+--------------+----------+-------------+----------+--------+-----+---------+
+      * |     lurn|       luref|       ern|                name|    entref|tradingstyle|         address1|      address2|  address3|     address4|  address5|postcode|sic07|employees|
+      * +---------+------------+----------+--------------------+----------+------------+-----------------+--------------+----------+-------------+----------+--------+-----+---------+
+      * |300000088|100000827984|3000000011|2-ND LU OF BLACKW...|9900000126|        null|North End Rd lane|       Croydon|    Surrey|         null|      null| CR0 1AA| 1122|        2|
+      * |300000099|100000246017|3000000011|  BLACKWELLGROUP LTD|9900000126|        null|  COGGESHALL ROAD|   EARLS COLNE|COLCHESTER|         null|      null| CO6 2JX|23456|        2|
+      * |400000055|100000508724|4000000011|  3-RD LU OF IBM LTD|9900000242|        null|        IBM HOUSE|  Smile Street|   Cardiff|  SOUTH WALES|      null|CF23 9EU| 3344|        1|
+      * |400000066|100000508723|4000000011|  2-ND LU OF IBM LTD|9900000242|        null|          IT DEPT|1 Hight Street|   Newport|  SOUTH WALES|      null|NP10 6XG| 2233|        2|
+      * |400000077|100000459235|4000000011|             IBM LTD|9900000242|        null|       BSTER DEPT| MAILPOINT A1F|P O BOX 41|NORTH HARBOUR|PORTSMOUTH| PO6 3AU|34567|        2|
+      * +---------+------------+----------+--------------------+----------+------------+-----------------+--------------+----------+-------------+----------+--------+-----+---------+
+      *  */
+    val lous = getLocallUnitDF(appconf)
+    print("Done")
+  }
+
+  def getLocallUnitDF(appconf:AppParams)(implicit spark: SparkSession): DataFrame =  {
+    val entsRows:RDD[Row] = getLocalUnitsFromLouTable(appconf).map(_.toLouRow)
+    spark.createDataFrame(entsRows, louRowSchema)
+  }
+
+  def getLegalUnitDF(appconf:AppParams)(implicit spark: SparkSession): DataFrame =  {
+    val entsRows:RDD[Row] = getLegalUnitsFromLinks(appconf).map(_.toLuRow)
+    spark.createDataFrame(entsRows, luRowSchema)
+  }
+
+  def getEntsDF(appconf:AppParams)(implicit spark: SparkSession): DataFrame =  {
+    val entsRows:RDD[Row] = getEntsFromEntTable(appconf).map(_.toEntRow)
+    spark.createDataFrame(entsRows, entRowSchema)
+  }
 
   def getData(appconf:AppParams)(implicit spark: SparkSession):DataReport =  {
 
@@ -59,6 +118,9 @@ object InputAnalyser extends RddLogging{
 
     res
   }
+
+
+
 
   private def getEntsFromEntTable(appconf: AppParams)(implicit ss:SparkSession) = {
     HBaseDao.readEnterprisesWithKeyFilter(Configs.conf, appconf, ".*~" + {
