@@ -1,14 +1,11 @@
 package closures
 
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
-import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
-import global.Configs.conf
 import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -29,7 +26,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
   lazy val testDir = "newperiod"
 
-  object MockRefreshPeriodWithCalculationsClosure$ extends RefreshPeriodWithCalculationsClosure$ with MockClosures{
+  object MockRefreshPeriodWithCalculationsClosure extends RefreshPeriodWithCalculationsClosure with MockClosures{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
@@ -56,21 +53,21 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
 
 
-/*   override def beforeAll() = {
+   override def beforeAll() = {
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+        MockRefreshPeriodWithCalculationsClosure.refreshPeriodDataWithCalculations(appConfs)(spark)
         spark.stop()
-  }*/
-/*  override def afterAll() = {
+  }
+  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
         File(entHfilePath).deleteRecursively()
         File(louHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
 
   "assembler" should {

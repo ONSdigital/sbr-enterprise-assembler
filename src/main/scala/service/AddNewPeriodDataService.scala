@@ -1,6 +1,6 @@
 package service
 
-import closures.{NewPeriodClosure, RefreshPeriodWithCalculationsClosure$}
+import closures.{NewPeriodClosure, RefreshPeriodWithCalculationsClosure}
 import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
 import global.AppParams
@@ -28,7 +28,7 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
 
     def loadNewPeriodWithCalculationsData(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
 
-      RefreshPeriodWithCalculationsClosure$.addNewPeriodDataWithCalculations(appconf)
+      RefreshPeriodWithCalculationsClosure.refreshPeriodDataWithCalculations(appconf)
 
         withHbaseConnection{implicit con:Connection =>
 

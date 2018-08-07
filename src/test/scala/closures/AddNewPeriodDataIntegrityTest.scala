@@ -1,23 +1,19 @@
 package closures
 
 import closures.mocks.MockCreateNewPeriodHBaseDao
-import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import utils.{Paths, TestDataUtils}
-
-import scala.reflect.io.File
 
 /**
   *
@@ -26,7 +22,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
 
   lazy val testDir = "newperiod"
 
-  object MockCalculationsClosure extends RefreshPeriodWithCalculationsClosure${
+  object MockCalculationsClosure extends RefreshPeriodWithCalculationsClosure{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
