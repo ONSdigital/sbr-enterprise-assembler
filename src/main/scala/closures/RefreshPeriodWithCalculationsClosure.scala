@@ -9,14 +9,15 @@ import spark.RddLogging
 import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
 
-import scala.util.Try
-
-trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
+trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
 
-
-  def addNewPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  /**
+    * Does not work currently because it's using previous period when looking up existing entities
+    * and saving fresh data with new period key
+    * */
+  def refreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
 
     val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 
@@ -85,4 +86,4 @@ trait NewPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClos
 
 
 }
-object NewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure
+object RefreshPeriodWithCalculationsClosure extends RefreshPeriodWithCalculationsClosure

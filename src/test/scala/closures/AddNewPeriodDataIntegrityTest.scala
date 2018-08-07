@@ -26,7 +26,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
 
   lazy val testDir = "newperiod"
 
-  object MockCalculationsClosure extends NewPeriodWithCalculationsClosure{
+  object MockCalculationsClosure extends RefreshPeriodWithCalculationsClosure${
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 

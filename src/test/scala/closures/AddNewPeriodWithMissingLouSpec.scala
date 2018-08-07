@@ -25,7 +25,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
 
   lazy val testDir = "missinglou"
 
-  object MockNewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure with MockClosures {
+  object MockRefreshPeriodWithCalculationsClosure$ extends RefreshPeriodWithCalculationsClosure$ with MockClosures {
 
     override val hbaseDao: HBaseDao = MockCreateNewPeriodHBaseDao
 
@@ -56,7 +56,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockNewPeriodWithCalculationsClosure.addNewPeriodDataWithCalculations(appConfs)(spark)
+        MockRefreshPeriodWithCalculationsClosure$.addNewPeriodDataWithCalculations(appConfs)(spark)
         spark.stop()
   }
 

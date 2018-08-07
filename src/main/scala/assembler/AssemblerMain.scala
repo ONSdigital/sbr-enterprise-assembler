@@ -1,8 +1,8 @@
 package assembler
 
 
+import global.AppParams
 import global.Configs.conf
-import global.{AppParams, Configs}
 import service._
 
 import scala.reflect.io.File
@@ -24,7 +24,7 @@ try{
       case "add-calculated-period" => loadNewPeriodWithCalculationsData(appParams)
       case "addperiod" => loadNewPeriodData(appParams)
       case "calculate" => addCalculations(appParams)
-      case "refresh" => loadRefreshFromParquet(appParams)
+      case "refresh" => refresh(appParams)
       case "create" => createNewPopulationFromParquet(appParams)
       case "deleteperiod" => deletePeriod(appParams)
       case "data-integrity-report" => {

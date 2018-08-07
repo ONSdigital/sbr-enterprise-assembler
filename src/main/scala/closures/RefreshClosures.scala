@@ -1,6 +1,6 @@
 package closures
 
-import dao.hbase.HBaseDao
+import dao.hbase.{HBaseDao, HFileUtils}
 import dao.hbase.converter.WithConversionHelper
 import dao.parquet.ParquetDao
 import dao.parquet.ParquetDao.adminCalculations
@@ -15,12 +15,12 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import spark.calculations.DataFrameHelper
+import spark.calculations.{AdminDataCalculator, DataFrameHelper}
 import spark.extensions.sql.SqlRowExtensions
 /**
   *
   */
-trait RefreshClosures extends  WithConversionHelper with DataFrameHelper with Serializable{
+trait RefreshClosures extends HFileUtils with AdminDataCalculator with Serializable{
 
 
 
@@ -60,7 +60,7 @@ trait RefreshClosures extends  WithConversionHelper with DataFrameHelper with Se
     val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
     //get cells for jobs and employees - the only updateable columns in enterprise table
-    val entsRDD: RDD[(String, hfile.HFileCell)] = adminCalculationsEnt(fullLUs, payeDF, vatDF).rdd.flatMap(row => {
+    val entsRDD: RDD[(String, hfile.HFileCell)] = calculate(fullLUs,appconf).rdd.flatMap(row => {
       val ern = row.getString("ern").get
       Seq(
       row.getCalcValue("paye_employees").map(employees => createEnterpriseCell(ern, "payeemployees", employees, appconf)),

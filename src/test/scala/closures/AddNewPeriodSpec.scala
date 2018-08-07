@@ -29,7 +29,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
   lazy val testDir = "newperiod"
 
-  object MockNewPeriodWithCalculationsClosure extends NewPeriodWithCalculationsClosure with MockClosures{
+  object MockRefreshPeriodWithCalculationsClosure$ extends RefreshPeriodWithCalculationsClosure$ with MockClosures{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
