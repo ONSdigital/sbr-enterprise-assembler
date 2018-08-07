@@ -52,6 +52,7 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
                             )))
 
   override def beforeAll() = {
+
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
         createRecords(confs)(spark)
@@ -74,13 +75,10 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
    "create hfiles populated with expected local units data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-
-
         val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
         val expected: List[LocalUnit] = newPeriodWithMissingLocalUnit.sortBy(_.lurn).sortBy(_.lurn)
         actual shouldBe expected
         spark.stop()
-
    }
 }
 
@@ -89,13 +87,10 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
-
         val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-
         val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
         val expected = newPeriodLinks.sortBy(_.key)
         actual shouldBe expected
-
         spark.stop()
 
         }
