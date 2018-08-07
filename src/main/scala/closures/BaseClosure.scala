@@ -19,6 +19,90 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
   val hbaseDao: HBaseDao = HBaseDao
 
+
+  /**
+    * Fields:
+    * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,
+    * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
+    * */
+  def getIncomingBiData(appconf: AppParams)(implicit spark: SparkSession) = {
+    val updatedConfs = appconf.copy(TIME_PERIOD = appconf.PREVIOUS_TIME_PERIOD)
+    val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
+    parquetDF.castAllToString
+  }
+
+  def getAllLUs(joinedLUs: DataFrame,appconf:AppParams)(implicit spark: SparkSession) = {
+
+    val rows = joinedLUs.rdd.map { row => {
+      val ern = if (row.isNull("ern")) generateErn(row, appconf) else row.getAs[String]("ern")
+
+      Row(
+        ern,
+        row.getAs[String]("id"),
+        row.getAs[String]("BusinessName"),
+        row.getAs[String]("IndustryCode"),
+        row.getAs[String]("LegalStatus"),
+        getValueOrEmptyStr(row,"PostCode"),
+        row.getAs[String]("TradingStatus"),
+        row.getAs[String]("Turnover"),
+        row.getAs[String]("UPRN"),
+        row.getAs[String]("CompanyNo"),
+        row.getAs[Seq[String]]("PayeRefs"),
+        row.getAs[Seq[String]]("VatRefs")
+      )}}
+    spark.createDataFrame(rows, biWithErnSchema)
+  }
+
+  /**
+    * Creates new Enterprises from new LEUs with calculations
+    * schema: completeNewEntSchema
+    * ern, entref, name, address1, postcode, sic07, legal_status,
+    * AND calculations:
+    * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
+    * */
+  //paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
+  def createNewEnts(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = spark.createDataFrame(
+    newLEUsCalculatedDF.rdd.map(row => Row(
+      row.getAs[String]("ern"),
+      Try {row.getAs[String]("entref")}.getOrElse(null),
+      row.getAs[String]("BusinessName"),
+      null, //trading_style
+      Try {row.getAs[String]("address1")}.getOrElse(""),
+      null, null, null, null, //address2,3,4,5
+      row.getAs[String]("PostCode"),
+      Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
+      row.getAs[String]("LegalStatus"),
+      Try {row.getAs[String]("paye_empees")}.getOrElse(null),
+      Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
+      Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("std_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
+    )
+    ), completeEntSchema)
+
+  def createNewLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+
+    spark.createDataFrame(
+      ents.rdd.map(row => Row(
+        generateLurn(row,appconf),
+        Try {row.getAs[String]("luref")}.getOrElse(null),
+        row.getAs[String]("ern"),
+        row.getAs[String]("name"),
+        Try {row.getAs[String]("entref")}.getOrElse(null),
+        Try {row.getAs[String]("trading_style")}.getOrElse(null),
+        row.getAs[String]("address1"),
+        Try {row.getAs[String]("address2")}.getOrElse(null),
+        Try {row.getAs[String]("address3")}.getOrElse (null),
+        Try {row.getAs[String]("address4")}.getOrElse (null),
+        Try {row.getAs[String]("address5")}.getOrElse (null),
+        getValueOrEmptyStr(row,"postcode"),
+        getValueOrEmptyStr(row,"sic07"),
+        getValueOrEmptyStr(row,"paye_empees")
+      )), louRowSchema)
+  }
+
   def getExistingLousDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
 
     val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
@@ -80,6 +164,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val res: RDD[(String, hfile.HFileCell)] = entsDF.map(row => rowToEnt(row, appconf)).flatMap(identity).rdd
     res
   }
+
   def getValueOrEmptyStr(row:Row, fieldName:String) = Try{
     val value = row.getAs[String](fieldName)
     value.size //just to trigger NullPointerException if is null
