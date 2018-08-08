@@ -152,31 +152,31 @@ trait HFileUtils extends Serializable{
 
   def createEnterpriseCell(ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateEntKey(ern,appParams),appParams.HBASE_ENTERPRISE_COLUMN_FAMILY,column,value)
 
+  def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_LOCALUNITS_COLUMN_FAMILY,column,value)
+
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
   private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = {
-    s"${ern.reverse}~${appParams.TIME_PERIOD}~$lurn"
+    s"${ern.reverse}~$lurn"
   }
 
   private def generateLocalUnitLinksKey(lurn:String,appParams:AppParams) = {
-    s"$lurn~$localUnit~${appParams.TIME_PERIOD}"
+    s"$lurn~$localUnit"
   }
 
-  def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_LOCALUNITS_COLUMN_FAMILY,column,value)
-
   private def generateLegalUnitLinksKey(ubrn:String,appParams:AppParams) = {
-    s"$ubrn~$legalUnit~${appParams.TIME_PERIOD}"
+    s"$ubrn~$legalUnit"
   }
 
   private def generateEntKey(ern:String,appParams:AppParams) = {
-    s"${ern.reverse}~${appParams.TIME_PERIOD}"
+    s"${ern.reverse}"
   }
   private def generateEntLinkKey(ern:String,appParams:AppParams) = {
-    s"${ern.reverse}~ENT~${appParams.TIME_PERIOD}"
+    s"${ern.reverse}~ENT"
   }
 
   private def generateLinkKey(id:String, suffix:String, appParams:AppParams) = {
-    s"$id~$suffix~${appParams.TIME_PERIOD}"
+    s"$id~${appParams.TIME_PERIOD}"
   }
 
   def getString(row:Row,name:String) = {

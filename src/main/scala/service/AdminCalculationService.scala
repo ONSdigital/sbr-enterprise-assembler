@@ -12,10 +12,10 @@ trait AdminCalculationService extends HBaseConnectionManager with SparkSessionMa
 
   def addCalculations(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
 
-    CalculateClosure.updateCalculations(appconf)
 
     withHbaseConnection{implicit con:Connection =>
 
+      CalculateClosure.updateCalculations(appconf)
       HBaseDao.loadEnterprisesHFile(con,appconf)
       HBaseDao.loadLousHFile(con,appconf)
 

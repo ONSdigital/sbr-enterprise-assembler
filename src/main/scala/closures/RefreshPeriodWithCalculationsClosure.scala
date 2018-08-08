@@ -3,6 +3,7 @@ package closures
 import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import spark.RddLogging
@@ -17,7 +18,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * Does not work currently because it's using previous period when looking up existing entities
     * and saving fresh data with new period key
     * */
-  def refreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  def refreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
 
     val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 
@@ -36,7 +37,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   }
 
 
-  def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession, con:Connection) = {
 
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
 
@@ -52,7 +53,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession, con:Connection) = {
 
     //val numOfPartitions = allLUsDF.rdd.getNumPartitions
 
@@ -71,8 +72,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   }
 
 
-  def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
-    //val numOfPartitions = allEntsDF.rdd.getNumPartitions
+  def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession, con:Connection) = {
 
     val existingLOUs: DataFrame = getExistingLousDF(appconf,confs)
 

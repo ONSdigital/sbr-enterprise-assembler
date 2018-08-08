@@ -28,6 +28,13 @@ trait HBaseDao extends Serializable{
 
 
 
+  def readTable(appParams:AppParams, config:Configuration, tableName:String)(implicit spark:SparkSession) = {
+    config.set(TableInputFormat.INPUT_TABLE, tableName)
+    val res = readKvsFromHBase(config)
+    config.unset(TableInputFormat.INPUT_TABLE)
+    res
+  }
+
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
@@ -41,7 +48,7 @@ trait HBaseDao extends Serializable{
     loadDeleteLousHFile
   }
 
-  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession,connection:Connection): Unit = {
+  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
     val rows: Array[HFileRow] = data.take(5)

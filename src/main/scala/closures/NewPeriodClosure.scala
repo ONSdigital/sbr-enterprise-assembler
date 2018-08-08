@@ -3,6 +3,7 @@ package closures
 import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import spark.RddLogging
@@ -15,7 +16,7 @@ import scala.util.Try
   */
 class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with Serializable {
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession, connection:Connection): Unit = {
     val confs = Configs.conf
     /**
       * Fields:
@@ -82,7 +83,7 @@ class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with 
     joinedLUs.unpersist()
   }
 
-  def getAllLOUs(allEntsDF: DataFrame, appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+  def getAllLOUs(allEntsDF: DataFrame, appconf: AppParams, confs: Configuration)(implicit spark: SparkSession, connection:Connection) = {
 
     val existingLOUs: DataFrame = getExistingLousDF(appconf, confs)
     val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"), Seq("ern"), "left_anti")

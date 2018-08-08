@@ -6,6 +6,7 @@ import model.domain.HFileRow
 import model.hfile
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -26,7 +27,6 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
     * */
   def getIncomingBiData(appconf: AppParams)(implicit spark: SparkSession) = {
-    val updatedConfs = appconf.copy(TIME_PERIOD = appconf.PREVIOUS_TIME_PERIOD)
     val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
     parquetDF.castAllToString
   }
@@ -104,20 +104,13 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
   }
 
   def getExistingLousDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-
-    val localUnitsTableName = s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}"
-    val regex = ".*~" + {appconf.PREVIOUS_TIME_PERIOD} + "~.*"
-    val louHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs, appconf, localUnitsTableName, regex)
-    val existingLouRdd: RDD[Row] = louHFileRowRdd.map(_.toLouRow)
-    spark.createDataFrame(existingLouRdd, louRowSchema)
+    val louHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf, confs, lousTableName(appconf)).map(_.toLouRow)
+    spark.createDataFrame(louHFileRowRdd, louRowSchema)
   }
 
   def getExistingEntsDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val entRegex = ".*~" + {appconf.PREVIOUS_TIME_PERIOD} + "$"
-    val entTableName = s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}"
-    val entHFileRowRdd: RDD[HFileRow] = hbaseDao.readTableWithKeyFilter(confs, appconf, entTableName, entRegex)
-    val existingEntRdd: RDD[Row] = entHFileRowRdd.map(_.toEntRow)
-    spark.createDataFrame(existingEntRdd, entRowSchema)
+    val entHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, entsTableName(appconf)).map(_.toEntRow)
+    spark.createDataFrame(entHFileRowRdd, entRowSchema)
   }
 
   /**
@@ -126,9 +119,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * ubrn, ern, CompanyNo, PayeRefs, VatRefs
     **/
   def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val linksTableName = s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}"
-    val luRegex = ".*(LEU)~" + {appconf.PREVIOUS_TIME_PERIOD} + "$"
-    val existingLinks: RDD[Row] = hbaseDao.readTableWithKeyFilter(confs, appconf, linksTableName, luRegex).map(_.toLuRow)
+    val existingLinks: RDD[Row] = hbaseDao.readTable(appconf,confs, linksTableName(appconf)).map(_.toLuRow)
     val existingLinksDF: DataFrame = spark.createDataFrame(existingLinks, luRowSchema)
     existingLinksDF
   }
@@ -170,4 +161,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     value.size //just to trigger NullPointerException if is null
     value
   }.getOrElse("")
+
+  def linksTableName(appconf:AppParams) =  s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}"
+  def lousTableName(appconf:AppParams) =  s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
+  def entsTableName(appconf:AppParams) =  s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}_${appconf.TIME_PERIOD}"
+
 }
