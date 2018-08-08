@@ -7,6 +7,7 @@ import global.{AppParams, Configs}
 import model.domain.{HFileRow, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -54,10 +55,11 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
   override def beforeAll() = {
 
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+        val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockRefreshPeriodWithCalculationsClosure$.refreshPeriodDataWithCalculations(appConfs)(spark)
+        MockRefreshPeriodWithCalculationsClosure$.refreshPeriodDataWithCalculations(appConfs)(spark,connection)
         spark.stop()
   }
 

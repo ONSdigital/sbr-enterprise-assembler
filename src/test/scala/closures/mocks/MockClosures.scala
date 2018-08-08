@@ -1,12 +1,18 @@
 package closures.mocks
 
+import closures.BaseClosure
+import closures.mocks.MockCreateNewPeriodHBaseDao.adjustPathToExistingRecords
 import dao.hbase.HFileUtils
 import global.AppParams
-import org.apache.spark.sql.Row
-import spark.extensions.sql.SqlRowExtensions
+import model.domain.HFileRow
+import org.apache.hadoop.conf.Configuration
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Row, SparkSession}
+import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
+import spark.extensions.sql.{SqlRowExtensions, entRowSchema, louRowSchema, luRowSchema}
 
 
-trait MockClosures{this:HFileUtils =>
+trait MockClosures{this:BaseClosure with HFileUtils =>
 
   val ernMapping: Map[String, String] = Map(
     ("5TH PROPERTY TRADING LIMITED" ->  "111111111-TEST-ERN"),
@@ -32,6 +38,26 @@ trait MockClosures{this:HFileUtils =>
   override def generateLurnFromEnt(row: Row, appParams: AppParams) = lurnMapping(generateLurn(row, appParams))
 
 
+  override def getExistingLeusDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
+    val path = adjustPathToExistingRecords(appParams.PATH_TO_LINKS_HFILE)
+    val rdd: RDD[Row] = readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).map(_.toLuRow)
+    spark.createDataFrame(rdd, luRowSchema)
+
+  }
+
+
+  override def getExistingLousDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
+    val path = adjustPathToExistingRecords(appParams.PATH_TO_LOCALUNITS_HFILE)
+    val lous: RDD[Row] = readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).map(_.toLouRow)
+    spark.createDataFrame(lous, louRowSchema)
+  }
+
+
+  override def getExistingEntsDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
+    val path = adjustPathToExistingRecords(appParams.PATH_TO_ENTERPRISE_HFILE)
+    val ents: RDD[Row] = readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).map(_.toEntRow)
+    spark.createDataFrame(ents, entRowSchema)
+  }
 
 
 }

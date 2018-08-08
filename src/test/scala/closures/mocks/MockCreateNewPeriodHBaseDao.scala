@@ -5,8 +5,10 @@ import global.AppParams
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
+import spark.extensions.sql._
 
 object MockCreateNewPeriodHBaseDao extends HBaseDao {
 
@@ -30,22 +32,6 @@ object MockCreateNewPeriodHBaseDao extends HBaseDao {
 
   }
 
-  override def readLinksWithKeyFilter(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    val path = adjustPathToExistingRecords(appParams.PATH_TO_LINKS_HFILE)
-    readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).filter(_.key.matches(regex))
-  }
-
-
-  override def readLouWithKeyFilter(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    val path = adjustPathToExistingRecords(appParams.PATH_TO_LOCALUNITS_HFILE)
-    readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).filter(_.key.matches(regex))
-  }
-
-
-  override def readEnterprisesWithKeyFilter(confs: Configuration, appParams: AppParams, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    val path = adjustPathToExistingRecords(appParams.PATH_TO_ENTERPRISE_HFILE)
-    readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).filter(_.key.matches(regex))
-}
 }
 
 

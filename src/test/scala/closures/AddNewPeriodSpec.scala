@@ -6,6 +6,7 @@ import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -15,6 +16,7 @@ import spark.extensions.rdd.HBaseDataReader._
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import utils.{Paths, TestDataUtils}
+import org.powermock.api.mockito.PowerMockito
 
 import scala.reflect.io.File
 /**
@@ -54,12 +56,12 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
 
    override def beforeAll() = {
-        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        val confs = appConfs
-        createRecords(confs)(spark)
-        ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockRefreshPeriodWithCalculationsClosure.refreshPeriodDataWithCalculations(appConfs)(spark)
-        spark.stop()
+        val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+        createRecords(appConfs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+        MockRefreshPeriodWithCalculationsClosure.refreshPeriodDataWithCalculations(appConfs)(spark,null)
+        spark.stop
+
   }
   override def afterAll() = {
         File(parquetPath).deleteRecursively()
@@ -68,7 +70,6 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
         File(louHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
   }
-
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {

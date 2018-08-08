@@ -1,6 +1,6 @@
 package closures
 
-import closures.mocks.MockNewPeriodClosure
+import closures.mocks.{MockClosures, MockNewPeriodClosure}
 import dao.hbase.HBaseDao
 import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
@@ -8,6 +8,7 @@ import model.domain.{Enterprise, HFileRow}
 import model.hfile
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -21,7 +22,9 @@ import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.collection.immutable
 import scala.reflect.io.File
-
+import org.powermock.api.mockito.PowerMockito._
+import org.mockito.Mockito
+import org.powermock.api.mockito.PowerMockito
 /**
   *
   *
@@ -31,7 +34,7 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
   lazy val testDir = "calculations"
 
   object MockNewPeriodClosure extends MockNewPeriodClosure{
-           lazy val testDir = "calculations"
+        lazy val testDir = "calculations"
   }
 
   val appConfs = AppParams(
@@ -47,7 +50,8 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
     )))
 
   override def beforeAll() = {
-    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    val mockConnection:Connection = PowerMockito.mock(classOf[Connection])
     val confs = appConfs
     createRecords(confs)(spark)
     //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
@@ -55,7 +59,7 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
     //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
     //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
     ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
-    MockNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+    MockNewPeriodClosure.addNewPeriodData(appConfs)(spark,mockConnection)
     spark.stop()
   }
 
