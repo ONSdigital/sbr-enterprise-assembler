@@ -18,7 +18,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * Does not work currently because it's using previous period when looking up existing entities
     * and saving fresh data with new period key
     * */
-  def refreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
+  def refreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
 
     val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 
@@ -37,7 +37,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   }
 
 
-  def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession, con:Connection) = {
+  def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession) = {
 
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
 
@@ -53,7 +53,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession, con:Connection) = {
+  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
     //val numOfPartitions = allLUsDF.rdd.getNumPartitions
 
@@ -72,7 +72,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   }
 
 
-  def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession, con:Connection) = {
+  def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLOUs: DataFrame = getExistingLousDF(appconf,confs)
 

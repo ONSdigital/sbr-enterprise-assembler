@@ -71,16 +71,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
       null, null, null, null, //address2,3,4,5
       row.getAs[String]("PostCode"),
       Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
-      row.getAs[String]("LegalStatus"),
-      Try {row.getAs[String]("paye_empees")}.getOrElse(null),
-      Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
-      Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("std_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
+      row.getAs[String]("LegalStatus")
     )
-    ), completeEntSchema)
+    ), entRowSchema)
 
   def createNewLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 

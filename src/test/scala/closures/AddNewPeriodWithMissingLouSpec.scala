@@ -55,11 +55,10 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
   override def beforeAll() = {
 
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        val connection: Connection = ConnectionFactory.createConnection(Configs.conf)
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockRefreshPeriodWithCalculationsClosure$.refreshPeriodDataWithCalculations(appConfs)(spark,connection)
+        MockRefreshPeriodWithCalculationsClosure$.refreshPeriodDataWithCalculations(appConfs)(spark)
         spark.stop()
   }
 

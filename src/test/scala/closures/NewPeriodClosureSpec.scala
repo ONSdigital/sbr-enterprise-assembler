@@ -1,30 +1,24 @@
 package closures
 
-import closures.mocks.{MockClosures, MockNewPeriodClosure}
-import dao.hbase.HBaseDao
+import closures.mocks.MockNewPeriodClosure
 import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
-import model.domain.{Enterprise, HFileRow}
+import model.domain.{Enterprise, HFileRow, LocalUnit}
 import model.hfile
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.SparkSession
+import org.powermock.api.mockito.PowerMockito
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
-import spark.extensions.sql.existingLuBiRowSchema
-import utils.{Paths, TestDataUtils}
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
+import utils.{Paths, TestDataUtils}
 
-import scala.collection.immutable
 import scala.reflect.io.File
-import org.powermock.api.mockito.PowerMockito._
-import org.mockito.Mockito
-import org.powermock.api.mockito.PowerMockito
 /**
   *
   *
@@ -51,39 +45,43 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
 
   override def beforeAll() = {
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-    val mockConnection:Connection = PowerMockito.mock(classOf[Connection])
     val confs = appConfs
     createRecords(confs)(spark)
-    //HBaseDao.copyExistingRecordsToHFiles(appConfs)(spark)
-    //val existinglous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-    //val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-    //val existingLinks = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
     ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
-    MockNewPeriodClosure.addNewPeriodData(appConfs)(spark,mockConnection)
+    MockNewPeriodClosure.addNewPeriodData(appConfs)(spark)
     spark.stop()
   }
 
-/*    override def afterAll() = {
-    File(parquetPath).deleteRecursively()
-    File(linkHfilePath).deleteRecursively()
-    File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()
-    File(existingRecordsDir).deleteRecursively()
-  }*/
+  override def afterAll() = {
+      File(parquetPath).deleteRecursively()
+      File(linkHfilePath).deleteRecursively()
+      File(entHfilePath).deleteRecursively()
+      File(louHfilePath).deleteRecursively()
+      File(existingRecordsDir).deleteRecursively()
+  }
 
-      "assembler" should {
-        "create hfiles populated with expected enterprise data" in {
+  "assembler" should {
+    "create hfiles populated with expected enterprise data" in {
 
-          implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-          val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
-          val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
-          val actual: List[Enterprise] = actualRows.map(Enterprise(_)).sortBy(_.ern)
-          val expected: List[Enterprise] = newPeriodEntsWithoutCalculations.sortBy(_.ern)
-          actual shouldBe expected
-          spark.stop()
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val existingEnts = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect.toList.sortBy(_.key)
+      val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
+      val actual: List[Enterprise] = actualRows.map(Enterprise(_)).sortBy(_.ern)
+      val expected: List[Enterprise] = newPeriodEntsWithoutCalculations.sortBy(_.ern)
+      actual shouldBe expected
+      spark.stop()
+    }
+  }
 
-        }
-      }
+  "assembler" should {
+    "create hfiles populated with expected local units data" in {
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
+      val expected: List[LocalUnit] = newPeriodLocalUnitsWithoutCalculations.sortBy(_.lurn)
+      actual shouldBe expected
+      spark.stop()
+    }
+  }
 
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
