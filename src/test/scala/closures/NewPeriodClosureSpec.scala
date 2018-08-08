@@ -6,12 +6,10 @@ import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.powermock.api.mockito.PowerMockito
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import utils.data.existing.ExistingData

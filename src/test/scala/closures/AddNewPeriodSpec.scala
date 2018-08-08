@@ -6,7 +6,6 @@ import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LinkRecord, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -16,7 +15,6 @@ import spark.extensions.rdd.HBaseDataReader._
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import utils.{Paths, TestDataUtils}
-import org.powermock.api.mockito.PowerMockito
 
 import scala.reflect.io.File
 /**
