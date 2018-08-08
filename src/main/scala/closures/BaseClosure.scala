@@ -73,6 +73,28 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     )
     ), entRowSchema)
 
+    def createNewEntsWithCalculations(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = spark.createDataFrame(
+    newLEUsCalculatedDF.rdd.map(row => Row(
+      row.getAs[String]("ern"),
+      Try {row.getAs[String]("entref")}.getOrElse(null),
+      row.getAs[String]("BusinessName"),
+      null, //trading_style
+      Try {row.getAs[String]("address1")}.getOrElse(""),
+      null, null, null, null, //address2,3,4,5
+      row.getAs[String]("PostCode"),
+      Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
+      row.getAs[String]("LegalStatus"),
+      Try {row.getAs[String]("paye_empees")}.getOrElse(null),
+      Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
+      Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("std_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
+      Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
+    )), completeEntSchema)
+
+
+
   def createNewLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 
     spark.createDataFrame(

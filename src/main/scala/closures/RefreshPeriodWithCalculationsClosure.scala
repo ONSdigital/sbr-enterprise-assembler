@@ -65,7 +65,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")//.repartition(numOfPartitions)
     val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")//.repartition(numOfPartitions)
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")//.repartition(numOfPartitions)
-    val newEntsCalculatedDF = spark.createDataFrame(createNewEnts(newLEUsCalculatedDF).rdd,completeEntSchema)
+    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF).rdd,completeEntSchema)
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist()
     allEntsDF
