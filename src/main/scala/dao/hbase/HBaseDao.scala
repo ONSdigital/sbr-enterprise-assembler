@@ -35,6 +35,48 @@ trait HBaseDao extends Serializable{
     res
   }
 
+  def createCleanupTablesHFiles(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
+
+    deleteAllFromEnts(appParams,config)
+    deleteAllFromLous(appParams,config)
+    deleteAllFromLinks(appParams,config)
+
+  }
+
+
+  def deleteAllFromEnts(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
+    config.set(TableInputFormat.INPUT_TABLE, entsTableName(appParams))
+    val res = readKvsFromHBase(config)
+    res.sortBy(row => s"${row.key}")
+      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY))
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], config)
+    config.unset(TableInputFormat.INPUT_TABLE)
+    res
+  }
+
+
+  def deleteAllFromLous(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
+    config.set(TableInputFormat.INPUT_TABLE, lousTableName(appParams))
+    val res = readKvsFromHBase(config)
+    res.sortBy(row => s"${row.key}")
+      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LOCALUNITS_COLUMN_FAMILY))
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LOCALUNITS_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], config)
+    config.unset(TableInputFormat.INPUT_TABLE)
+    res
+  }
+
+
+  def deleteAllFromLinks(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
+    config.set(TableInputFormat.INPUT_TABLE, linksTableName(appParams))
+    val res = readKvsFromHBase(config)
+    res.sortBy(row => s"${row.key}")
+      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
+      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINK_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], config)
+    config.unset(TableInputFormat.INPUT_TABLE)
+    res
+  }
+
+
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
@@ -268,6 +310,10 @@ trait HBaseDao extends Serializable{
 
    config.set(TableInputFormat.SCAN,scanStr)
   }
+
+  def linksTableName(appconf:AppParams) =  s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}"
+  def lousTableName(appconf:AppParams) =  s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
+  def entsTableName(appconf:AppParams) =  s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}_${appconf.TIME_PERIOD}"
 
 }
 

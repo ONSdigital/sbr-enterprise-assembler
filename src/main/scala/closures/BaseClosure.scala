@@ -2,11 +2,9 @@ package closures
 
 import dao.hbase.{HBaseDao, HFileUtils}
 import global.{AppParams, Configs}
-import model.domain.HFileRow
 import model.hfile
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.KeyValue
-import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -97,12 +95,12 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
   }
 
   def getExistingLousDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val louHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf, confs, lousTableName(appconf)).map(_.toLouRow)
+    val louHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf, confs, HBaseDao.lousTableName(appconf)).map(_.toLouRow)
     spark.createDataFrame(louHFileRowRdd, louRowSchema)
   }
 
   def getExistingEntsDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val entHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, entsTableName(appconf)).map(_.toEntRow)
+    val entHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.entsTableName(appconf)).map(_.toEntRow)
     spark.createDataFrame(entHFileRowRdd, entRowSchema)
   }
 
@@ -112,7 +110,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * ubrn, ern, CompanyNo, PayeRefs, VatRefs
     **/
   def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val existingLinks: RDD[Row] = hbaseDao.readTable(appconf,confs, linksTableName(appconf)).map(_.toLuRow)
+    val existingLinks: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.linksTableName(appconf)).map(_.toLuRow)
     val existingLinksDF: DataFrame = spark.createDataFrame(existingLinks, luRowSchema)
     existingLinksDF
   }
@@ -155,8 +153,6 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     value
   }.getOrElse("")
 
-  def linksTableName(appconf:AppParams) =  s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}"
-  def lousTableName(appconf:AppParams) =  s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
-  def entsTableName(appconf:AppParams) =  s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}_${appconf.TIME_PERIOD}"
+
 
 }

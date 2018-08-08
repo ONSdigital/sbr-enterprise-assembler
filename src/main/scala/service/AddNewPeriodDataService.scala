@@ -15,23 +15,23 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
 
   def loadNewPeriodData(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
 
-
+        NewPeriodClosure.addNewPeriodData(appconf)
+        HBaseDao.createCleanupTablesHFiles(appconf,global.Configs.conf)
 
         withHbaseConnection{implicit con:Connection =>
-                                 NewPeriodClosure.addNewPeriodData(appconf)
+                                 HBaseDao.loadDeleteHFiles(con,appconf)
                                  HBaseDao.loadLinksHFile(con,appconf)
                                  HBaseDao.loadEnterprisesHFile(con,appconf)
                                  HBaseDao.loadLousHFile(con,appconf)
-
-               }
-  }
+        }}
 
     def loadNewPeriodWithCalculationsData(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
 
-
+        RefreshPeriodWithCalculationsClosure.createRefreshPeriodDataWithCalculationsHFiles(appconf)
+        HBaseDao.createCleanupTablesHFiles(appconf,global.Configs.conf)
 
         withHbaseConnection{implicit con:Connection =>
-                                 RefreshPeriodWithCalculationsClosure.refreshPeriodDataWithCalculations(appconf)
+                                 HBaseDao.loadDeleteHFiles(con,appconf)
                                  HBaseDao.loadLinksHFile(con,appconf)
                                  HBaseDao.loadEnterprisesHFile(con,appconf)
                                  HBaseDao.loadLousHFile(con,appconf)
