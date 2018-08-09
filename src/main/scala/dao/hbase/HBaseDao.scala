@@ -141,24 +141,19 @@ trait HBaseDao extends Serializable{
   }
 
   def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-
-    val tableName = s"${appParams.HBASE_LINKS_TABLE_NAMESPACE}:${appParams.HBASE_LINKS_TABLE_NAME}"
-    readTableWithKeyFilter(confs, appParams, tableName, regex)
+    readTableWithKeyFilter(confs, appParams, linksTableName(appParams), regex)
 
   }
 
   def readLouWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-
-    val tableName = s"${appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appParams.HBASE_LOCALUNITS_TABLE_NAME}"
-    readTableWithKeyFilter(confs, appParams, tableName, regex)
+    readTableWithKeyFilter(confs, appParams, lousTableName(appParams), regex)
 
   }
 
 
   def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
 
-    val tableName = s"${appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appParams.HBASE_ENTERPRISE_TABLE_NAME}"
-    readTableWithKeyFilter(confs, appParams, tableName, regex)
+    readTableWithKeyFilter(confs, appParams, entsTableName(appParams), regex)
 
   }
 
@@ -170,59 +165,59 @@ trait HBaseDao extends Serializable{
       readKvsFromHBase
     }}
 
-  def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE_UPDATE), admin,table,regionLocator)
   }
 
-  def loadDeleteLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadDeleteLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE_DELETE), admin,table,regionLocator)
   }
 
-  def loadDeleteLousHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(appParams.HBASE_LOCALUNITS_TABLE_NAME,Some(appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadDeleteLousHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(lousTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_DELETE_PERIOD_HFILE), admin,table,regionLocator)
   }
 
-  def loadDeleteEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_ENTERPRISE_TABLE_NAME,Some(appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadDeleteEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(entsTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_ENTERPRISE_DELETE_PERIOD_HFILE), admin,table,regionLocator)
   }
 
 
-  def loadLinksHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LINKS_TABLE_NAME, Some(appParams.HBASE_LINKS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadLinksHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE), admin,table,regionLocator)
   }
 
-  def loadEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_ENTERPRISE_TABLE_NAME,Some(appParams.HBASE_ENTERPRISE_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(entsTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_ENTERPRISE_HFILE), admin,table,regionLocator)
   }
 
 
-  def loadLousHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LOCALUNITS_TABLE_NAME,Some(appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadLousHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(lousTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_HFILE), admin,table,regionLocator)
   }
 
-  def loadLousDeletePeriodHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(appParams.HBASE_LOCALUNITS_TABLE_NAME,Some(appParams.HBASE_LOCALUNITS_TABLE_NAMESPACE)){ (table, admin) =>
+  def loadLousDeletePeriodHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(lousTableName(appParams)){ (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_DELETE_PERIOD_HFILE), admin,table,regionLocator)
   }
 
 
-  private def wrapTransaction(tableName:String,nameSpace:Option[String])(action:(Table,Admin) => Unit)(implicit connection:Connection){
-    val tn = nameSpace.map(ns => TableName.valueOf(ns, tableName)).getOrElse(TableName.valueOf(tableName))
+  private def wrapTransaction(fullTableName:String)(action:(Table,Admin) => Unit)(implicit connection:Connection){
+    val tn = TableName.valueOf(fullTableName)
     val table: Table = connection.getTable(tn)
     val admin = connection.getAdmin
     setJob(table)
