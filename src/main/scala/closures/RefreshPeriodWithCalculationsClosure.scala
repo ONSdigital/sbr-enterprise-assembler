@@ -18,7 +18,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * Does not work currently because it's using previous period when looking up existing entities
     * and saving fresh data with new period key
     * */
-  def createRefreshPeriodDataWithCalculationsHFiles(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  def createHFilesWithRefreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
 
     val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 

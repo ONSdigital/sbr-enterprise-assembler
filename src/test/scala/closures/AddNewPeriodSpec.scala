@@ -57,7 +57,7 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 /*        createRecords(appConfs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)*/
-        MockRefreshPeriodWithCalculationsClosure.createRefreshPeriodDataWithCalculationsHFiles(appConfs)(spark)
+        MockRefreshPeriodWithCalculationsClosure.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark)
         spark.stop
 
   }

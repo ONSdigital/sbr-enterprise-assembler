@@ -176,7 +176,7 @@ trait HFileUtils extends Serializable{
   }
 
   private def generateLinkKey(id:String, suffix:String, appParams:AppParams) = {
-    s"$id~${appParams.TIME_PERIOD}"
+    s"$id"
   }
 
   def getString(row:Row,name:String) = {
