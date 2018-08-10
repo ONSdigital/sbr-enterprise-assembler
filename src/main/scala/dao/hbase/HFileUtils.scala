@@ -55,8 +55,8 @@ trait HFileUtils extends Serializable{
   def leuToLinks(row: Row, appParams: AppParams) = {
     val ubrn = getString(row,"id").get
     val ern = getString(row,"ern").get
-    val entKey = generateLinkKey(ern,enterprise,appParams)
-    val luKey = generateLinkKey(ubrn,legalUnit,appParams)
+    val entKey = generateLinkKey(ern,enterprise)
+    val luKey = generateLinkKey(ubrn,legalUnit)
     val leLinks = rowToLegalUnitLinks(entKey,ubrn,ern,appParams)
     val chVatPaye = (rowToCHLinks(row,luKey,ubrn,appParams) ++ rowToVatRefsLinks(row,luKey,ubrn,appParams) ++ rowToPayeRefLinks(row,luKey,ubrn,appParams))
     val all = leLinks ++ chVatPaye
@@ -66,8 +66,8 @@ trait HFileUtils extends Serializable{
   def louToLinks(row:Row,appParams:AppParams):Seq[(String, HFileCell)] = {
     val lurn = getString(row,"lurn").get
     val ern = getString(row,"ern").get
-    val loKey = generateLocalUnitLinksKey(lurn,appParams)
-    val entKey = generateLinkKey(ern,enterprise,appParams)
+    val loKey = generateLocalUnitLinksKey(lurn)
+    val entKey = generateLinkKey(ern,enterprise)
     Seq(
       createLinksRecord(loKey,s"$parentPrefix$enterprise",ern,appParams),
       createLinksRecord(entKey,s"$childPrefix$lurn",localUnit,appParams)
@@ -76,7 +76,7 @@ trait HFileUtils extends Serializable{
 
 
   def rowToLegalUnitLinks(entKey:String,ubrn:String, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
-    val leuKey = generateLegalUnitLinksKey(ubrn,appParams)
+    val leuKey = generateLegalUnitLinksKey(ubrn)
     Seq(
       createLinksRecord(leuKey,s"$parentPrefix$enterprise",ern,appParams),
       createLinksRecord(entKey,s"$childPrefix$ubrn",legalUnit,appParams)
@@ -135,17 +135,17 @@ trait HFileUtils extends Serializable{
 
   private def rowToCHLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = getString(row,"CompanyNo").map(companyNo => Seq(
     createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse,appParams),
-    createLinksRecord(generateLinkKey(companyNo,companiesHouse,appParams),s"$parentPrefix$legalUnit",ubrn,appParams)
+    createLinksRecord(generateLinkKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn,appParams)
   )).getOrElse(Seq[(String, HFileCell)]())
 
   private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("VatRefs").map(_.flatMap(vat => Seq(
     createLinksRecord(luKey,s"$childPrefix$vat",vatValue,appParams),
-    createLinksRecord(generateLinkKey(vat,vatValue,appParams),s"$parentPrefix$legalUnit",ubrn,appParams)
+    createLinksRecord(generateLinkKey(vat,vatValue),s"$parentPrefix$legalUnit",ubrn,appParams)
   ))).getOrElse (Seq[(String, HFileCell)]())
 
   private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
     createLinksRecord(luKey,s"$childPrefix$paye",payeValue,appParams),
-    createLinksRecord(generateLinkKey(paye,payeValue,appParams),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
+    createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
   ))).getOrElse(Seq[(String, HFileCell)]())
 
   private def createLinksRecord(key:String,column:String, value:String, appParams:AppParams) = createRecord(key,appParams.HBASE_LINKS_COLUMN_FAMILY,column,value)
@@ -160,30 +160,32 @@ trait HFileUtils extends Serializable{
     s"${ern.reverse}~$lurn"
   }
 
-  private def generateLocalUnitLinksKey(lurn:String,appParams:AppParams) = {
-    s"$lurn~$localUnit"
-  }
+  private def generateEntKey(ern:String,appParams:AppParams) = s"${ern.reverse}"
 
-  private def generateLegalUnitLinksKey(ubrn:String,appParams:AppParams) = {
-    s"$ubrn~$legalUnit"
-  }
 
-  private def generateEntKey(ern:String,appParams:AppParams) = {
-    s"${ern.reverse}"
-  }
-  private def generateEntLinkKey(ern:String,appParams:AppParams) = {
-    s"${ern.reverse}~ENT"
-  }
 
-  private def generateLinkKey(id:String, suffix:String, appParams:AppParams) = {
-    s"$id"
-  }
+  private def generateLocalUnitLinksKey(lurn:String) = generateLinkKey(lurn,localUnit)
 
+  private def generateLegalUnitLinksKey(ubrn:String) = generateLinkKey(ubrn,legalUnit)
+
+  private def generateEntLinkKey(ern:String) = generateLinkKey(ern,enterprise)
+
+  private def generateLinkKey(id:String, prefix:String) = s"$prefix~$id"
+
+
+  /**
+    * Returns None if:
+    * 1. row does not contain field with given name
+    * 2. value is null
+    * 3. value's data type is not String
+    * returns Some(...) of value O
+    * otherwise
+    * */
   def getString(row:Row,name:String) = {
     Try{
       val value = row.getAs[String](name)
       if(value==null) {
-        throw new NullPointerException(s"value of field $name is null")
+        throw new NullPointerException(s"value of field $name is null, None will be returned")
       }
       else value
     }.toOption

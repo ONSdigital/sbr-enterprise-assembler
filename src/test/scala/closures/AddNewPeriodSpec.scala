@@ -55,19 +55,19 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
    override def beforeAll() = {
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-/*        createRecords(appConfs)(spark)
-        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)*/
+        createRecords(appConfs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
         MockRefreshPeriodWithCalculationsClosure.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark)
         spark.stop
 
   }
-/*  override def afterAll() = {
+  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
         File(entHfilePath).deleteRecursively()
         File(louHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
