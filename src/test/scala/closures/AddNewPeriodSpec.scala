@@ -78,7 +78,6 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       val expected  = newPeriodEnts.sortBy(_.ern)
       actual shouldBe expected
       spark.stop()
-
     }
   }
 /**
