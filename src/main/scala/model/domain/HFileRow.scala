@@ -19,7 +19,7 @@ import scala.util.Try
 
 case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
-  def getId = key.split("~").head
+  def getLinkId = key.split("~").last
 
   def getCellValue(key: String, byKey: Boolean = true, default: String = "") = if (byKey) cells.collect { case KVCell(`key`, value) => if (value == null) default else value }.headOption.getOrElse(null)
   else cells.collect { case KVCell(value, `key`) => if (value == null) default else value }.headOption.getOrElse(null)
@@ -71,7 +71,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       import spark.extensions.sql._
 
       new GenericRowWithSchema(Array(
-        getId,
+        getLinkId,
         getCellValue("p_ENT"),
         {
           val ch: String = getCellValue("CH", false)
@@ -96,7 +96,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       import spark.extensions.sql._
 
       new GenericRowWithSchema(Array(
-        getId,
+        getLinkId,
         getCellValue("p_ENT")
       ), existingLuBiRowSchema)
     }

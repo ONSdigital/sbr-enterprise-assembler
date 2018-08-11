@@ -1,8 +1,9 @@
 package spark.calculations
 
 import global.AppParams
-import org.apache.spark.sql.functions.{col, explode_outer}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
+import org.apache.spark.sql._
 import spark.RddLogging
 
 
@@ -19,13 +20,13 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   def calculate(unitsDF:DataFrame,appConfs:AppParams)(implicit spark: SparkSession ) = {
     val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
     val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-    //unitsDF.show()
+
     val calculatedPayeDF = getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
-    //printDF("calculatedPayeDF",calculatedPayeDF)
-    val calculatedWithVatAndPaye = calculateGroupTurnover(unitsDF,vatDF,calculatedPayeDF)
-    //printDF("calculatedWithVatAndPaye",calculatedWithVatAndPaye)
+
+    val calculatedWithVatAndPaye = joinWithVatAndPayeData(unitsDF,vatDF,calculatedPayeDF)
+
     val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye)
-    //printDF("calculatedTurnovers",calculatedTurnovers)
+
     aggregateDF(calculatedTurnovers)
 
 
@@ -66,8 +67,18 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val step1 = spark.sql(sql)
     val step1Table = "TEMP"
     step1.createOrReplaceTempView(step1Table)
+    val ernByVatGroup = step1.select(col("vat_group"),col("ern"))
+    val step2 = step1.select("ern","no_ents_in_group", contained, standard).filter("no_ents_in_group = 1")
+    val step2TableName = "STEP2"
+    step2.createOrReplaceTempView(step2TableName )
+    val aggregateStdAndCntdTurnoversSQL =
+      s"""
+         SELECT ern,SUM($contained) as $contained,SUM($standard) as $standard
+         FROM $step2TableName
+         GROUP BY ern
+       """.stripMargin
 
-
+    val step2DF = spark.sql(aggregateStdAndCntdTurnoversSQL)
     /**
       * Sums app_turnovers for every enterprise
       * */
@@ -78,8 +89,8 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val distinctsTable = "APPAGGREGATED"
     app_aggregated.createOrReplaceTempView(distinctsTable)
 
-
-    val aggregated = step1.drop(col(apportioned)).join(app_aggregated,Seq("vat_group","ern"),"leftouter")
+    val step3 = step1.drop(contained,standard).join(step2DF, Seq("ern"),"leftouter")
+    val aggregated = step3.drop(col(apportioned)).join(app_aggregated,Seq("vat_group","ern"),"leftouter")
     val withAggregatedApp = "WITHAPPAGGR"
     aggregated.createOrReplaceTempView(withAggregatedApp)
     /**
@@ -88,40 +99,48 @@ trait AdminDataCalculator extends Serializable with RddLogging{
       *   paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
       * * */
       * */
-    val sql2 = s"SELECT vat_group, ern,$employees, $jobs, SUM($contained) as $contained, SUM($standard) as $standard, $apportioned, $group_turnover FROM $withAggregatedApp GROUP BY vat_group, ern, $employees, $jobs, $group_turnover, $apportioned "
+    val sql2 = s"SELECT vat_group, ern,$employees, $jobs, $contained, $standard, $apportioned, $group_turnover FROM $withAggregatedApp GROUP BY vat_group, ern, $employees, $jobs, $contained, $standard, $group_turnover, $apportioned "
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
     turnovers.createOrReplaceTempView(t3)
+
+    val aggregateApportionedSql =
+      s"""
+         SELECT ern,$employees, $jobs, $contained, SUM($apportioned) as $apportioned, $standard, CAST(SUM($group_turnover) as long) as $group_turnover
+         FROM $t3
+         GROUP BY ern,$employees, $jobs, $contained,$standard
+
+       """.stripMargin
+
+    val addedEntTurnoverTable = "COMPLETE_TURNOVERS"
+    val aggregatedApportionedTurnoverDF = spark.sql(aggregateApportionedSql).drop(col("vat_group"))
+    aggregatedApportionedTurnoverDF.createOrReplaceTempView(addedEntTurnoverTable)
+
     val sql3 =
-      s"""SELECT $t3.*,
+      s"""SELECT *,
                   ((CASE
-                    WHEN $t3.$standard is NULL
+                    WHEN $standard is NULL
                     THEN 0
-                    ELSE $t3.$standard
+                    ELSE $standard
                   END) +
                  (CASE
-                   WHEN $t3.$contained is NULL
+                   WHEN $contained is NULL
                    THEN 0
-                   ELSE $t3.$contained
+                   ELSE $contained
                  END) +
                     (CASE
-                      WHEN $t3.$apportioned is NULL
+                      WHEN $apportioned is NULL
                       THEN 0
-                      ELSE $t3.$apportioned
+                      ELSE $apportioned
                     END)
                      )AS $ent
-         FROM $t3""".stripMargin
+         FROM $addedEntTurnoverTable""".stripMargin
 
-    val addedEntTurnover = spark.sql(sql3)
-    val addedEntTurnoverTable = "COMPLETE_TURNOVERS"
-    addedEntTurnover.createOrReplaceTempView(addedEntTurnoverTable)
-    val finalSQL =
-      s"""
-         SELECT ern,$employees, $jobs, $contained, SUM($apportioned) as $apportioned, SUM($standard) as $standard, CAST(SUM($group_turnover) as long) as $group_turnover, SUM($ent) as $ent
-         FROM $addedEntTurnoverTable
-         GROUP BY ern,$employees, $jobs, $contained
-       """.stripMargin
-    spark.sql(finalSQL)
+
+
+
+    val res = spark.sql(sql3)
+    res
 
   }
 
@@ -151,7 +170,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
                                                                                 GROUP BY emp_total_table.vat_group
                                                               )"""
 
-  def calculateGroupTurnover(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
+  def joinWithVatAndPayeData(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
     val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
 
     val luTable = "LEGAL_UNITS"

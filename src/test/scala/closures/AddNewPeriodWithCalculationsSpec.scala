@@ -22,7 +22,7 @@ import scala.reflect.io.File
   */
 
 
-class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class AddNewPeriodWithCalculationsSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
   lazy val testDir = "newperiod"
 
@@ -53,21 +53,21 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
 
 
 
-   override def beforeAll() = {
+/*   override def beforeAll() = {
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
         createRecords(appConfs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
         MockRefreshPeriodWithCalculationsClosure.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark)
         spark.stop
 
-  }
-  override def afterAll() = {
+  }*/
+/*  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
         File(entHfilePath).deleteRecursively()
         File(louHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
-  }
+  }*/
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -84,9 +84,9 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
   * |               ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover|
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
+  * |        4000000011|          4|        8|         null|         444|         260|        1000|         704|
+  * |        5000000011|          5|        5|         null|         555|        null|        1000|         555|
   * |        2000000011|          2|        4|         null|        null|         390|        null|         390|
-  * |        5000000011|          5|        5|         null|        null|        null|         444|           0|
-  * |        4000000011|          4|        8|         null|         444|        null|         444|         444|
   * |        3000000011|         19|       20|          585|        null|        null|        null|         585|
   * |111111111-TEST-ERN|          3|        5|           85|        null|        null|        null|          85|
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
@@ -130,6 +130,14 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
       entityName+id
   }
 
+  def saveLinksToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
+    val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows).map(row => row.copy(cells = row.cells.toList.sortBy(_.column)))
+    val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
+    cells.sortBy(cell => cell._1)
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(path,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+  }
+
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
@@ -139,8 +147,8 @@ class AddNewPeriodSpec extends Paths with WordSpecLike with Matchers with Before
   }
 
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
+    saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
-    saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
   }
 

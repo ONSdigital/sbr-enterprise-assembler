@@ -12,6 +12,8 @@ import spark.extensions.sql._
 
 object MockCreateNewPeriodHBaseDao extends HBaseDao {
 
+
+
   override def readTableWithKeyFilter(confs: Configuration, appParams: AppParams, tableName: String, regex: String)(implicit spark: SparkSession) = {
 
     val res = tableName.split(":").last match {

@@ -86,6 +86,21 @@ lazy val addNewPeriodParams = Array(
                                   )
 
 
+lazy val addNewPeriodWithCalculationsParams = Array(
+                                  "LINKS", "ons", "l", "src/main/resources/data/newperiod/links/hfile",
+                                  "ENT", "ons", "d", "src/main/resources/data/newperiod/enterprise/hfile",
+                                  "LOU", "ons", "d", "src/main/resources/data/newperiod/local-unit/hfile",
+                                  "src/main/resources/data/newperiod/sample.parquet",
+                                  "localhost",
+                                  "2181",
+                                  "201804",
+                                  "src/main/resources/data/newperiod/newPeriodPaye.csv",
+                                  "src/main/resources/data/newperiod/newPeriodVat.csv",
+                                  "local",
+                                  "add-calculated-period"
+                                  )
+
+
 
 lazy val deletePeriodParams = Array(
                                   "LINKS", "ons", "l", "src/main/resources/data/temp/deleteperiod/links/hfile",
@@ -130,6 +145,7 @@ lazy val runInitialPopulationRecs = taskKey[Unit]("run-args")
 lazy val runAddPeriodRecs = taskKey[Unit]("run-args")
 lazy val runCalculationPeriodRecs = taskKey[Unit]("run-args")
 lazy val runDeletePeriod = taskKey[Unit]("run-args")
+lazy val runAddPeriodWithCalculations = taskKey[Unit]("run-args")
 
 
 fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsParams: _*)
@@ -137,6 +153,7 @@ fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsPa
 fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodParams: _*)
 fullRunTask(runCalculationPeriodRecs, Runtime, "assembler.AssemblerMain", calculationsParams: _*)
 fullRunTask(runDeletePeriod, Runtime, "assembler.AssemblerMain", deletePeriodParams: _*)
+fullRunTask(runAddPeriodWithCalculations, Runtime, "assembler.AssemblerMain", addNewPeriodWithCalculationsParams: _*)
 
 /*
 current app args for addNewPeriod:

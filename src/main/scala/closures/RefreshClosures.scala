@@ -42,7 +42,7 @@ trait RefreshClosures extends HFileUtils with AdminDataCalculator with Serializa
     val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
     val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfCopy,appconf,regex) //read LUs from links
 
-    val rows: RDD[Row] = lus.map(row => Row(row.getId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
+    val rows: RDD[Row] = lus.map(row => Row(row.getLinkId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
 
     val schema = new StructType()
       .add(StructField("id", StringType, true))

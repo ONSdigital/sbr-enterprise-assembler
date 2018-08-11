@@ -6,12 +6,12 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp
-import org.apache.hadoop.hbase.filter.{RegexStringComparator, RowFilter}
+import org.apache.hadoop.hbase.filter.{PrefixFilter, RegexStringComparator, RowFilter}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles, TableInputFormat}
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.protobuf.generated.ClientProtos
-import org.apache.hadoop.hbase.util.Base64
+import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
@@ -142,7 +142,10 @@ trait HBaseDao extends Serializable{
 
   def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
     readTableWithKeyFilter(confs, appParams, linksTableName(appParams), regex)
+  }
 
+  def readLinksWithKeyPrefixFilter(confs:Configuration, appParams:AppParams, prefix:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+    readTableWithPrefixKeyFilter(confs, appParams, linksTableName(appParams), prefix)
   }
 
   def readLouWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
@@ -157,6 +160,13 @@ trait HBaseDao extends Serializable{
 
   }
 
+
+
+  def readTableWithPrefixKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
+    val localConfCopy = confs
+    withKeyPrefixScanner(localConfCopy,regex,appParams,tableName){
+      readKvsFromHBase
+    }}
 
 
   def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
@@ -243,6 +253,15 @@ trait HBaseDao extends Serializable{
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
   }
 
+  def withKeyPrefixScanner(config:Configuration,prefix:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
+    config.set(TableInputFormat.INPUT_TABLE, tableName)
+    setPrefixScanner(config,prefix,appParams)
+    val res = getResult(config)
+    unsetPrefixScanner(config)
+    config.unset(TableInputFormat.INPUT_TABLE)
+    res
+  }
+
   def withScanner(config:Configuration,regex:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
     config.set(TableInputFormat.INPUT_TABLE, tableName)
     setScanner(config,regex,appParams)
@@ -305,6 +324,26 @@ trait HBaseDao extends Serializable{
 
    config.set(TableInputFormat.SCAN,scanStr)
   }
+
+
+ private def unsetPrefixScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
+
+  private def setPrefixScanner(config:Configuration,prefix:String, appParams:AppParams) = {
+
+    val prefixFilter = new PrefixFilter(prefix.getBytes)
+    val scan: Scan = new Scan()
+    scan.setFilter(prefixFilter)
+
+    def convertScanToString: String = {
+      val proto: ClientProtos.Scan = ProtobufUtil.toScan(scan)
+      return Base64.encodeBytes(proto.toByteArray())
+    }
+
+
+   config.set(TableInputFormat.SCAN,convertScanToString)
+  }
+
+
 
   def linksTableName(appconf:AppParams) =  s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}"
   def lousTableName(appconf:AppParams) =  s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"

@@ -81,7 +81,7 @@ trait ParquetDao extends WithConversionHelper with DataFrameHelper with Serializ
             val regex = "~LEU~"+{appconf.TIME_PERIOD}+"$"
             val lus: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(localConfigs,appconf,regex) //read LUs from links
 
-            val rows: RDD[Row] = lus.map(row => Row(row.getId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
+            val rows: RDD[Row] = lus.map(row => Row(row.getLinkId, row.cells.find(_.column == "p_ENT").get.value)) //extract ERNs
 
             val schema = new StructType()
               .add(StructField("id", StringType, true))
