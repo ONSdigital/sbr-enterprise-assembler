@@ -134,8 +134,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
   def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
     val tableData = hbaseDao.readLinksWithKeyFilter(confs,appconf, "^(LEU~)(\\w)")
     val existingLinks: RDD[Row] = tableData.map(_.toLuRow)
-    val existingLinksDF: DataFrame = spark.createDataFrame(existingLinks, luRowSchema)
-    existingLinksDF
+    spark.createDataFrame(existingLinks, luRowSchema)
+
   }
 /*  def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
     val tableData = hbaseDao.readLinksWithKeyPrefixFilter(confs,appconf, "LEU~")
