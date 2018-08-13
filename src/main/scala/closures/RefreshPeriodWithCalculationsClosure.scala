@@ -3,12 +3,10 @@ package closures
 import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.client.Connection
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import spark.RddLogging
-import spark.calculations.{AdminDataCalculator, OldAdminDataCalculator}
+import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
 
 trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
