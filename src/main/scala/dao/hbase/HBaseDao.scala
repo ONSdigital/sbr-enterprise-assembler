@@ -104,7 +104,7 @@ trait HBaseDao extends Serializable{
   def saveDeletePeriodLinksToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
     val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
-    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
+    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex).map(row => row.copy(cells = row.cells.toList.sortBy(_.column)))
     data.sortBy(row => s"${row.key}")
       .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
       .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINK_DELETE_PERIOD_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)

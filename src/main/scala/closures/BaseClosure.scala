@@ -146,10 +146,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
   def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
     import spark.implicits._
-    val lousLinks = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
+    val lousLinks: RDD[(String, hfile.HFileCell)] = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
     val restOfLinks = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
-    val allLinks: RDD[(String, hfile.HFileCell)] = lousLinks.union(restOfLinks)
-    allLinks.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+    val allLinks: RDD[(String, hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).sortBy(_._2.qualifier)
+    allLinks.sortBy(_._2.key)
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
