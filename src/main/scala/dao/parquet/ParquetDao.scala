@@ -71,7 +71,7 @@ trait ParquetDao extends WithConversionHelper with DataFrameHelper with Serializ
 
       parquetRDD.sortBy(t => s"${t._2.key}${t._2.qualifier}")
         .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE_UPDATE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
       }
 
 
