@@ -41,9 +41,9 @@ class AddNewPeriodWithCalculationsSpec extends Paths with WordSpecLike with Matc
 
   val appConfs = AppParams(
     (Array[String](
-      "LINKS", "ons", "l", linkHfilePath,
-      "ENT", "ons", "d",entHfilePath,
-      "LOU", "ons", "d",louHfilePath,
+      "LINKS", "ons", "l", linkHfilePath,linkDeleteHfilePath,
+      "ENT", "ons", "d",entHfilePath,entDeleteHfilePath,
+      "LOU", "ons", "d",louHfilePath,louDeleteHfilePath,
       parquetPath,
       "201804",payeFilePath,
       vatFilePath,
@@ -53,14 +53,14 @@ class AddNewPeriodWithCalculationsSpec extends Paths with WordSpecLike with Matc
 
 
 
-/*   override def beforeAll() = {
+   override def beforeAll() = {
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        createRecords(appConfs)(spark)
-        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+/*        createRecords(appConfs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)*/
         MockRefreshPeriodWithCalculationsClosure.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark)
         spark.stop
 
-  }*/
+  }
 /*  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
