@@ -11,19 +11,16 @@ case class AppParams(
                       HBASE_LINKS_TABLE_NAMESPACE:String,
                       HBASE_LINKS_COLUMN_FAMILY:String,
                       PATH_TO_LINKS_HFILE:String,
-                      PATH_TO_LINKS_DELETE_HFILE:String,
 
                       HBASE_ENTERPRISE_TABLE_NAME:String,
                       HBASE_ENTERPRISE_TABLE_NAMESPACE:String,
                       HBASE_ENTERPRISE_COLUMN_FAMILY:String,
                       PATH_TO_ENTERPRISE_HFILE:String,
-                      PATH_TO_ENTERPRISES_DELETE_HFILE:String,
 
                       HBASE_LOCALUNITS_TABLE_NAME:String,
                       HBASE_LOCALUNITS_TABLE_NAMESPACE:String,
                       HBASE_LOCALUNITS_COLUMN_FAMILY:String,
                       PATH_TO_LOCALUNITS_HFILE:String,
-                      PATH_TO_LOCALUNITS_DELETE_HFILE:String,
 
                       PATH_TO_PARQUET:String,
                       TIME_PERIOD:String,
