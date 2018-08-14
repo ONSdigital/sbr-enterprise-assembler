@@ -31,9 +31,9 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
 
   val appConfs = AppParams(
     (Array[String](
-      "LINKS", "ons", "l", linkHfilePath,linkDeleteHfilePath,
-      "ENT", "ons", "d",entHfilePath,entDeleteHfilePath,
-      "LOU", "ons", "d",louHfilePath,louDeleteHfilePath,
+      "LINKS", "ons", "l", linkHfilePath,
+      "ENT", "ons", "d",entHfilePath,
+      "LOU", "ons", "d",louHfilePath,
       parquetPath,
       "201804",payeFilePath,
       vatFilePath,
