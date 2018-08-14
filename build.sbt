@@ -12,6 +12,7 @@ lazy val Versions = new {
   val hbase = "1.2.6"
   val spark = "2.2.0"
 }
+resolvers += Resolver.url("ClouderaRepo", url("https://repository.cloudera.com/content/repositories/releases"))
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
@@ -22,6 +23,8 @@ libraryDependencies ++= Seq(
                                                       .exclude("org.mortbay.jetty","jsp-api-2.1"),
   "org.apache.hbase" % "hbase-common" % Versions.hbase,
   "org.apache.hbase" %  "hbase-client" % Versions.hbase,
+/*  ("org.apache.hbase" % "hbase-spark" % "2.0.0-alpha4")
+    .exclude("com.fasterxml.jackson.module","jackson-module-scala_2.10"),*/
   ("org.apache.spark" %% "spark-core" % Versions.spark)
                                                       .exclude("aopalliance","aopalliance")
                                                       .exclude("commons-beanutils","commons-beanutils"),

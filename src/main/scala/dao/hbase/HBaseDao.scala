@@ -260,6 +260,7 @@ trait HBaseDao extends Serializable{
     job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
     job.setMapOutputValueClass(classOf[KeyValue])
     HFileOutputFormat2.configureIncrementalLoadMap(job, table)
+    //HFileOutputFormat2.configureIncrementalLoad(job, table, connection.getRegionLocator(table.getName))
   }
 
   def withKeyPrefixScanner(config:Configuration,prefix:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
