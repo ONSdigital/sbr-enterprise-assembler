@@ -29,12 +29,6 @@ trait RefreshClosures extends HFileUtils with AdminDataCalculator with Serializa
     HBaseDao.readDeleteData(appconf,regex)
   }
 
-
-  def createDeleteLinksHFile(appconf:AppParams)(implicit ss:SparkSession,connection:Connection){
-    val regex = ".*(?<!(ENT|LOU))~"+{appconf.TIME_PERIOD}+"$"
-    HBaseDao.saveDeleteLinksToHFile(appconf,regex)
-  }
-
   def createLinksRefreshHFile(appconf:AppParams)(implicit spark:SparkSession) = ParquetDao.createRefreshLinksHFile(appconf)
 
   def createEnterpriseRefreshHFile(appconf:AppParams)(implicit spark:SparkSession,connection:Connection) = {
@@ -79,8 +73,6 @@ trait RefreshClosures extends HFileUtils with AdminDataCalculator with Serializa
 
 
   def loadRefreshFromHFiles(appconf:AppParams)(implicit con: Connection) = {
-
-    HBaseDao.loadDeleteLinksHFile(con,appconf)
     HBaseDao.loadRefreshLinksHFile(con,appconf)
     HBaseDao.loadEnterprisesHFile(con,appconf)
 

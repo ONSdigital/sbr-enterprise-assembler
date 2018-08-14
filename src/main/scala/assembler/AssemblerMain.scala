@@ -8,7 +8,7 @@ import service._
 import scala.reflect.io.File
 
 
-object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefreshService with AddNewPeriodDataService with DeleteDataService with DataIntegrityReportService with AdminCalculationService{
+object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefreshService with AddNewPeriodDataService with DataIntegrityReportService with AdminCalculationService{
 
   def main(args: Array[String]) {
 
@@ -26,7 +26,6 @@ try{
       case "calculate" => addCalculations(appParams)
       case "refresh" => refresh(appParams)
       case "create" => createNewPopulationFromParquet(appParams)
-      case "deleteperiod" => deletePeriod(appParams)
       case "data-integrity-report" => {
         conf.setInt("spark.sql.broadcastTimeout", 2400)
         printReport(appParams)

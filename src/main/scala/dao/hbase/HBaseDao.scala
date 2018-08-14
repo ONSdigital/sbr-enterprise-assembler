@@ -11,11 +11,11 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles, TableInputFormat}
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil
 import org.apache.hadoop.hbase.protobuf.generated.ClientProtos
-import org.apache.hadoop.hbase.util.{Base64, Bytes}
+import org.apache.hadoop.hbase.util.Base64
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession}
 import org.slf4j.LoggerFactory
 
 /**
@@ -33,44 +33,6 @@ trait HBaseDao extends Serializable{
     res
   }
 
-  def createCleanupTablesHFiles(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
-
-    deleteAllFromEnts(appParams,config)
-    deleteAllFromLous(appParams,config)
-    deleteAllFromLinks(appParams,config)
-
-  }
-
-  def deleteAllFromEnts(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
-    config.set(TableInputFormat.INPUT_TABLE, entsTableName(appParams))
-    val res = readKvsFromHBase(config)
-    res.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_ENTERPRISES_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], config)
-    config.unset(TableInputFormat.INPUT_TABLE)
-    res
-  }
-
-  def deleteAllFromLous(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
-    config.set(TableInputFormat.INPUT_TABLE, lousTableName(appParams))
-    val res = readKvsFromHBase(config)
-    res.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LOCALUNITS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LOCALUNITS_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], config)
-    config.unset(TableInputFormat.INPUT_TABLE)
-    res
-  }
-
-  def deleteAllFromLinks(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
-    config.set(TableInputFormat.INPUT_TABLE, linksTableName(appParams))
-    val res = readKvsFromHBase(config)
-    res.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], config)
-    config.unset(TableInputFormat.INPUT_TABLE)
-    res
-  }
-
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
     loadEnterprisesHFile
@@ -81,13 +43,6 @@ trait HBaseDao extends Serializable{
     truncateLinksTable
     truncateEntsTable
     truncateLousTable
-  }
-
-  def loadDeleteHFiles(implicit connection:Connection,appParams:AppParams) = {
-
-    loadDeleteLinksHFile
-    loadDeleteEnterprisesHFile
-    loadDeleteLousHFile
   }
 
   def truncateTable(tableName:String)(implicit connection:Connection,appParams:AppParams) =  wrapTransaction(tableName){ (table, admin) =>
@@ -108,45 +63,6 @@ trait HBaseDao extends Serializable{
         row+'\n'+
         "="*10
     ))
-  }
-
-  def saveDeletePeriodLinksToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
-    val localConfCopy = conf
-    val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
-    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex).map(row => row.copy(cells = row.cells.toList.sortBy(_.column)))
-    data.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
-  }
-
-
-  def saveDeletePeriodEnterpriseToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
-    val localConfCopy = conf
-    val regex = ".*~"+{appParams.TIME_PERIOD}+"$"
-    val data = readEnterprisesWithKeyFilter(localConfCopy,appParams,regex)
-    data.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_ENTERPRISES_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
-  }
-
-
-
-  def saveDeleteLouToHFile(appParams:AppParams)(implicit spark:SparkSession): Unit = {
-    val localConfCopy = conf
-    val regex = ".*~"+{appParams.TIME_PERIOD}+"~*."
-    val data = readLouWithKeyFilter(localConfCopy,appParams,regex)
-    data.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeletePeriodHFileEntries(appParams.HBASE_LOCALUNITS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LOCALUNITS_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
-  }
-
-
-  def saveDeleteLinksToHFile(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
-    val localConfCopy = conf
-    val data = readLinksWithKeyFilter(localConfCopy,appParams,regex)
-    data.sortBy(row => s"${row.key}")
-      .flatMap(_.toDeleteHFileEntries(appParams.HBASE_LINKS_COLUMN_FAMILY))
-      .saveAsNewAPIHadoopFile(appParams.PATH_TO_LINKS_DELETE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], localConfCopy)
   }
 
   def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
@@ -190,23 +106,6 @@ trait HBaseDao extends Serializable{
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE), admin,table,regionLocator)
   }
 
-  def loadDeleteLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_DELETE_HFILE), admin,table,regionLocator)
-  }
-
-  def loadDeleteLousHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(lousTableName(appParams)){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_DELETE_HFILE), admin,table,regionLocator)
-  }
-
-  def loadDeleteEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(entsTableName(appParams)){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_ENTERPRISES_DELETE_HFILE), admin,table,regionLocator)
-  }
 
 
   def loadLinksHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
@@ -228,11 +127,7 @@ trait HBaseDao extends Serializable{
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_HFILE), admin,table,regionLocator)
   }
 
-  def loadLousDeletePeriodHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(lousTableName(appParams)){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_DELETE_HFILE), admin,table,regionLocator)
-  }
+
 
 
   private def wrapTransaction(fullTableName:String)(action:(Table,Admin) => Unit)(implicit connection:Connection){

@@ -55,10 +55,7 @@ object AppParams{
                                                   args(14),
                                                   args(15),
                                                   args(16),
-                                                  args(17),
-                                                  args(18),
-                                                  args(19),
-                                                  args(20)
+                                                  args(17)
                                                 )
   
 }
