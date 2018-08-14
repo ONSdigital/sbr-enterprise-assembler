@@ -83,12 +83,29 @@ trait HBaseDao extends Serializable{
     loadLousHFile
   }
 
+  def truncateTables(implicit connection:Connection,appParams:AppParams) = {
+    truncateLinksTable
+    truncateEntsTable
+    truncateLousTable
+  }
 
   def loadDeleteHFiles(implicit connection:Connection,appParams:AppParams) = {
+
     loadDeleteLinksHFile
     loadDeleteEnterprisesHFile
     loadDeleteLousHFile
   }
+
+
+
+  def truncateTable(tableName:String)(implicit connection:Connection,appParams:AppParams) =  wrapTransaction(tableName){ (table, admin) =>
+    admin.disableTable(table.getName)
+    admin.truncateTable(table.getName,true)
+  }
+
+  def truncateLinksTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(linksTableName(appParams))
+  def truncateEntsTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(entsTableName(appParams))
+  def truncateLousTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(lousTableName(appParams))
 
   def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
