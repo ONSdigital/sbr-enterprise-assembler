@@ -26,8 +26,6 @@ trait HBaseDao extends Serializable{
 
   val logger = LoggerFactory.getLogger(getClass)
 
-
-
   def readTable(appParams:AppParams, config:Configuration, tableName:String)(implicit spark:SparkSession) = {
     config.set(TableInputFormat.INPUT_TABLE, tableName)
     val res = readKvsFromHBase(config)
@@ -43,7 +41,6 @@ trait HBaseDao extends Serializable{
 
   }
 
-
   def deleteAllFromEnts(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
     config.set(TableInputFormat.INPUT_TABLE, entsTableName(appParams))
     val res = readKvsFromHBase(config)
@@ -53,7 +50,6 @@ trait HBaseDao extends Serializable{
     config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
-
 
   def deleteAllFromLous(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
     config.set(TableInputFormat.INPUT_TABLE, lousTableName(appParams))
@@ -65,7 +61,6 @@ trait HBaseDao extends Serializable{
     res
   }
 
-
   def deleteAllFromLinks(appParams:AppParams, config:Configuration)(implicit spark:SparkSession) = {
     config.set(TableInputFormat.INPUT_TABLE, linksTableName(appParams))
     val res = readKvsFromHBase(config)
@@ -75,7 +70,6 @@ trait HBaseDao extends Serializable{
     config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
-
 
   def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
     loadLinksHFile
@@ -95,8 +89,6 @@ trait HBaseDao extends Serializable{
     loadDeleteEnterprisesHFile
     loadDeleteLousHFile
   }
-
-
 
   def truncateTable(tableName:String)(implicit connection:Connection,appParams:AppParams) =  wrapTransaction(tableName){ (table, admin) =>
     admin.disableTable(table.getName)
