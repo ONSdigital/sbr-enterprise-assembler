@@ -52,7 +52,7 @@ class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with 
 
       val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
       val newLEUsDF = allLUsDF.join(existingEntDF.select(col("ern")),Seq("ern"),"left_anti")
-      val newEntsDF = spark.createDataFrame(createNewEnts(newLEUsDF).rdd,entRowSchema)
+      val newEntsDF = spark.createDataFrame(createNewEnts(newLEUsDF, appconf).rdd,entRowSchema)
       val allEntsDF =  existingEntDF.union(newEntsDF)
       allEntsDF
     }

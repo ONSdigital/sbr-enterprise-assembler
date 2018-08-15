@@ -107,7 +107,8 @@ trait HFileUtils extends Serializable{
 
   def rowToEnt(row: Row, appParams: AppParams): Seq[(String, HFileCell)] = {
     val ern = getString(row,"ern").get //must be there
-    Seq(createEnterpriseCell(ern, "ern", ern, appParams)) ++
+    val prn = getString(row,"prn").get //must be there
+    Seq(createEnterpriseCell(ern, "ern", ern, appParams),createEnterpriseCell(ern, "prn", prn, appParams)) ++
       Seq(
         getString(row,"entref").map(ref => createEnterpriseCell(ern, "entref", ref, appParams)),
         getString(row,"name").map (name => createEnterpriseCell(ern, "name", name, appParams)),
@@ -192,6 +193,7 @@ trait HFileUtils extends Serializable{
   }
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
+  def generatePrn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey
 

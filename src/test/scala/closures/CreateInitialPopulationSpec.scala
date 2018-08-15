@@ -1,10 +1,11 @@
 package closures
 
 import closures.mocks.MockClosures
-import dao.hbase.HFileUtils
+import dao.hbase.{HBaseConnectionManager, HFileUtils}
 import dao.parquet.ParquetDao
 import global.AppParams
 import model.domain.{Enterprise, HFileRow, LocalUnit}
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
@@ -15,7 +16,7 @@ import scala.reflect.io.File
 /**
   *
   */
-class CreateInitialPopulationSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExpectedDataForCreatePopulationScenario{
+class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExpectedDataForCreatePopulationScenario{
 
   lazy val testDir = "create"
 
@@ -40,7 +41,9 @@ class CreateInitialPopulationSpec extends Paths with WordSpecLike with Matchers 
     val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
 
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-    MockCreateNewPopulationClosure.parquetCreateNewToHFile(spark,appConfs)
+    withHbaseConnection { implicit connection: Connection =>
+      MockCreateNewPopulationClosure.parquetCreateNewToHFile(spark, connection,confs)
+    }
     spark.stop()
 
 

@@ -47,6 +47,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       new GenericRowWithSchema(Array(
 
         getCellValue("ern"),
+        getCellValue("prn"),
         getCellValue("entref"),
         getCellValue("name"),
         getCellValue("trading_style"),

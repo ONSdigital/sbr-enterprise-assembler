@@ -26,7 +26,7 @@ trait CreateClosures extends AdminDataCalculator with BaseClosure with HFileUtil
     newLEUsCalculatedDF.cache()
     val allLUsDF = getAllLUs(newLEUsCalculatedDF,appconf)
 
-    val allEntsDF = spark.createDataFrame(createNewEnts(allLUsDF).rdd,completeEntSchema).cache()
+    val allEntsDF = spark.createDataFrame(createNewEnts(allLUsDF,appArgs).rdd,completeEntSchema).cache()
 
     val allLOUs: Dataset[Row] = createNewLOUs(allEntsDF,appconf).cache()
 

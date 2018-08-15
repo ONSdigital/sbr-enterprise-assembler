@@ -1,11 +1,13 @@
 package closures
 
 import closures.mocks.MockNewPeriodClosure
+import dao.hbase.HBaseConnectionManager
 import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
 import model.domain.{Enterprise, HFileRow, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
@@ -21,7 +23,7 @@ import scala.reflect.io.File
   *
   *
   */
-class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
 
   lazy val testDir = "calculations"
 
@@ -46,7 +48,9 @@ class NewPeriodClosureSpec extends Paths with WordSpecLike with Matchers with Be
     val confs = appConfs
     createRecords(confs)(spark)
     ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
-    MockNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+    withHbaseConnection { implicit connection: Connection =>
+      MockNewPeriodClosure.addNewPeriodData(appConfs)(spark,connection)
+    }
     spark.stop()
   }
 

@@ -26,7 +26,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val allEntsDF =  getAllEntsCalculated(allLUsDF,appconf).cache()
 
 
-    val allLOUs: Dataset[Row] = getAllLOUs(allEntsDF,appconf,Configs.conf).cache()
+    val allLOUs: DataFrame = getAllLOUs(allEntsDF,appconf,Configs.conf).cache()
 
 
     saveLinks(allLOUs,allLUsDF,appconf)
@@ -49,7 +49,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
       existingLEsDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
       Seq("id"), "left_outer")//.repartition(numOfPartitions)
 
-    getAllLUs(joinedLUs, appconf)
+     getAllLUs(joinedLUs, appconf)
 
   }
 
@@ -65,7 +65,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")//.repartition(numOfPartitions)
     val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")//.repartition(numOfPartitions)
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")//.repartition(numOfPartitions)
-    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF).rdd,completeEntSchema)
+    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF,appconf).rdd,completeEntSchema)
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist()
     allEntsDF

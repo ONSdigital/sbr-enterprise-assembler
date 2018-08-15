@@ -1,7 +1,7 @@
 package closures
 
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
-import dao.hbase.HBaseDao
+import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
 import global.{AppParams, Configs}
 import model.domain.{HFileRow, LocalUnit}
@@ -21,7 +21,7 @@ import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
 
-class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
+class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
   import global.Configs._
 
   lazy val testDir = "missinglou"
@@ -58,7 +58,9 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockRefreshPeriodWithCalculationsClosure$.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark)
+    withHbaseConnection { implicit connection: Connection =>
+      MockRefreshPeriodWithCalculationsClosure$.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark, connection)
+    }
         spark.stop()
   }
 

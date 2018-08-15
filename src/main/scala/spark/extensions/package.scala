@@ -84,6 +84,7 @@ package object sql {
 
   val entRowSchema = new StructType()
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,true))
     .add(StructField("trading_style", StringType,true))
@@ -99,6 +100,7 @@ package object sql {
 
   val entRowWithEmplDataSchema = new StructType()
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("idbrref", StringType,true))
     .add(StructField("name", StringType,true))
     .add(StructField("trading_style", StringType,true))
@@ -115,6 +117,7 @@ package object sql {
 
   val completeEntSchema = new StructType()
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,true))
     .add(StructField("trading_style", StringType,true))

@@ -62,9 +62,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
     * */
   //paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
-  def createNewEnts(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = spark.createDataFrame(
+  def createNewEnts(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
     newLEUsCalculatedDF.rdd.map(row => Row(
       row.getAs[String]("ern"),
+      generatePrn(row,appconf),
       Try {row.getAs[String]("entref")}.getOrElse(null),
       row.getAs[String]("BusinessName"),
       null, //trading_style
@@ -76,9 +77,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     )
     ), entRowSchema)
 
-    def createNewEntsWithCalculations(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = spark.createDataFrame(
+    def createNewEntsWithCalculations(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
     newLEUsCalculatedDF.rdd.map(row => Row(
       row.getAs[String]("ern"),
+      generatePrn(row,appconf),
       Try {row.getAs[String]("entref")}.getOrElse(null),
       row.getAs[String]("BusinessName"),
       null, //trading_style
