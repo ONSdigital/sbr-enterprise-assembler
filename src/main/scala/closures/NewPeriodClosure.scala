@@ -16,7 +16,7 @@ import scala.util.Try
   */
 class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with Serializable {
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit = {
     val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 
 

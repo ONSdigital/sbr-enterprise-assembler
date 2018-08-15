@@ -2,6 +2,7 @@ package closures
 
 import dao.hbase.HFileUtils
 import global.AppParams
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
@@ -13,7 +14,7 @@ import spark.extensions.sql._
 trait CreateClosures extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
-  def parquetCreateNewToHFile(implicit spark:SparkSession, appconf:AppParams){
+  def parquetCreateNewToHFile(implicit spark:SparkSession, con:Connection, appconf:AppParams){
 
     val appArgs = appconf
 

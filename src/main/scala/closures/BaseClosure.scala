@@ -1,10 +1,12 @@
 package closures
 
+
 import dao.hbase.{HBaseDao, HFileUtils}
 import global.{AppParams, Configs}
 import model.hfile
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.{KeyValue, TableName}
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.hadoop.hbase.util.Bytes
@@ -145,12 +147,19 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     existingLinksDF
   }*/
 
-  def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+  def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
     import spark.implicits._
+
+    val tableName = TableName.valueOf(hbaseDao.linksTableName(appconf))
+    val regionLocator = connection.getRegionLocator(tableName)
+    val partitioner = HFilePartitioner(connection.getConfiguration, regionLocator.getStartKeys, 1)
+
     val lousLinks: RDD[(String, hfile.HFileCell)] = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
     val restOfLinks: RDD[(String, hfile.HFileCell)] = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
-    val allLinks: RDD[(String, hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).sortBy(t => s"${t._2.key.split("~").last}${t._2.qualifier}").repartition(louDF.rdd.getNumPartitions)
-    allLinks.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+
+    val allLinks: RDD[(String, hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).map(entry => (entry._1+"@"+entry._2.qualifier,entry._2) ).repartitionAndSortWithinPartitions(partitioner)
+
+    allLinks.map(rec => (new ImmutableBytesWritable(rec._1.slice(0,rec._1.indexOf('@')).getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 

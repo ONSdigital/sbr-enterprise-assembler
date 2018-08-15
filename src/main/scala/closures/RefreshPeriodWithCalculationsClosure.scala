@@ -3,6 +3,7 @@ package closures
 import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import spark.RddLogging
@@ -17,7 +18,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * Does not work currently because it's using previous period when looking up existing entities
     * and saving fresh data with new period key
     * */
-  def createHFilesWithRefreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession): Unit = {
+  def createHFilesWithRefreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit = {
 
     val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
 
