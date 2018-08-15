@@ -157,9 +157,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val lousLinks: RDD[(String, hfile.HFileCell)] = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
     val restOfLinks: RDD[(String, hfile.HFileCell)] = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
 
-    val allLinks: RDD[(String, hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).map(entry => (entry._1+"@"+entry._2.qualifier,entry._2) ).repartitionAndSortWithinPartitions(partitioner)
+    val allLinks: RDD[((String,String), hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).map(entry => ((entry._1,entry._2.qualifier),entry._2) ).sortBy(t => t._1).repartitionAndSortWithinPartitions(partitioner)
 
-    allLinks.map(rec => (new ImmutableBytesWritable(rec._1.slice(0,rec._1.indexOf('@')).getBytes()), rec._2.toKeyValue))
+    allLinks.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
