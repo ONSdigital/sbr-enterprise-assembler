@@ -1,6 +1,6 @@
 package dao.hbase
 
-import global.AppParams
+import global.{AppParams, Configs}
 import model.hfile.HFileCell
 import org.apache.spark.sql.Row
 
@@ -157,13 +157,9 @@ trait HFileUtils extends Serializable{
 
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
-  private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = {
-    s"${ern.reverse}~$lurn"
-  }
+  private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = s"${ern.reverse}~$lurn"
 
   private def generateEntKey(ern:String,appParams:AppParams) = s"${ern.reverse}"
-
-
 
   private def generateLocalUnitLinksKey(lurn:String) = generateLinkKey(lurn,localUnit)
 
@@ -193,7 +189,7 @@ trait HFileUtils extends Serializable{
   }
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
-  def generatePrn(row:Row, appParams:AppParams) = generateUniqueKey
+  def generatePrn(row:Row, appParams:AppParams) = (Configs.DEFAULT_PRN.toDouble + 0.001D).toString
   def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey
 

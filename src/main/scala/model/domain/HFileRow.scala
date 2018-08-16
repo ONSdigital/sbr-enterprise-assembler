@@ -1,5 +1,6 @@
 package model.domain
 
+import global.{AppParams, Configs}
 import model.hfile
 import model.hfile.HFileCell
 import org.apache.hadoop.hbase.client.Result
@@ -46,8 +47,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     try {
       new GenericRowWithSchema(Array(
 
-        Option(getCellValue("ern")).getOrElse(""),
-        getCellValue("prn"),
+        getCellValue("ern"),
+        Option(getCellValue("prn")).getOrElse(Configs.DEFAULT_PRN),
         getCellValue("entref"),
         getCellValue("name"),
         getCellValue("trading_style"),

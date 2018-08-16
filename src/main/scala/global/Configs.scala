@@ -13,6 +13,8 @@ object Configs{
 
   val logger = LoggerFactory.getLogger(getClass)
 
+  val DEFAULT_PRN = "0"
+
   val  defaultTimePeriod = "timeperiod-not-specified"
 
   val config: Config = ConfigFactory.load()

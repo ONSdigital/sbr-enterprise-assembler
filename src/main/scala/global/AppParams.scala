@@ -29,7 +29,6 @@ case class AppParams(
                       ENV:String,
                       ACTION:String
                    ){
-
   val PREVIOUS_TIME_PERIOD = (TIME_PERIOD.toInt - 1).toString //temp
   val PATH_TO_LEU_TO_ENT_CSV = "src/main/resources/data/LeU_to_ENT_subset.csv"
 }
