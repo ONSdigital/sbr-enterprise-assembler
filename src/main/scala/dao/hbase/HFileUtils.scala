@@ -105,6 +105,36 @@ trait HFileUtils extends Serializable{
     ).collect { case Some(v) => v }
   }
 
+
+  def rowToLegalUnit(row: Row, appParams: AppParams):Seq[(String, HFileCell)] = {
+    val lurn = getString(row,"ubrn").get
+    val ern = getString(row,"ern").get
+    Seq(
+      createLegalUnitCell(lurn,ern, "ubrn", lurn, appParams),
+      createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "name", row.getString("name").getOrElse(""), appParams),
+      createLocalUnitCell(lurn,ern, "address1", getValueOrEmptyStr(row,"address1"), appParams),
+      createLocalUnitCell(lurn,ern, "postcode", getValueOrEmptyStr(row,"postcode"), appParams),
+      createLocalUnitCell(lurn,ern, "sic07", getValueOrEmptyStr(row,"sic07"), appParams),
+      createLocalUnitCell(lurn,ern, "legal_status", getValueOrEmptyStr(row,"legal_status"), appParams) ,
+      createLocalUnitCell(lurn,ern, "birth_date", getValueOrEmptyStr(row,"birth_date"), appParams)
+    ) ++ Seq(
+      row.getString("crn").map(bn => createLocalUnitCell(lurn,ern, "crn", bn, appParams)),
+      row.getString("paye_jobs").map(bn => createLocalUnitCell(lurn,ern, "paye_jobs", bn, appParams)),
+      row.getString("trading_style").map(bn => createLocalUnitCell(lurn,ern, "trading_style", bn, appParams)),
+      row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
+      row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
+      row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
+      row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
+      row.getString("address5").map(bn => createLocalUnitCell(lurn,ern, "address5", bn, appParams)),
+      row.getString("turnover").map(bn => createLocalUnitCell(lurn,ern, "turnover", bn, appParams)),
+      row.getString("trading_status").map(bn => createLocalUnitCell(lurn,ern, "trading_status", bn, appParams)),
+      row.getString("death_date").map(bn => createLocalUnitCell(lurn,ern, "death_date", bn, appParams)),
+      row.getString("death_code").map(bn => createLocalUnitCell(lurn,ern, "death_code", bn, appParams)),
+      row.getString("uprn").map(bn => createLocalUnitCell(lurn,ern, "uprn", bn, appParams))
+    ).collect { case Some(v) => v }
+  }
+
   def rowToEnt(row: Row, appParams: AppParams): Seq[(String, HFileCell)] = {
     val ern = getString(row,"ern").get //must be there
     val prn = getString(row,"prn").get //must be there
@@ -155,9 +185,13 @@ trait HFileUtils extends Serializable{
 
   def createLocalUnitCell(lurn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLocalUnitKey(lurn,ern,appParams),appParams.HBASE_LOCALUNITS_COLUMN_FAMILY,column,value)
 
+  def createLegalUnitCell(ubrn:String,ern:String,column:String, value:String, appParams:AppParams) = createRecord(generateLegalUnitKey(ubrn,ern,appParams),appParams.HBASE_LEGALUNITS_COLUMN_FAMILY,column,value)
+
   private def createRecord(key:String,columnFamily:String, column:String, value:String) = key -> HFileCell(key,columnFamily,column,value)
 
   private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = s"${ern.reverse}~$lurn"
+
+  private def generateLegalUnitKey(ubrn:String,ern:String,appParams:AppParams) = s"${ern.reverse}~$ubrn"
 
   private def generateEntKey(ern:String,appParams:AppParams) = s"${ern.reverse}"
 
@@ -169,6 +203,12 @@ trait HFileUtils extends Serializable{
 
   private def generateLinkKey(id:String, prefix:String) = s"$prefix~$id"
 
+
+  def getValueOrEmptyStr(row:Row, fieldName:String) = Try{
+    val value = row.getAs[String](fieldName)
+    value.size //just to trigger NullPointerException if is null
+    value
+  }.getOrElse("")
 
   /**
     * Returns None if:

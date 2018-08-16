@@ -4,7 +4,9 @@ import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions._
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
@@ -20,28 +22,31 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * */
   def createHFilesWithRefreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit = {
 
-    val allLUsDF: DataFrame = getAllLUsDF(appconf).cache()
+    val allLinksLusDF: DataFrame = getAllLinksLUsDF(appconf).cache()
 
 
-    val allEntsDF =  getAllEntsCalculated(allLUsDF,appconf).cache()
+    val allEntsDF =  getAllEntsCalculated(allLinksLusDF,appconf).cache()
 
 
     val allLOUs: DataFrame = getAllLOUs(allEntsDF,appconf,Configs.conf).cache()
 
 
-    saveLinks(allLOUs,allLUsDF,appconf)
+    val allLEUs: Dataset[Row] = getAllLEUs(allEntsDF,appconf,Configs.conf).cache()
+
+    saveLinks(allLOUs,allLinksLusDF,appconf)
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
-    allLUsDF.unpersist()
+    saveLeus(allLEUs,appconf)
+    allLinksLusDF.unpersist()
     allLOUs.unpersist()
   }
 
 
-  def getAllLUsDF(appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllLinksLUsDF(appconf: AppParams)(implicit spark: SparkSession) = {
 
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
 
-    val existingLEsDF: DataFrame = getExistingLeusDF(appconf, Configs.conf)
+    val existingLEsDF: DataFrame = getExistingLinksLeusDF(appconf, Configs.conf)
 
     //val numOfPartitions = existingLEsDF.rdd.getNumPartitions
 
@@ -53,7 +58,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams,newLeusViewName:String = "NEWLEUS")(implicit spark: SparkSession) = {
 
     //val numOfPartitions = allLUsDF.rdd.getNumPartitions
 
@@ -66,6 +71,32 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")//.repartition(numOfPartitions)
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")//.repartition(numOfPartitions)
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF,appconf).rdd,completeEntSchema)
+    val newLegalUnitsDS = newLEUsCalculatedDF.rdd.map(row => Row(
+
+        row.getAs[String]("id"),
+        row.getAs[String]("ern"),
+        row.getAs[String]("CompanyNo"),
+        getValueOrEmptyStr(row,"BusinessName"),
+        row.getAs[String]("trading_style"),//will not be present
+        getValueOrEmptyStr(row,"address1"),
+        row.getAs[String]("address2"),
+        row.getAs[String]("address3"),
+        row.getAs[String]("address4"),
+        row.getAs[String]("address5"),
+        getValueOrEmptyStr(row,"PostCode"),
+        getValueOrEmptyStr(row,"IndustryCode"),
+        row.getAs[String]("paye_jobs"),
+        row.getAs[String]("Turnover"),
+        getValueOrEmptyStr(row,"LegalStatus"),
+        row.getAs[String]("TradingStatus"),
+        getValueOrEmptyStr(row,"birth_date"),
+        row.getAs[String]("death_date"),
+        row.getAs[String]("death_code"),
+        row.getAs[String]("UPRN")
+      ))
+
+    val newLegalUnitsDF: DataFrame = spark.createDataFrame(newLegalUnitsDS,leuRowSchema)
+    newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist()
     allEntsDF
@@ -83,7 +114,21 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     existingLOUs.union(newAndMissingLOUsDF)
   }
 
+  def getAllLEUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
 
+    val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
+    existingLEUs.createOrReplaceTempView("EXISTINGLEUS")
+    val sql =
+      s"""
+         SELECT * FROM EXISTINGLEUS
+         UNION
+         SELECT * FROM NEWLEUS
+
+       """.stripMargin
+
+    spark.sql(sql)
+
+  }
 
 }
 object RefreshPeriodWithCalculationsClosure extends RefreshPeriodWithCalculationsClosure

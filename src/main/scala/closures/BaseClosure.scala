@@ -1,8 +1,6 @@
 package closures
 
 
-import java.nio.file.{Files, Paths}
-
 import dao.hbase.{HBaseDao, HFileUtils}
 import global.{AppParams, Configs}
 import model.hfile
@@ -13,9 +11,10 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
-import spark.extensions.sql._
+import spark.extensions.sql.{leuRowSchema, _}
 
 import scala.util.Try
 
@@ -54,6 +53,28 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getAs[Seq[String]]("VatRefs")
       )}}
     spark.createDataFrame(rows, biWithErnSchema)
+  }
+
+  def createNewLEUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+
+    spark.createDataFrame(
+      ents.rdd.map(row => Row(
+        generateLurn(row,appconf),
+        Try {row.getAs[String]("luref")}.getOrElse(null),
+        row.getAs[String]("ern"),
+        row.getAs[String]("name"),
+        Try {row.getAs[String]("entref")}.getOrElse(null),
+        Try {row.getAs[String]("trading_style")}.getOrElse(null),
+        row.getAs[String]("address1"),
+        Try {row.getAs[String]("address2")}.getOrElse(null),
+        Try {row.getAs[String]("address3")}.getOrElse (null),
+        Try {row.getAs[String]("address4")}.getOrElse (null),
+        Try {row.getAs[String]("address5")}.getOrElse (null),
+        getValueOrEmptyStr(row,"postcode"),
+        getValueOrEmptyStr(row,"sic07"),
+        getValueOrEmptyStr(row,"paye_empees"),
+        getValueOrEmptyStr(row,"paye_empees")
+      )), leuRowSchema)
   }
 
   /**
@@ -133,16 +154,50 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     spark.createDataFrame(entHFileRowRdd, entRowSchema)
   }
 
+/*
+  def createNewLeusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    newLEUsCalculatedDF.map(row => new GenericRowWithSchema(Array(
+
+      row.getAs[String]("id"),
+      row.getAs[String]("ern"),
+      row.getAs[String]("CompanyNo"),
+      getValueOrEmptyStr(row,"BusinessName"),
+      row.getAs[String]("trading_style"),//will not be present
+      getValueOrEmptyStr(row,"address1"),
+      row.getAs[String]("address2"),
+      row.getAs[String]("address3"),
+      row.getAs[String]("address4"),
+      row.getAs[String]("address5"),
+      getValueOrEmptyStr(row,"PostCode"),
+      getValueOrEmptyStr(row,"IndustryCode"),
+      row.getAs[String]("paye_jobs"),
+      row.getAs[String]("Turnover"),
+      getValueOrEmptyStr(row,"LegalStatus"),
+      row.getAs[String]("TradingStatus"),
+      getValueOrEmptyStr(row,"birth_date"),
+      row.getAs[String]("death_date"),
+      row.getAs[String]("death_code"),
+      row.getAs[String]("UPRN")
+    ), leuRowSchema)
+
+    )
+  }*/
+
+
+
   /**
     * returns existing ~LEU~ links DF
     * fields:
     * ubrn, ern, CompanyNo, PayeRefs, VatRefs
     **/
-  def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val tableData = hbaseDao.readLinksWithKeyFilter(confs,appconf, "^(LEU~)(\\w)")
-    val existingLinks: RDD[Row] = tableData.map(_.toLuRow)
-    spark.createDataFrame(existingLinks, luRowSchema)
+  def getExistingLinksLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    val leuHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.leusTableName(appconf)).map(_.toLeuRow)
+    spark.createDataFrame(leuHFileRowRdd, leuRowSchema)
+  }
 
+  def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    val leuHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.leusTableName(appconf)).map(_.toLeuRow)
+    spark.createDataFrame(leuHFileRowRdd, leuRowSchema)
   }
 
   def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
@@ -177,31 +232,20 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
+
+  def saveLeus(leusDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+    import spark.implicits._
+    val hfileCells = leusDF.map(row => rowToLegalUnit(row, appconf)).flatMap(identity(_)).rdd
+    hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+  }
+
   def getEntHFileCells(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession): RDD[(String, hfile.HFileCell)] = {
     import spark.implicits._
     val res: RDD[(String, hfile.HFileCell)] = entsDF.map(row => rowToEnt(row, appconf)).flatMap(identity).rdd
     res
   }
 
-  def getValueOrEmptyStr(row:Row, fieldName:String) = Try{
-    val value = row.getAs[String](fieldName)
-    value.size //just to trigger NullPointerException if is null
-    value
-  }.getOrElse("")
-
-  class KeyFamilyQualifier(val rowKey:Array[Byte], val family:Array[Byte], val qualifier:Array[Byte])
-    extends Comparable[KeyFamilyQualifier] with Serializable {
-    override def compareTo(o: KeyFamilyQualifier): Int = {
-      var result = Bytes.compareTo(rowKey, o.rowKey)
-      if (result == 0) {
-        result = Bytes.compareTo(family, o.family)
-        if (result == 0) result = Bytes.compareTo(qualifier, o.qualifier)
-      }
-      result
-    }
-    override def toString: String = {
-      Bytes.toString(rowKey) + ":" + Bytes.toString(family) + ":" + Bytes.toString(qualifier)
-    }
-  }
 
 }

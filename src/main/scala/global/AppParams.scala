@@ -12,6 +12,11 @@ case class AppParams(
                       HBASE_LINKS_COLUMN_FAMILY:String,
                       PATH_TO_LINKS_HFILE:String,
 
+                      HBASE_LEGALUNITS_TABLE_NAME:String,
+                      HBASE_LEGALUNITS_TABLE_NAMESPACE:String,
+                      HBASE_LEGALUNITS_COLUMN_FAMILY:String,
+                      PATH_TO_LEGALUNITS_HFILE:String,
+
                       HBASE_ENTERPRISE_TABLE_NAME:String,
                       HBASE_ENTERPRISE_TABLE_NAMESPACE:String,
                       HBASE_ENTERPRISE_COLUMN_FAMILY:String,
@@ -54,7 +59,11 @@ object AppParams{
                                                   args(14),
                                                   args(15),
                                                   args(16),
-                                                  args(17)
-                                                )
+                                                  args(17),
+                                                  args(18),
+                                                  args(19),
+                                                  args(20),
+                                                  args(21)
+                                                                                              )
   
 }

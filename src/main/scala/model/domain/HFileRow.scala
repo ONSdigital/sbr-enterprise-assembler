@@ -69,6 +69,41 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     }
   }
 
+
+  def toLeuRow = {
+    import spark.extensions.sql._
+    try {
+      new GenericRowWithSchema(Array(
+
+        getCellValue("ubrn"),
+        getCellValue("ern"),
+        getCellValue("crn"),
+        getCellValue("name"),
+        getCellValue("trading_style"),
+        getCellValue("address1"),
+        getCellValue("address2"),
+        getCellValue("address3"),
+        getCellValue("address4"),
+        getCellValue("address5"),
+        getCellValue("postcode"),
+        getCellValue("sic07"),
+        getCellValue("paye_jobs"),
+        getCellValue("turnover"),
+        getCellValue("legal_status"),
+        getCellValue("trading_status"),
+        getCellValue("birth_date"),
+        getCellValue("death_date"),
+        getCellValue("death_code"),
+        getCellValue("uprn")
+      ), leuRowSchema)
+    } catch {
+      case e: java.lang.RuntimeException => {
+        println(s"(toLuRow)Exception reading enterprise row with ern: ${getCellValue("ern")}")
+        throw e
+      }
+    }
+  }
+
     def toLuRow = {
       import spark.extensions.sql._
 
