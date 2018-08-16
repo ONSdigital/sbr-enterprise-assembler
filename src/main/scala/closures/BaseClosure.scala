@@ -1,6 +1,8 @@
 package closures
 
 
+import java.nio.file.{Files, Paths}
+
 import dao.hbase.{HBaseDao, HFileUtils}
 import global.{AppParams, Configs}
 import model.hfile
@@ -142,12 +144,6 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     spark.createDataFrame(existingLinks, luRowSchema)
 
   }
-/*  def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val tableData = hbaseDao.readLinksWithKeyPrefixFilter(confs,appconf, "LEU~")
-    val existingLinks: RDD[Row] = tableData.map(_.toLuRow)
-    val existingLinksDF: DataFrame = spark.createDataFrame(existingLinks, luRowSchema)
-    existingLinksDF
-  }*/
 
   def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
     import spark.implicits._
@@ -160,7 +156,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val restOfLinks: RDD[(String, hfile.HFileCell)] = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
 
     val allLinks: RDD[((String,String), hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).map(entry => ((entry._1,entry._2.qualifier),entry._2) ).repartitionAndSortWithinPartitions(partitioner)
-
+    //Files.deleteIfExists(Paths.get(appconf.PATH_TO_LINKS_HFILE))
     allLinks.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
