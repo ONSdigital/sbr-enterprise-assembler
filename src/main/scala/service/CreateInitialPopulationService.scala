@@ -21,16 +21,18 @@ trait CreateInitialPopulationService extends HBaseConnectionManager with SparkSe
 
 
   def loadNewPopulationFromJson(appconf:AppParams) = withSpark(appconf) { implicit ss: SparkSession =>
-
-    ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
-    parquetCreateNewToHFile(ss, appconf)
-    withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
+    withHbaseConnection { implicit con: Connection =>
+          ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
+          parquetCreateNewToHFile(ss, con,appconf)
+          HBaseDao.loadHFiles(con,appconf)
+    }
   }
 
   def createNewPopulationFromParquet(appconf:AppParams){
     withSpark(appconf){ implicit ss:SparkSession =>
-      parquetCreateNewToHFile(ss, appconf)
-      withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}
+      withHbaseConnection { implicit con: Connection =>
+      parquetCreateNewToHFile(ss, con, appconf)
+      HBaseDao.loadHFiles(con,appconf)}
   }}
 
   def loadFromHFile(appconf:AppParams) = withHbaseConnection { implicit con: Connection => HBaseDao.loadHFiles(con,appconf)}

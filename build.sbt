@@ -9,24 +9,24 @@ fork := true
 parallelExecution in Test:= false
 
 lazy val Versions = new {
-  val hbase = "1.2.6"
-  val spark = "2.2.0"
+  val hbase = "1.2.0-cdh5.13.1"
+  val spark = "2.2.0.cloudera2"
 }
+
+resolvers += "ClouderaRepo" at "https://repository.cloudera.com/artifactory/cloudera-repos"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
-  "org.apache.hbase" % "hbase-hadoop-compat" % "1.4.2",
+  "org.apache.hbase" % "hbase-hadoop-compat" % Versions.hbase,
   "com.typesafe" % "config" % "1.3.2",
-  ("org.apache.hbase" % "hbase-server" % Versions.hbase)
-                                                      .exclude("com.sun.jersey","jersey-server")
-                                                      .exclude("org.mortbay.jetty","jsp-api-2.1"),
+  "org.apache.hbase" % "hbase-server" % Versions.hbase,
   "org.apache.hbase" % "hbase-common" % Versions.hbase,
   "org.apache.hbase" %  "hbase-client" % Versions.hbase,
-  ("org.apache.spark" %% "spark-core" % Versions.spark)
-                                                      .exclude("aopalliance","aopalliance")
-                                                      .exclude("commons-beanutils","commons-beanutils"),
+/*  ("org.apache.hbase" % "hbase-spark" % "2.0.0-alpha4")
+    .exclude("com.fasterxml.jackson.module","jackson-module-scala_2.10"),*/
+ "org.apache.spark" %% "spark-core" % Versions.spark,
   "org.apache.spark" %% "spark-sql" % Versions.spark,
-  ("org.apache.crunch" % "crunch-hbase" % "0.15.0")   .exclude("com.sun.jersey","jersey-server")
+  "org.apache.crunch" % "crunch-hbase" % "0.15.0"
 
 )
 
@@ -86,6 +86,21 @@ lazy val addNewPeriodParams = Array(
                                   )
 
 
+lazy val addNewPeriodWithCalculationsParams = Array(
+                                  "LINKS", "ons", "l", "src/main/resources/data/newperiod/links/hfile",
+                                  "ENT", "ons", "d", "src/main/resources/data/newperiod/enterprise/hfile",
+                                  "LOU", "ons", "d", "src/main/resources/data/newperiod/local-unit/hfile",
+                                  "src/main/resources/data/newperiod/sample.parquet",
+                                  "localhost",
+                                  "2181",
+                                  "201804",
+                                  "src/main/resources/data/newperiod/newPeriodPaye.csv",
+                                  "src/main/resources/data/newperiod/newPeriodVat.csv",
+                                  "local",
+                                  "add-calculated-period"
+                                  )
+
+
 
 lazy val deletePeriodParams = Array(
                                   "LINKS", "ons", "l", "src/main/resources/data/temp/deleteperiod/links/hfile",
@@ -130,6 +145,7 @@ lazy val runInitialPopulationRecs = taskKey[Unit]("run-args")
 lazy val runAddPeriodRecs = taskKey[Unit]("run-args")
 lazy val runCalculationPeriodRecs = taskKey[Unit]("run-args")
 lazy val runDeletePeriod = taskKey[Unit]("run-args")
+lazy val runAddPeriodWithCalculations = taskKey[Unit]("run-args")
 
 
 fullRunTask(runCreateRecs, Runtime, "assembler.AssemblerMain", createRecordsParams: _*)
@@ -137,6 +153,7 @@ fullRunTask(runRefreshRecs, Runtime, "assembler.AssemblerMain", refreshRecordsPa
 fullRunTask(runAddPeriodRecs, Runtime, "assembler.AssemblerMain", addNewPeriodParams: _*)
 fullRunTask(runCalculationPeriodRecs, Runtime, "assembler.AssemblerMain", calculationsParams: _*)
 fullRunTask(runDeletePeriod, Runtime, "assembler.AssemblerMain", deletePeriodParams: _*)
+fullRunTask(runAddPeriodWithCalculations, Runtime, "assembler.AssemblerMain", addNewPeriodWithCalculationsParams: _*)
 
 /*
 current app args for addNewPeriod:

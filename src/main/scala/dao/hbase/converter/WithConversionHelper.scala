@@ -113,7 +113,6 @@ trait WithConversionHelper {
   }
 
 /*
-
   def toEnterpriseRecords(row:Row, appParams:AppParams): Tables = {
     val ern = generateErn
     Tables(rowToEnterprise(row,ern,appParams),rowToLinks(row,ern,appParams))
@@ -151,10 +150,10 @@ trait WithConversionHelper {
       row.getString("LegalStatus").map(ls => createEnterpriseCell(ern, "legal_status", ls, appParams)),
       row.getString("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
       row.getString("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs.toString, appParams)),
-      row.getString("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
-      row.getString("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
-      row.getString("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appParams)),
-      row.getString("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+      row.getString("apportioned_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+      row.getString("ent_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+      row.getString("contained_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained, appParams)),
+      row.getString("standard_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
       row.getString("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
     ).collect { case Some(v) => v }
 
@@ -179,10 +178,10 @@ trait WithConversionHelper {
       },
       row.getString("paye_employees").map(employees => createEnterpriseCell(ern, "paye_empees", employees, appParams)),
       row.getString("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs, appParams)),
-      row.getString("apportion_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
-      row.getString("total_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
-      row.getString("temp_contained_rep_vat_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
-      row.getString("temp_standard_vat_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
+      row.getString("apportioned_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion, appParams)),
+      row.getString("ent_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total, appParams)),
+      row.getString("contained_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
+      row.getString("standard_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
       row.getString("group_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
     ).collect { case Some(v) => v }
 }

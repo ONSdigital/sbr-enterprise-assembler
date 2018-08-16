@@ -1,31 +1,32 @@
 package closures
 
-import closures.mocks.MockClosures
-import dao.hbase.{HBaseDao, MockCreateNewPeriodHBaseDao}
+import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
+import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
-import test.data.existing.ExistingData
-import test.data.expected.ExpectedDataForAddNewPeriodScenario
 import global.{AppParams, Configs}
 import model.domain.{HFileRow, LocalUnit}
 import model.hfile
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader._
-import test.Paths
-import test.utils.HFileTestUtils
+import utils.{HFileTestUtils, Paths}
+import utils.data.existing.ExistingData
+import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
 
-class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
+class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
   import global.Configs._
 
- lazy val testDir = "missinglou"
+  lazy val testDir = "missinglou"
 
-  object MockCreateNewPeriodClosure extends CreateNewPeriodClosure with MockClosures {
+  object MockRefreshPeriodWithCalculationsClosure$ extends RefreshPeriodWithCalculationsClosure with MockClosures {
 
     override val hbaseDao: HBaseDao = MockCreateNewPeriodHBaseDao
 
@@ -52,21 +53,24 @@ class AddNewPeriodWithMissingLouSpec extends Paths with WordSpecLike with Matche
                             )))
 
   override def beforeAll() = {
+
         val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
-        MockCreateNewPeriodClosure.addNewPeriodData(appConfs)(spark)
+    withHbaseConnection { implicit connection: Connection =>
+      MockRefreshPeriodWithCalculationsClosure$.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark, connection)
+    }
         spark.stop()
   }
 
-override def afterAll() = {
-      File(parquetPath).deleteRecursively()
-      File(linkHfilePath).deleteRecursively()
-      File(entHfilePath).deleteRecursively()
-      File(louHfilePath).deleteRecursively()
-      File(existingRecordsDir).deleteRecursively()
-}
+  override def afterAll() = {
+        File(parquetPath).deleteRecursively()
+        File(linkHfilePath).deleteRecursively()
+        File(entHfilePath).deleteRecursively()
+        File(louHfilePath).deleteRecursively()
+        File(existingRecordsDir).deleteRecursively()
+  }
 
 
 
@@ -74,13 +78,10 @@ override def afterAll() = {
    "create hfiles populated with expected local units data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-
-
         val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
         val expected: List[LocalUnit] = newPeriodWithMissingLocalUnit.sortBy(_.lurn).sortBy(_.lurn)
         actual shouldBe expected
         spark.stop()
-
    }
 }
 
@@ -89,14 +90,11 @@ override def afterAll() = {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
-
         val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-
         val actual: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(_.key)
         val expected = newPeriodLinks.sortBy(_.key)
         actual shouldBe expected
-
-        spark.close()
+        spark.stop()
 
         }
 }

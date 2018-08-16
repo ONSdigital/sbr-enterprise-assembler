@@ -22,6 +22,32 @@ package object sql {
     .add(StructField("VatRefs", ArrayType(StringType,true),true))
     .add(StructField("id", StringType,false))
 
+  val biWithErnSchema = new StructType()
+    .add(StructField("ern", StringType,false))
+    .add(StructField("id", StringType,false))
+    .add(StructField("BusinessName", StringType,true))
+    .add(StructField("IndustryCode", StringType,true))
+    .add(StructField("LegalStatus", StringType,true))
+    .add(StructField("PostCode", StringType,true))
+    .add(StructField("TradingStatus", StringType,true))
+    .add(StructField("Turnover", StringType,true))
+    .add(StructField("UPRN", StringType,true))
+    .add(StructField("CompanyNo", StringType,true))
+    .add(StructField("PayeRefs", ArrayType(StringType,true),true))
+    .add(StructField("VatRefs", ArrayType(StringType,true),true))
+
+  val preCalculateDfSchema = new StructType()
+    .add(StructField("ern", StringType,true))
+    .add(StructField("id", StringType,true))
+    .add(StructField("CompanyNo", StringType,true))
+    .add(StructField("PayeRefs", ArrayType(StringType,true),true))
+    .add(StructField("VatRefs", ArrayType(StringType,true),true))
+
+
+  val existingLuBiRowSchema = new StructType()
+    .add(StructField("id", StringType,true))
+    .add(StructField("ern", StringType,true))
+
   val luRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,true))
@@ -33,8 +59,8 @@ package object sql {
     .add(StructField("lurn", StringType,false))
     .add(StructField("luref", StringType,true))
     .add(StructField("ern", StringType,true))
-    .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,false))
+    .add(StructField("entref", StringType,true))
     .add(StructField("tradingstyle", StringType,true))
     .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
@@ -58,6 +84,7 @@ package object sql {
 
   val entRowSchema = new StructType()
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("entref", StringType,true))
     .add(StructField("name", StringType,true))
     .add(StructField("trading_style", StringType,true))
@@ -66,16 +93,17 @@ package object sql {
     .add(StructField("address3", StringType,true))
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
-    .add(StructField("postcode", StringType,true))
-    .add(StructField("sic07", StringType,true))
-    .add(StructField("legal_status", StringType,true))
+    .add(StructField("postcode", StringType,false))
+    .add(StructField("sic07", StringType,false))
+    .add(StructField("legal_status", StringType,false))
 
 
   val entRowWithEmplDataSchema = new StructType()
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("idbrref", StringType,true))
     .add(StructField("name", StringType,true))
-    .add(StructField("tradingstyle", StringType,true))
+    .add(StructField("trading_style", StringType,true))
     .add(StructField("address1", StringType,true))
     .add(StructField("address2", StringType,true))
     .add(StructField("address3", StringType,true))
@@ -86,6 +114,39 @@ package object sql {
     .add(StructField("legalstatus", StringType,true))
     .add(StructField("paye_employees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
+
+  val completeEntSchema = new StructType()
+    .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
+    .add(StructField("entref", StringType,true))
+    .add(StructField("name", StringType,true))
+    .add(StructField("trading_style", StringType,true))
+    .add(StructField("address1", StringType,true))
+    .add(StructField("address2", StringType,true))
+    .add(StructField("address3", StringType,true))
+    .add(StructField("address4", StringType,true))
+    .add(StructField("address5", StringType,true))
+    .add(StructField("postcode", StringType,true))
+    .add(StructField("sic07", StringType,true))
+    .add(StructField("legal_status", StringType,true))
+    .add(StructField("paye_empees", StringType,true))
+    .add(StructField("paye_jobs", StringType,true))
+    .add(StructField("cntd_turnover", StringType,true))
+    .add(StructField("app_turnover", StringType,true))
+    .add(StructField("std_turnover", StringType,true))
+    .add(StructField("grp_turnover", StringType,true))
+    .add(StructField("ent_turnover", StringType,true))
+
+
+val calculationsSchema = new StructType()
+  .add(StructField("ern", StringType,true))
+  .add(StructField("paye_empees", StringType,true))
+  .add(StructField("paye_jobs", StringType,true))
+  .add(StructField("app_turnover", StringType,true))
+  .add(StructField("ent_turnover", StringType,true))
+  .add(StructField("cntd_turnover", StringType,true))
+  .add(StructField("std_turnover", StringType,true))
+  .add(StructField("grp_turnover", StringType,true))
 
   implicit class DataFrameExtensions(df:DataFrame){
 
@@ -106,7 +167,15 @@ package object sql {
       if (v.isDefined && v==null) None
       else v
     }
-
+/**
+  * returns option of value
+  * Retruns None if field is present but value is null, if field is not present
+  * returns Some(VALUE_OF_THE_FIELD) otherwise
+  * */
+    def getOption[T](field:String)= {
+      if(row.isNull(field)) None
+      else Option[T](row.getAs[T](field))
+    }
 
     def getString(field:String): Option[String] = getValue[String](field)
 

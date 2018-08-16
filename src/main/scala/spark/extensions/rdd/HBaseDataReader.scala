@@ -6,7 +6,7 @@ import org.apache.crunch.io.hbase.HFileInputFormat
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.{Cell, KeyValue}
+import org.apache.hadoop.hbase.{Cell, CellUtil, KeyValue, KeyValueUtil}
 import org.apache.hadoop.io.NullWritable
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
@@ -20,9 +20,9 @@ object HBaseDataReader{
         type DataMap = (String,Iterable[(String, String)])
 
         def getKeyValue[T <: Cell](kv:T): (String, (String, String)) = {
-          val key = Bytes.toString(kv.getRowArray).slice(kv.getRowOffset, kv.getRowOffset + kv.getRowLength)
-          val column =  Bytes.toString(kv.getQualifierArray).slice(kv.getQualifierOffset, kv.getQualifierOffset + kv.getQualifierLength)
-          val value = Bytes.toString(kv.getValueArray).slice(kv.getValueOffset, kv.getValueOffset + kv.getValueLength)
+          val key = Bytes.toString(CellUtil.cloneRow(kv))
+          val column =  Bytes.toStringBinary(CellUtil.cloneQualifier(kv))
+          val value = Bytes.toStringBinary(CellUtil.cloneValue(kv))
           (key,(column, value))
 
         }

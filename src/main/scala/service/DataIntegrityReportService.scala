@@ -51,6 +51,7 @@ trait DataIntegrityReportService extends SparkSessionManager{
   def printReport(appconf:AppParams, printableSize:Int = 50) = withSpark(appconf){ implicit ss:SparkSession =>
 
 
+    InputAnalyser.getData(appconf)
     val report: DataReport = InputAnalyser.getData(appconf)
     val childlessEntsCount = report.childlessEntErns.length
     val brokenKeyEntsCount = report.entsWithBrokenkeys.length

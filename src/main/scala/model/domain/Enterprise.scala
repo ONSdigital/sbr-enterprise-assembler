@@ -83,7 +83,7 @@ object Enterprise{
         address2.map(_.value),
         address3.map(_.value),
         address4.map(_.value),
-        address4.map(_.value),
+        address5.map(_.value),
         postcode.get.value,
         tradingStyle.map(_.value),
         sic07.get.value,
@@ -108,7 +108,6 @@ object Enterprise{
         case opt@Some(str) if (str.trim().nonEmpty) => opt
         case _ => None
       }
-
     }
     val ern = entry._2.find(_._1=="ern").get._2
 //ern	entref	name	trading_style	address1	address2	address3	address4	address5	postcode	legal_status	sic07
@@ -118,7 +117,7 @@ object Enterprise{
       ern,
       getValue("entref"),
       getValue("name").get,
-      getValue("address1").get,
+      getValue("address1").getOrElse(""),
       getValue("address2"),
       getValue("address3"),
       getValue("address4"),
