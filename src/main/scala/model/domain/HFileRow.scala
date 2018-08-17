@@ -104,7 +104,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     }
   }
 
-    def toLuRow = {
+    def toLeuLinksRow = {
       import spark.extensions.sql._
 
       new GenericRowWithSchema(Array(
@@ -126,7 +126,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
             vat.substring(2)
           } else vat)
         }.getOrElse(null)
-      ), luRowSchema)
+      ), linksLeuRowSchema)
     }
 
     def toUbrnErnRow = {

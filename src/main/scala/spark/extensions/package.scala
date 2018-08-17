@@ -70,7 +70,7 @@ package object sql {
     .add(StructField("id", StringType,true))
     .add(StructField("ern", StringType,true))
 
-  val luRowSchema = new StructType()
+  val linksLeuRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,true))
     .add(StructField("CompanyNo", StringType,true))

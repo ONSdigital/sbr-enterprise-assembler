@@ -39,6 +39,8 @@ try{
           entHFile.deleteRecursively()
           val linksHFile =  File(appParams.PATH_TO_LINKS_HFILE)
           linksHFile.deleteRecursively()
+          val leuHFile =  File(appParams.PATH_TO_LEGALUNITS_HFILE)
+          leuHFile.deleteRecursively()
           val louHFile =  File(appParams.PATH_TO_LOCALUNITS_HFILE)
           louHFile.deleteRecursively()
 

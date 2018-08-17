@@ -191,8 +191,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * ubrn, ern, CompanyNo, PayeRefs, VatRefs
     **/
   def getExistingLinksLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val leuHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.leusTableName(appconf)).map(_.toLeuRow)
-    spark.createDataFrame(leuHFileRowRdd, leuRowSchema)
+    val leuHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.linksTableName(appconf)).map(_.toLeuLinksRow)
+    spark.createDataFrame(leuHFileRowRdd, linksLeuRowSchema)
   }
 
   def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
@@ -238,7 +238,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val hfileCells = leusDF.map(row => rowToLegalUnit(row, appconf)).flatMap(identity(_)).rdd
     hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LEGALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
   def getEntHFileCells(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession): RDD[(String, hfile.HFileCell)] = {

@@ -63,8 +63,8 @@ object InputAnalyser extends RddLogging{
   }
 
   def getLegalUnitDF(appconf:AppParams)(implicit spark: SparkSession): DataFrame =  {
-    val entsRows:RDD[Row] = getLegalUnitsFromLinks(appconf).map(_.toLuRow)
-    spark.createDataFrame(entsRows, luRowSchema)
+    val entsRows:RDD[Row] = getLegalUnitsFromLinks(appconf).map(_.toLeuLinksRow)
+    spark.createDataFrame(entsRows, linksLeuRowSchema)
   }
 
   def getEntsDF(appconf:AppParams)(implicit spark: SparkSession): DataFrame =  {

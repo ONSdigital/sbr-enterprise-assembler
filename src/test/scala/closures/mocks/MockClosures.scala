@@ -10,7 +10,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{Row, SparkSession}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
-import spark.extensions.sql.{SqlRowExtensions, entRowSchema, louRowSchema, luRowSchema}
+import spark.extensions.sql.{SqlRowExtensions, entRowSchema, louRowSchema, linksLeuRowSchema}
 
 
 trait MockClosures{this:BaseClosure with HFileUtils =>
@@ -42,8 +42,8 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
   override def getExistingLeusDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
     val path = adjustPathToExistingRecords(appParams.PATH_TO_LINKS_HFILE)
     val hfileRows: RDD[HFileRow] = readEntitiesFromHFile[HFileRow](path).filter(_.key.startsWith("LEU~"))
-    val rdd: RDD[Row] = hfileRows.sortBy(_.cells.map(_.column).mkString).map(_.toLuRow)
-    spark.createDataFrame(rdd, luRowSchema)
+    val rdd: RDD[Row] = hfileRows.sortBy(_.cells.map(_.column).mkString).map(_.toLeuLinksRow)
+    spark.createDataFrame(rdd, linksLeuRowSchema)
 
   }
 

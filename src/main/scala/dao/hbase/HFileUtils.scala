@@ -210,6 +210,12 @@ trait HFileUtils extends Serializable{
     value
   }.getOrElse("")
 
+  def getValueOrNull(row:Row, fieldName:String) = Try{
+    val value = row.getAs[String](fieldName)
+    value.size //just to trigger NullPointerException if is null
+    value
+  }.getOrElse(null)
+
   /**
     * Returns None if:
     * 1. row does not contain field with given name

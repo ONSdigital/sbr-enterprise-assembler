@@ -37,7 +37,10 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
     saveLeus(allLEUs,appconf)
+
     allLinksLusDF.unpersist()
+    allEntsDF.unpersist()
+    allLEUs.unpersist()
     allLOUs.unpersist()
   }
 
@@ -46,56 +49,56 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val incomingBiDataDF: DataFrame = getIncomingBiData(appconf)
 
-    val existingLEsDF: DataFrame = getExistingLinksLeusDF(appconf, Configs.conf)
-
-    //val numOfPartitions = existingLEsDF.rdd.getNumPartitions
+    val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(appconf, Configs.conf)
 
     val joinedLUs = incomingBiDataDF.join(
-      existingLEsDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
+      existingLinksLeusDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
       Seq("id"), "left_outer")//.repartition(numOfPartitions)
 
      getAllLUs(joinedLUs, appconf)
 
   }
 
-  def getAllEntsCalculated(allLUsDF:DataFrame,appconf: AppParams,newLeusViewName:String = "NEWLEUS")(implicit spark: SparkSession) = {
+  def getAllEntsCalculated(allLinksLusDF:DataFrame,appconf: AppParams,newLeusViewName:String = "NEWLEUS")(implicit spark: SparkSession) = {
 
     //val numOfPartitions = allLUsDF.rdd.getNumPartitions
 
-    val calculatedDF = calculate(allLUsDF,appconf).castAllToString
+    val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
     calculatedDF.cache()
 
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
     val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")//.repartition(numOfPartitions)
-    val newLEUsDF = allLUsDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")//.repartition(numOfPartitions)
+    val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")//.repartition(numOfPartitions)
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")//.repartition(numOfPartitions)
+
+    val newLegalUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
+
+                                                                          row.getAs[String]("id"),
+                                                                          row.getAs[String]("ern"),
+                                                                          getValueOrNull(row,"CompanyNo"),
+                                                                          getValueOrEmptyStr(row,"BusinessName"),
+                                                                          getValueOrNull(row,"trading_style"),//will not be present
+                                                                          getValueOrEmptyStr(row,"address1"),
+                                                                          getValueOrNull(row, "address2"),
+                                                                          getValueOrNull(row, "address3"),
+                                                                          getValueOrNull(row, "address4"),
+                                                                          getValueOrNull(row, "address5"),
+                                                                          getValueOrEmptyStr(row,"PostCode"),
+                                                                          getValueOrEmptyStr(row,"IndustryCode"),
+                                                                          getValueOrNull(row, "paye_jobs"),
+                                                                          getValueOrNull(row, "Turnover"),
+                                                                          getValueOrEmptyStr(row,"LegalStatus"),
+                                                                          getValueOrNull(row, "TradingStatus"),
+                                                                          getValueOrEmptyStr(row,"birth_date"),
+                                                                          getValueOrNull(row,"death_date"),
+                                                                          getValueOrNull(row,"death_code"),
+                                                                          getValueOrNull(row,"UPRN")
+                                                                        ),leuRowSchema))
+
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF,appconf).rdd,completeEntSchema)
-    val newLegalUnitsDS = newLEUsCalculatedDF.rdd.map(row => Row(
-
-        row.getAs[String]("id"),
-        row.getAs[String]("ern"),
-        row.getAs[String]("CompanyNo"),
-        getValueOrEmptyStr(row,"BusinessName"),
-        row.getAs[String]("trading_style"),//will not be present
-        getValueOrEmptyStr(row,"address1"),
-        row.getAs[String]("address2"),
-        row.getAs[String]("address3"),
-        row.getAs[String]("address4"),
-        row.getAs[String]("address5"),
-        getValueOrEmptyStr(row,"PostCode"),
-        getValueOrEmptyStr(row,"IndustryCode"),
-        row.getAs[String]("paye_jobs"),
-        row.getAs[String]("Turnover"),
-        getValueOrEmptyStr(row,"LegalStatus"),
-        row.getAs[String]("TradingStatus"),
-        getValueOrEmptyStr(row,"birth_date"),
-        row.getAs[String]("death_date"),
-        row.getAs[String]("death_code"),
-        row.getAs[String]("UPRN")
-      ))
-
     val newLegalUnitsDF: DataFrame = spark.createDataFrame(newLegalUnitsDS,leuRowSchema)
+    newLegalUnitsDF.cache()
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist()
@@ -117,6 +120,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   def getAllLEUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
+    val tempDF = spark.sql("""SELECT * FROM NEWLEUS""")
     existingLEUs.createOrReplaceTempView("EXISTINGLEUS")
     val sql =
       s"""

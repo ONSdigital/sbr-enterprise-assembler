@@ -43,6 +43,7 @@ trait HBaseDao extends Serializable{
     truncateLinksTable
     truncateEntsTable
     truncateLousTable
+    truncateLeusTable
   }
 
   def truncateTable(tableName:String)(implicit connection:Connection,appParams:AppParams) =  wrapTransaction(tableName){ (table, admin) =>
@@ -53,6 +54,7 @@ trait HBaseDao extends Serializable{
   def truncateLinksTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(linksTableName(appParams))
   def truncateEntsTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(entsTableName(appParams))
   def truncateLousTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(lousTableName(appParams))
+  def truncateLeusTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(leusTableName(appParams))
 
   def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
@@ -128,7 +130,11 @@ trait HBaseDao extends Serializable{
   }
 
 
-
+  def loadLeusHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(leusTableName(appParams)){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LEGALUNITS_HFILE), admin,table,regionLocator)
+  }
 
   private def wrapTransaction(fullTableName:String)(action:(Table,Admin) => Unit)(implicit connection:Connection){
     val tn = TableName.valueOf(fullTableName)
