@@ -9,8 +9,8 @@ trait Paths {this: { val testDir: String } =>
   val jsonFilePath = s"src/test/resources/data/$testDir/newPeriod.json"
   val linkHfilePath = s"src/test/resources/data/$testDir/links"
   val linkDeleteHfilePath = s"src/test/resources/data/$testDir/delete/links"
-  val leuHfilePath = s"src/test/resources/data/$testDir/leus"
-  val leuDeleteHfilePath = s"src/test/resources/data/$testDir/delete/leus"
+  val leuHfilePath = s"src/test/resources/data/$testDir/leu"
+  val leuDeleteHfilePath = s"src/test/resources/data/$testDir/delete/leu"
   val entHfilePath = s"src/test/resources/data/$testDir/enterprise"
   val entDeleteHfilePath = s"src/test/resources/data/$testDir/delete/enterprise"
   val louHfilePath = s"src/test/resources/data/$testDir/lou"
@@ -21,5 +21,6 @@ trait Paths {this: { val testDir: String } =>
   val existingRecordsDir = s"src/test/resources/data/$testDir/existing"
   val existingEntRecordHFiles = s"$existingRecordsDir/enterprise"
   val existingLinksRecordHFiles = s"$existingRecordsDir/links"
+  val existingLeusRecordHFiles = s"$existingRecordsDir/leu"
   val existingLousRecordHFiles = s"$existingRecordsDir/lou"
 }

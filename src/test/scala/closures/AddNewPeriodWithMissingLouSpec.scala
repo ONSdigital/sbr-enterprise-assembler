@@ -109,7 +109,7 @@ def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:St
 }
 
 def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
-    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
+    saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
     saveToHFile(existingLinksForMissingLousScenario,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(louForLouMissingScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
 }
