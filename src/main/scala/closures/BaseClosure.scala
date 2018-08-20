@@ -5,13 +5,11 @@ import dao.hbase.{HBaseDao, HFileUtils}
 import global.{AppParams, Configs}
 import model.hfile
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
-import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql.{leuRowSchema, _}
@@ -154,37 +152,6 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     spark.createDataFrame(entHFileRowRdd, entRowSchema)
   }
 
-/*
-  def createNewLeusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    newLEUsCalculatedDF.map(row => new GenericRowWithSchema(Array(
-
-      row.getAs[String]("id"),
-      row.getAs[String]("ern"),
-      row.getAs[String]("CompanyNo"),
-      getValueOrEmptyStr(row,"BusinessName"),
-      row.getAs[String]("trading_style"),//will not be present
-      getValueOrEmptyStr(row,"address1"),
-      row.getAs[String]("address2"),
-      row.getAs[String]("address3"),
-      row.getAs[String]("address4"),
-      row.getAs[String]("address5"),
-      getValueOrEmptyStr(row,"PostCode"),
-      getValueOrEmptyStr(row,"IndustryCode"),
-      row.getAs[String]("paye_jobs"),
-      row.getAs[String]("Turnover"),
-      getValueOrEmptyStr(row,"LegalStatus"),
-      row.getAs[String]("TradingStatus"),
-      getValueOrEmptyStr(row,"birth_date"),
-      row.getAs[String]("death_date"),
-      row.getAs[String]("death_code"),
-      row.getAs[String]("UPRN")
-    ), leuRowSchema)
-
-    )
-  }*/
-
-
-
   /**
     * returns existing ~LEU~ links DF
     * fields:
@@ -211,9 +178,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val restOfLinks: RDD[(String, hfile.HFileCell)] = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
 
     val allLinks: RDD[((String,String), hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).map(entry => ((entry._1,entry._2.qualifier),entry._2) ).repartitionAndSortWithinPartitions(partitioner)
-    //Files.deleteIfExists(Paths.get(appconf.PATH_TO_LINKS_HFILE))
     allLinks.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
   def saveEnts(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {

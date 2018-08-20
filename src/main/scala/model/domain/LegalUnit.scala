@@ -1,41 +1,74 @@
 package model.domain
 
+import scala.util.Try
+
 /**
   *
   */
-case class PayeData(payeRef:String,q1:Option[String],q2:Option[String],q3:Option[String],q4:Option[String])
-object PayeData{
-  def apply(payeRef:String) = new PayeData(payeRef, None,None,None,None)
-}
+case class LegalUnit(
+                      ubrn:String,
+                      ern:String,
+                      crn:Option[String],
+                      name:String,
+                      trading_style:Option[String],
+                      address1:String,
+                      address2:Option[String],
+                      address3:Option[String],
+                      address4:Option[String],
+                      address5:Option[String],
+                      postcode:String,
+                      sic07:String,
+                      paye_jobs:Option[String],
+                      turnover:Option[String],
+                      legal_status:String,
+                      trading_status:Option[String],
+                      birth_date:String,
+                      death_date:Option[String],
+                      death_code:Option[String],
+                      uprn:Option[String]
+                    )
+object LegalUnit {
 
-case class VatData(vatRef:String,turnover:Option[String],recordType:Option[String])
-object VatData{
-  def apply(vatRef:String) = new VatData(vatRef,None,None)
-}
-
-
-
-case class LegalUnitLink(ubrn:String, ch:Option[String], payeRefs:Seq[String], varRefs:Seq[String])
-
-case class LinkRecord(ern:String, lurns:Seq[String], leus:Seq[LegalUnitLink])
-
-object LinkRecord{
-
-  //def getId(rows:Seq[String], unitCode:String) = rows.collect{case HFileRow(key,cells) if(key.contains(s"~$unitCode~")) => key.split("~").head}
-
-  def getLinkRecords(rows:Seq[HFileRow]) = {
-    val erns: Seq[String] = rows.collect{case HFileRow(key,cells) if(key.contains("~ENT~")) => key.split("~").head}
-    erns.map(ern => {
-      val ubrns = rows.collect{case HFileRow(key,cells) if(key.contains("~LEU~") && cells.find(_.value==ern).isDefined) => key.split("~").head}.sortBy(identity(_))
-      val leus = ubrns.map(ubrn => {
-        val ch = rows.collect{case HFileRow(key,cells) if(key.contains("~CH~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.headOption
-        val payeRefs = rows.collect{case HFileRow(key,cells) if(key.contains("~PAYE~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.sortBy(identity(_))
-        val vatRefs = rows.collect{case HFileRow(key,cells) if(key.contains("~VAT~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.sortBy(identity(_))
-        LegalUnitLink(ubrn,ch,payeRefs, vatRefs)
-      }).sortBy(_.ubrn)
-
-      val lurns = rows.collect{case HFileRow(key,cells) if(key.contains(s"$ern~ENT~")) => cells.collect{case cell if (cell.value=="LOU") => cell.column.replace("c_","")}}.flatten.sortBy(identity(_))
-      new LinkRecord(ern, lurns, leus)}
-    ).sortBy(_.ern)
+  def getValue(entry:(String, Iterable[(String, String)]),qualifier:String) = Try{entry._2.find(_._1==qualifier).get._2}.toOption match {
+    case opt@Some(str) if (str.trim().nonEmpty) => opt
+    case _ => None
   }
+
+      implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])) = {
+
+
+        val ubrn = entry._2.find(_._1=="ubrn").get._2
+        val ern = entry._2.find(_._1=="ern").get._2
+        val name = entry._2.find(_._1=="name").map(_._2).getOrElse("")
+        val address1 = entry._2.find(_._1=="address1").get._2
+        val postcode = entry._2.find(_._1=="postcode").get._2
+        val sic07 = entry._2.find(_._1=="sic07").get._2
+        val legalStatus = entry._2.find(_._1=="legal_status").get._2
+        val dob = entry._2.find(_._1=="birth_date").get._2
+
+        new LegalUnit(
+          ubrn,
+          ern,
+          getValue(entry,"crn"),
+          name,
+          getValue(entry,"trading_style"),
+          address1,
+          getValue(entry,"address2"),
+          getValue(entry,"address3"),
+          getValue(entry,"address4"),
+          getValue(entry,"address5"),
+          postcode,
+          sic07,
+          getValue(entry,"paye_jobs"),
+          getValue(entry,"turnover"),
+          legalStatus,
+          getValue(entry,"trading_status"),
+          dob,
+          getValue(entry,"death_date"),
+          getValue(entry,"death_code"),
+          getValue(entry,"uprn")
+
+        )
+
+      }
 }
