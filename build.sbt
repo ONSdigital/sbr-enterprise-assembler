@@ -19,14 +19,14 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
   "org.apache.hbase" % "hbase-hadoop-compat" % Versions.hbase,
   "com.typesafe" % "config" % "1.3.2",
-  "org.apache.hbase" % "hbase-server" % Versions.hbase,
+  ("org.apache.hbase" % "hbase-server" % Versions.hbase).exclude("com.sun.jersey","jersey-server"),
   "org.apache.hbase" % "hbase-common" % Versions.hbase,
   "org.apache.hbase" %  "hbase-client" % Versions.hbase,
-/*  ("org.apache.hbase" % "hbase-spark" % "2.0.0-alpha4")
-    .exclude("com.fasterxml.jackson.module","jackson-module-scala_2.10"),*/
- "org.apache.spark" %% "spark-core" % Versions.spark,
+  ("org.apache.spark" %% "spark-core" % Versions.spark)
+                                                      .exclude("aopalliance","aopalliance")
+                                                      .exclude("commons-beanutils","commons-beanutils"),
   "org.apache.spark" %% "spark-sql" % Versions.spark,
-  "org.apache.crunch" % "crunch-hbase" % "0.15.0"
+  ("org.apache.crunch" % "crunch-hbase" % "0.15.0").exclude("com.sun.jersey","jersey-server")
 
 )
 
