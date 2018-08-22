@@ -14,6 +14,7 @@ trait Paths {this: { val testDir: String } =>
   val entHfilePath = s"src/test/resources/data/$testDir/enterprise"
   val entDeleteHfilePath = s"src/test/resources/data/$testDir/delete/enterprise"
   val louHfilePath = s"src/test/resources/data/$testDir/lou"
+  val ruHfilePath = s"src/test/resources/data/$testDir/rou"
   val louDeleteHfilePath = s"src/test/resources/data/$testDir/delete/lou"
   val parquetPath = s"src/test/resources/data/$testDir/sample.parquet"
   val payeFilePath = s"src/test/resources/data/$testDir/newPeriodPaye.csv"
@@ -23,4 +24,5 @@ trait Paths {this: { val testDir: String } =>
   val existingLinksRecordHFiles = s"$existingRecordsDir/links"
   val existingLeusRecordHFiles = s"$existingRecordsDir/leu"
   val existingLousRecordHFiles = s"$existingRecordsDir/lou"
+  val existingRusRecordHFiles = s"$existingRecordsDir/rou"
 }

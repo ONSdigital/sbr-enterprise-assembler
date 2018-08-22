@@ -7,10 +7,10 @@ import global.AppParams
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.{Row, SparkSession}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import spark.extensions.sql.{SqlRowExtensions, entRowSchema, leuRowSchema, linksLeuRowSchema, louRowSchema}
+import utils.data.TestIds
 
 
 trait MockClosures{this:BaseClosure with HFileUtils =>
@@ -27,6 +27,13 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
     ("ACCLAIMED HOMES LIMITED" ->       "22222222-TEST-LURN"),
     ("MERCATURA INVESTMENTS LIMITED" -> "33333333-TEST-LURN"),
     ("NEW ENTERPRISE LU" -> "444444444-TEST-LURN")
+  )
+
+  val rurnMapping: Map[String, String] = Map(
+    ("5TH PROPERTY TRADING LIMITED" ->  "111111111-TEST-RURN"),
+    ("ACCLAIMED HOMES LIMITED" ->       "222222222-TEST-RURN"),
+    ("MERCATURA INVESTMENTS LIMITED" -> "333333333-TEST-RURN"),
+    ("NEW ENTERPRISE LU" -> "444444444-TEST-RURN")
   )
 
   override def generateErn(row: Row, appParams: AppParams) = ernMapping(row.getString("BusinessName").get)

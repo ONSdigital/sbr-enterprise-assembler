@@ -15,6 +15,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import spark.extensions.rdd.HBaseDataReader._
+import utils.data.TestIds
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import utils.{Paths, TestDataUtils}
@@ -34,11 +35,15 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
     override val ernMapping: Map[String, String] = Map(
-      ("NEW ENTERPRISE LU" -> newEntErn)
+      "NEW ENTERPRISE LU" -> newEntErn
     )
 
     override val lurnMapping: Map[String, String] = Map(
-      ("NEW ENTERPRISE LU" ->  newLouLurn)
+      "NEW ENTERPRISE LU" ->  newLouLurn
+    )
+
+    override val rurnMapping: Map[String, String] = Map(
+      "NEW ENTERPRISE LU" ->  newRuRurn
     )
 
   }
@@ -49,6 +54,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       "LEU", "ons", "d", leuHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
+      "ROU", "ons", "d",ruHfilePath,
       parquetPath,
       "201804",payeFilePath,
       vatFilePath,
@@ -79,7 +85,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         File(existingRecordsDir).deleteRecursively()
   }*/
 
-/*  "assembler" should {
+  /*"assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -89,7 +95,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       actual shouldBe expected
       spark.stop()
     }
-  }*/
+  }
 /**
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
   * |               ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover|
@@ -102,7 +108,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
   * */
 
-/*"assembler" should {
+"assembler" should {
     "create hfiles populated with expected local units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -111,11 +117,23 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       val expected: List[LocalUnit] = newPeriodLocalUnits.sortBy(_.lurn)
       actual shouldBe expected
       spark.stop()
-
     }
   }*/
 
+
 "assembler" should {
+    "create hfiles populated with expected local units data" in {
+
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+      val actual: List[ReportingUnit] = readEntitiesFromHFile[ReportingUnit](ruHfilePath).collect.toList.sortBy(_.rurn)
+      val expected: List[ReportingUnit] = newPeriodReportingUnits.sortBy(_.rurn)
+      actual shouldBe expected
+      spark.stop()
+    }
+  }
+
+/*"assembler" should {
     "create hfiles populated with expected legal units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -129,7 +147,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
   }
 
 
-  /*  "assembler" should {
+    "assembler" should {
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -143,8 +161,8 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       actualLinksRecords shouldBe expectedlLinksRecords
       spark.close()
     }
-  }
-*/
+  }*/
+
   def sortByKeyAndEntityName(row:HFileRow) = {
 
       val keyBlocks= row.key.split("~")
@@ -172,6 +190,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
+    saveToHFile(existingRusForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingRusRecordHFiles)
     saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
     saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
   }

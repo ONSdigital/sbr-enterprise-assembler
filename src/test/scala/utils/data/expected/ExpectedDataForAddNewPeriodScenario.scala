@@ -87,6 +87,8 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     LocalUnit(newLouLurn, None, newEntErn, None, "NEW ENTERPRISE LU", None, "", None, None, None, None, "W1A 1AA", "10001", "3")
   )
 
+  val newPeriodReportingUnits = List[ReportingUnit]()
+
   val newPeriodLegalUnits = List[LegalUnit](
     LegalUnit("100000246017","3000000011",Some("00032262"),"BLACKWELLGROUP LTD",Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456",Some("2"),Some("200"),"1",Some("A"),"02/042017",None,None,None),
     LegalUnit("100000459235","4000000011",Some("04223164"),"IBM LTD",Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"CF23 9EU","3344",Some("2"),None,"1",Some("A"),"04/06/2015",None,None,None),

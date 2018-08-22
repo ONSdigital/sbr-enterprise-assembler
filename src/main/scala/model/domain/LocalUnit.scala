@@ -29,7 +29,7 @@ object LocalUnit {
     val employees = entry._2.find(_._1=="employees").get._2
 
     new LocalUnit(
-      lurn, getValue(entry,"luref"),ern, getValue(entry,"entref"), name,getValue(entry,"tradingstyle"), address1,
+      lurn, getValue(entry,"luref"),ern, getValue(entry,"entref"), name,getValue(entry,"trading_style"), address1,
       getValue(entry,"address2"),getValue(entry,"address3"),getValue(entry,"address4"),getValue(entry,"address5"),
       postcode,sic07,employees
     )

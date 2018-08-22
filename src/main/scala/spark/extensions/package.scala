@@ -36,6 +36,25 @@ package object sql {
     .add(StructField("PayeRefs", ArrayType(StringType,true),true))
     .add(StructField("VatRefs", ArrayType(StringType,true),true))
 
+  val ruRowSchema = new StructType()
+    .add(StructField("rurn", StringType,false))
+    .add(StructField("ern", StringType,false))
+    .add(StructField("name", StringType,false))
+    .add(StructField("entref", StringType,true))
+    .add(StructField("ruref", StringType,true))
+    .add(StructField("trading_style", StringType,true))
+    .add(StructField("address1", StringType,false))
+    .add(StructField("address2", StringType,true))
+    .add(StructField("address3", StringType,true))
+    .add(StructField("address4", StringType,true))
+    .add(StructField("address5", StringType,true))
+    .add(StructField("postcode", StringType,false))
+    .add(StructField("sic07", StringType,false))
+    .add(StructField("employees", StringType,false))
+    .add(StructField("employment", StringType,false))
+    .add(StructField("turnover", StringType,false))
+    .add(StructField("prn", StringType,false))
+
   val leuRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,false))
@@ -83,7 +102,7 @@ package object sql {
     .add(StructField("ern", StringType,true))
     .add(StructField("name", StringType,false))
     .add(StructField("entref", StringType,true))
-    .add(StructField("tradingstyle", StringType,true))
+    .add(StructField("trading_style", StringType,true))
     .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
     .add(StructField("address3", StringType,true))
@@ -191,7 +210,7 @@ val calculationsSchema = new StructType()
     }
 /**
   * returns option of value
-  * Retruns None if field is present but value is null, if field is not present
+  * Retuns None if field is present but value is null or if field is not present
   * returns Some(VALUE_OF_THE_FIELD) otherwise
   * */
     def getOption[T](field:String)= {

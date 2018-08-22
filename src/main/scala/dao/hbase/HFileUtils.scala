@@ -74,6 +74,17 @@ trait HFileUtils extends Serializable{
     )
   }
 
+  def ruToLinks(row:Row,appParams:AppParams):Seq[(String, HFileCell)] = {
+    val lurn = getString(row,"lurn").get
+    val ern = getString(row,"ern").get
+    val loKey = generateLocalUnitLinksKey(lurn)
+    val entKey = generateLinkKey(ern,enterprise)
+    Seq(
+      createLinksRecord(loKey,s"$parentPrefix$enterprise",ern,appParams),
+      createLinksRecord(entKey,s"$childPrefix$lurn",localUnit,appParams)
+    )
+  }
+
 
   def rowToLegalUnitLinks(entKey:String,ubrn:String, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
     val leuKey = generateLegalUnitLinksKey(ubrn)
@@ -97,7 +108,7 @@ trait HFileUtils extends Serializable{
     ) ++ Seq(
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
       row.getString("entref").map(bn => createLocalUnitCell(lurn,ern, "entref", bn, appParams)),
-      row.getString("tradingstyle").map(bn => createLocalUnitCell(lurn,ern, "tradingstyle", bn, appParams)),
+      row.getString("trading_style").map(bn => createLocalUnitCell(lurn,ern, "trading_style", bn, appParams)),
       row.getString("address2").map(bn => createLocalUnitCell(lurn,ern, "address2", bn, appParams)),
       row.getString("address3").map(bn => createLocalUnitCell(lurn,ern, "address3", bn, appParams)),
       row.getString("address4").map(bn => createLocalUnitCell(lurn,ern, "address4", bn, appParams)),
@@ -235,6 +246,7 @@ trait HFileUtils extends Serializable{
   }
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
+  def generateRurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generatePrn(row:Row, appParams:AppParams) = (Configs.DEFAULT_PRN.toDouble + 0.001D).toString
   def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey

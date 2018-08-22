@@ -77,16 +77,12 @@ trait HBaseDao extends Serializable{
 
   def readLouWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
     readTableWithKeyFilter(confs, appParams, lousTableName(appParams), regex)
-
   }
-
 
   def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
 
     readTableWithKeyFilter(confs, appParams, entsTableName(appParams), regex)
-
   }
-
 
 
   def readTableWithPrefixKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
@@ -259,6 +255,7 @@ trait HBaseDao extends Serializable{
   def linksTableName(appconf:AppParams) =  s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}"
   def leusTableName(appconf:AppParams) =  s"${appconf.HBASE_LEGALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LEGALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
   def lousTableName(appconf:AppParams) =  s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
+  def rusTableName(appconf:AppParams) =  s"${appconf.HBASE_REPORTINGUNITS_TABLE_NAMESPACE}:${appconf.HBASE_REPORTINGUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
   def entsTableName(appconf:AppParams) =  s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}_${appconf.TIME_PERIOD}"
 
 }

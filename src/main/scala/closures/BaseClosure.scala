@@ -12,7 +12,7 @@ import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
-import spark.extensions.sql.{leuRowSchema, _}
+import spark.extensions.sql._
 
 import scala.util.Try
 
@@ -53,15 +53,17 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     spark.createDataFrame(rows, biWithErnSchema)
   }
 
-  def createNewLEUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+
+
+  def createNewRUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 
     spark.createDataFrame(
       ents.rdd.map(row => Row(
-        generateLurn(row,appconf),
-        Try {row.getAs[String]("luref")}.getOrElse(null),
+        generateRurn(row,appconf),
         row.getAs[String]("ern"),
         row.getAs[String]("name"),
         Try {row.getAs[String]("entref")}.getOrElse(null),
+        Try {row.getAs[String]("ruref")}.getOrElse(null),
         Try {row.getAs[String]("trading_style")}.getOrElse(null),
         row.getAs[String]("address1"),
         Try {row.getAs[String]("address2")}.getOrElse(null),
@@ -70,19 +72,14 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         Try {row.getAs[String]("address5")}.getOrElse (null),
         getValueOrEmptyStr(row,"postcode"),
         getValueOrEmptyStr(row,"sic07"),
-        getValueOrEmptyStr(row,"paye_empees"),
-        getValueOrEmptyStr(row,"paye_empees")
-      )), leuRowSchema)
+        getValueOrEmptyStr(row,"employees"),
+        getValueOrEmptyStr(row,"employment"),
+        getValueOrEmptyStr(row,"turnover"),
+        generatePrn(row,appconf)
+      )), ruRowSchema)
   }
 
-  /**
-    * Creates new Enterprises from new LEUs with calculations
-    * schema: completeNewEntSchema
-    * ern, entref, name, address1, postcode, sic07, legal_status,
-    * AND calculations:
-    * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
-    * */
-  //paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
+
   def createNewEnts(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
     newLEUsCalculatedDF.rdd.map(row => Row(
       row.getAs[String]("ern"),
@@ -98,26 +95,35 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     )
     ), entRowSchema)
 
+
+  /**
+    * Creates new Enterprises from new LEUs with calculations
+    * schema: completeNewEntSchema
+    * ern, entref, name, address1, postcode, sic07, legal_status,
+    * AND calculations:
+    * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
+    * */
     def createNewEntsWithCalculations(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
-    newLEUsCalculatedDF.rdd.map(row => Row(
-      row.getAs[String]("ern"),
-      generatePrn(row,appconf),
-      Try {row.getAs[String]("entref")}.getOrElse(null),
-      row.getAs[String]("BusinessName"),
-      null, //trading_style
-      Try {row.getAs[String]("address1")}.getOrElse(""),
-      null, null, null, null, //address2,3,4,5
-      row.getAs[String]("PostCode"),
-      Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
-      row.getAs[String]("LegalStatus"),
-      Try {row.getAs[String]("paye_empees")}.getOrElse(null),
-      Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
-      Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("std_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
-    )), completeEntSchema)
+
+      newLEUsCalculatedDF.rdd.map(row => Row(
+          row.getAs[String]("ern"),
+          generatePrn(row,appconf),
+          Try {row.getAs[String]("entref")}.getOrElse(null),
+          row.getAs[String]("BusinessName"),
+          null, //trading_style
+          Try {row.getAs[String]("address1")}.getOrElse(""),
+          null, null, null, null, //address2,3,4,5
+          row.getAs[String]("PostCode"),
+          Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
+          row.getAs[String]("LegalStatus"),
+          Try {row.getAs[String]("paye_empees")}.getOrElse(null),
+          Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
+          Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
+          Try {row.getAs[String]("app_turnover")}.getOrElse(null),
+          Try {row.getAs[String]("std_turnover")}.getOrElse(null),
+          Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
+          Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
+        )), completeEntSchema)
 
 
 
@@ -140,6 +146,12 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         getValueOrEmptyStr(row,"sic07"),
         getValueOrEmptyStr(row,"paye_empees")
       )), louRowSchema)
+  }
+
+
+  def getExistingRusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    val ruHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf, confs, HBaseDao.rusTableName(appconf)).map(_.toRuRow)
+    spark.createDataFrame(ruHFileRowRdd, ruRowSchema)
   }
 
   def getExistingLousDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
@@ -167,7 +179,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     spark.createDataFrame(leuHFileRowRdd, leuRowSchema)
   }
 
-  def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
+  def saveLinks(louDF: DataFrame, ruDF:DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
     import spark.implicits._
 
     val tableName = TableName.valueOf(hbaseDao.linksTableName(appconf))

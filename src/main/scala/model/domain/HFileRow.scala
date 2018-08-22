@@ -104,6 +104,30 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     }
   }
 
+    def toRuRow = {
+      import spark.extensions.sql._
+      try {
+        new GenericRowWithSchema(Array(
+              getCellValue("rurn"),
+              getCellValue("ern"),
+              getCellValue("name"),
+              getCellValue("entref"),
+              getCellValue("ruref"),
+              getCellValue("trading_style"),
+              getCellValue("address1"),
+              getCellValue("address2"),
+              getCellValue("address3"),
+              getCellValue("address4"),
+              getCellValue("address5"),
+              getCellValue("postcode"),
+              getCellValue("sic07"),
+              getCellValue("employees"),
+              getCellValue("employment"),
+              getCellValue("turnover"),
+              getCellValue("prn")
+        ),ruRowSchema)
+    }}
+
     def toLeuLinksRow = {
       import spark.extensions.sql._
 
@@ -149,7 +173,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getCellValue("ern"),
           getCellValue("name"),
           getCellValue("entref"),
-          getCellValue("tradingstyle"),
+          getCellValue("trading_style"),
           getCellValue("address1"),
           getCellValue("address2"),
           getCellValue("address3"),
