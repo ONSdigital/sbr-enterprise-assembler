@@ -23,25 +23,26 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * */
   def createHFilesWithRefreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit = {
 
-    val allLinksLusDF: DataFrame = getAllLinksLUsDF(appconf).cache()
+    val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
-    val allEntsDF =  getAllEntsCalculated(allLinksLusDF,appconf).cache()
+    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,appconf).cache()
 
-    val allLOUs: DataFrame = getAllLOUs(allEntsDF,appconf,Configs.conf).cache()
+    val allRusDF = getAllRus(allEntsDF,appconf,Configs.conf).cache()
 
-    val allRUs: DataFrame = getAllRUs(allEntsDF,appconf,Configs.conf).cache()
+    val allLousDF = getAllLous(allRusDF,appconf,Configs.conf).cache()
 
-    val allLEUs: Dataset[Row] = getAllLEUs(allEntsDF,appconf,Configs.conf).cache()
+    val allLeusDF = getAllLeus(allEntsDF,appconf,Configs.conf).cache()
 
-    saveLinks(allLOUs,allRUs,allLinksLusDF,appconf)
+    saveLinks(allLousDF,allRusDF,allLinksLeusDF,appconf)
     saveEnts(allEntsDF,appconf)
-    saveLous(allLOUs,appconf)
-    saveLeus(allLEUs,appconf)
+    saveLous(allLousDF,appconf)
+    saveLeus(allLeusDF,appconf)
 
-    allLinksLusDF.unpersist()
+    allLinksLeusDF.unpersist()
     allEntsDF.unpersist()
-    allLEUs.unpersist()
-    allLOUs.unpersist()
+    allLeusDF.unpersist()
+    allLousDF.unpersist()
+    allRusDF.unpersist()
   }
 
 
@@ -55,7 +56,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
       existingLinksLeusDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
       Seq("id"), "left_outer")//.repartition(numOfPartitions)
 
-     getAllLUs(joinedLUs, appconf)
+    getAllLUs(joinedLUs, appconf)
 
   }
 
@@ -73,13 +74,9 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")//.repartition(numOfPartitions)
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF,appconf).rdd,completeEntSchema)
-    val newLegalUnitsDF: DataFrame = getNewLusDF(newEntsCalculatedDF)
+    val newLegalUnitsDF: DataFrame = getNewLeusDF(newEntsCalculatedDF)
     newLegalUnitsDF.cache()//TODO: check if this is actually needed
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
-
-/*    val newReportingUnitsDF: DataFrame = getNewRusDF(newEntsCalculatedDF,appconf)
-    newReportingUnitsDF.cache()//TODO: check if this is actually needed
-    newReportingUnitsDF.createOrReplaceTempView(newRusViewName)*/
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist()
@@ -111,7 +108,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     newReportingUnitsDF
   }
 
-  def getNewLusDF(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = {
+  def getNewLeusDF(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = {
     val newLegalUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
 
                   row.getAs[String]("id"),
@@ -141,41 +138,41 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   }
 
 
-  def getAllLOUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingLOUs: DataFrame = getExistingLousDF(appconf,confs)
-
-    val entsWithoutLOUs: DataFrame = allEntsDF.join(existingLOUs.select("ern"),Seq("ern"),"left_anti")
-
-    val newAndMissingLOUsDF: DataFrame =  createNewLOUs(entsWithoutLOUs,appconf)
-
-    existingLOUs.union(newAndMissingLOUsDF)
-  }
-
-
-  def getAllRUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllRus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
 
-    val entsWithoutRUs: DataFrame = allEntsDF.join(existingRUs.select("ern"),Seq("ern"),"left_anti")
+    val entsWithoutRus: DataFrame = allEntsDF.join(existingRUs.select("ern"),Seq("ern"),"left_anti")
 
-    val newAndMissingRUsDF: DataFrame =  createNewRUs(entsWithoutRUs,appconf)
+    val newAndMissingRusDF: DataFrame =  createNewRus(entsWithoutRus,appconf)
 
-    existingRUs.union(newAndMissingRUsDF)
+    existingRUs.union(newAndMissingRusDF)
+  }
+
+  def getAllLous(allRus:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+
+    val existingLous: DataFrame = getExistingLousDF(appconf,confs)
+
+    val rusWithoutLous: DataFrame = allRus.join(existingLous.select("ern"),Seq("ern"),"left_anti")
+
+    val newAndMissingLousDF: DataFrame =  createNewLous(rusWithoutLous,appconf)
+
+    existingLous.union(newAndMissingLousDF)
   }
 
 
 
-  def getAllLEUs(allEntsDF:DataFrame,appconf: AppParams,confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllLeus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
-    val tempDF = spark.sql("""SELECT * FROM NEWLEUS""")
+    val tempDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
     existingLEUs.createOrReplaceTempView("EXISTINGLEUS")
     val sql =
       s"""
          SELECT * FROM EXISTINGLEUS
          UNION
-         SELECT * FROM NEWLEUS
+         SELECT * FROM $newLeusViewName
 
        """.stripMargin
 

@@ -9,8 +9,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SparkSession}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
-import spark.extensions.sql.{SqlRowExtensions, entRowSchema, leuRowSchema, linksLeuRowSchema, louRowSchema}
-import utils.data.TestIds
+import spark.extensions.sql._
 
 
 trait MockClosures{this:BaseClosure with HFileUtils =>
@@ -42,9 +41,12 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
     val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
     lurnMapping(key)
   }
+  override def generateRurn(row: Row, appParams: AppParams) = {
+    val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
+    rurnMapping(key)
+  }
 
   override def generateLurnFromEnt(row: Row, appParams: AppParams) = lurnMapping(generateLurn(row, appParams))
-
 
   override def getExistingLinksLeusDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
     val path = adjustPathToExistingRecords(appParams.PATH_TO_LINKS_HFILE)
@@ -53,7 +55,6 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
     spark.createDataFrame(rdd, linksLeuRowSchema)
   }
 
-
   override def getExistingLeusDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
     val path = adjustPathToExistingRecords(appParams.PATH_TO_LEGALUNITS_HFILE)
     val hfileRows: RDD[HFileRow] = readEntitiesFromHFile[HFileRow](path)
@@ -61,13 +62,17 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
     spark.createDataFrame(rdd, leuRowSchema)
   }
 
+  override def getExistingRusDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
+    val path = adjustPathToExistingRecords(appParams.PATH_TO_REPORTINGUNITS_HFILE)
+    val rus: RDD[Row] = readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).map(_.toRuRow)
+    spark.createDataFrame(rus, ruRowSchema)
+  }
 
   override def getExistingLousDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
     val path = adjustPathToExistingRecords(appParams.PATH_TO_LOCALUNITS_HFILE)
     val lous: RDD[Row] = readEntitiesFromHFile[HFileRow](path).sortBy(_.cells.map(_.column).mkString).map(_.toLouRow)
     spark.createDataFrame(lous, louRowSchema)
   }
-
 
   override def getExistingEntsDF(appParams: AppParams,confs: Configuration )(implicit spark: SparkSession) = {
     val path = adjustPathToExistingRecords(appParams.PATH_TO_ENTERPRISE_HFILE)

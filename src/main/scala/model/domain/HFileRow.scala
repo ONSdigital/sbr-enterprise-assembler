@@ -106,7 +106,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
     def toRuRow = {
       import spark.extensions.sql._
-      try {
+
         new GenericRowWithSchema(Array(
               getCellValue("rurn"),
               getCellValue("ern"),
@@ -126,7 +126,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
               getCellValue("turnover"),
               getCellValue("prn")
         ),ruRowSchema)
-    }}
+    }
 
     def toLeuLinksRow = {
       import spark.extensions.sql._
@@ -171,6 +171,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getCellValue("lurn"),
           getCellValue("luref"),
           getCellValue("ern"),
+          getCellValue("rurn"),
+          getCellValue("ruref"),
           getCellValue("name"),
           getCellValue("entref"),
           getCellValue("trading_style"),

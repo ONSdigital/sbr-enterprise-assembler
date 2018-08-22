@@ -13,6 +13,7 @@ trait HFileUtils extends Serializable{
 
   val legalUnit = "LEU"
   val localUnit = "LOU"
+  val reportingUnit = "REU"
   val enterprise = "ENT"
   val companiesHouse = "CH"
   val vatValue = "VAT"
@@ -66,25 +67,28 @@ trait HFileUtils extends Serializable{
   def louToLinks(row:Row,appParams:AppParams):Seq[(String, HFileCell)] = {
     val lurn = getString(row,"lurn").get
     val ern = getString(row,"ern").get
+    val rurn = getString(row,"rurn").get
     val loKey = generateLocalUnitLinksKey(lurn)
     val entKey = generateLinkKey(ern,enterprise)
+    val ruKey = generateReportingUnitLinksKey(rurn)
     Seq(
       createLinksRecord(loKey,s"$parentPrefix$enterprise",ern,appParams),
+      createLinksRecord(loKey,s"$parentPrefix$reportingUnit",rurn,appParams),
+      createLinksRecord(ruKey,s"$childPrefix$localUnit",rurn,appParams),
       createLinksRecord(entKey,s"$childPrefix$lurn",localUnit,appParams)
     )
   }
 
   def ruToLinks(row:Row,appParams:AppParams):Seq[(String, HFileCell)] = {
-    val lurn = getString(row,"lurn").get
+    val rurn = getString(row,"rurn").get
     val ern = getString(row,"ern").get
-    val loKey = generateLocalUnitLinksKey(lurn)
+    val ruKey = generateReportingUnitLinksKey(rurn)
     val entKey = generateLinkKey(ern,enterprise)
     Seq(
-      createLinksRecord(loKey,s"$parentPrefix$enterprise",ern,appParams),
-      createLinksRecord(entKey,s"$childPrefix$lurn",localUnit,appParams)
+      createLinksRecord(ruKey,s"$parentPrefix$reportingUnit",ern,appParams),
+      createLinksRecord(entKey,s"$childPrefix$rurn",localUnit,appParams)
     )
   }
-
 
   def rowToLegalUnitLinks(entKey:String,ubrn:String, ern:String,appParams:AppParams):Seq[(String, HFileCell)] = {
     val leuKey = generateLegalUnitLinksKey(ubrn)
@@ -202,11 +206,15 @@ trait HFileUtils extends Serializable{
 
   private def generateLocalUnitKey(lurn:String,ern:String,appParams:AppParams) = s"${ern.reverse}~$lurn"
 
+  private def generateReportingUnitKey(lurn:String,ern:String,appParams:AppParams) = s"${ern.reverse}~$lurn"
+
   private def generateLegalUnitKey(ubrn:String,ern:String,appParams:AppParams) = s"${ern.reverse}~$ubrn"
 
   private def generateEntKey(ern:String,appParams:AppParams) = s"${ern.reverse}"
 
   private def generateLocalUnitLinksKey(lurn:String) = generateLinkKey(lurn,localUnit)
+
+  private def generateReportingUnitLinksKey(rurn:String) = generateLinkKey(rurn,reportingUnit)
 
   private def generateLegalUnitLinksKey(ubrn:String) = generateLinkKey(ubrn,legalUnit)
 

@@ -24,13 +24,14 @@ trait CreateClosures extends AdminDataCalculator with BaseClosure with HFileUtil
     val stringifiedParquet = spark.read.parquet(appArgs.PATH_TO_PARQUET).castAllToString
     val newLEUsCalculatedDF = calculate(stringifiedParquet,appconf).castAllToString
     newLEUsCalculatedDF.cache()
+
     val allLUsDF = getAllLUs(newLEUsCalculatedDF,appconf)
 
     val allEntsDF = spark.createDataFrame(createNewEnts(allLUsDF,appArgs).rdd,completeEntSchema).cache()
 
-    val allLOUs: Dataset[Row] = createNewLOUs(allEntsDF,appconf).cache()
+    val allLOUs: Dataset[Row] = createNewLous(allEntsDF,appconf).cache()
 
-    saveLinks(allLOUs,allLUsDF,appconf)
+    //saveLinks(allLOUs,allLUsDF,appconf)
     saveEnts(allEntsDF,appconf)
     saveLous(allLOUs,appconf)
     allLUsDF.unpersist()

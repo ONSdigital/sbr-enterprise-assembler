@@ -6,10 +6,10 @@ import scala.util.Try
   *
   */
 case class ReportingUnit(
-                          ruref:Option[String],
                           rurn:String,
-                          entref:Option[String],
+                          ruref:Option[String],
                           ern:String,
+                          entref:Option[String],
                           prn:String,
                           name:String,
                           tradingStyle:Option[String],
@@ -49,8 +49,10 @@ object ReportingUnit {
           val prn = entry._2.find (_._1 == "prn").get._2
 
           new ReportingUnit(
+            rurn,
             getValue(entry,"ruref"),
-            rurn,getValue(entry,"entref"),ern,prn,name,getValue(entry,"trading_style"),legalStatus,address1,
+            ern,
+            getValue(entry,"entref"),prn,name,getValue(entry,"trading_style"),legalStatus,address1,
             getValue(entry,"address2"),getValue(entry,"address3"),getValue(entry,"address4"),getValue(entry,"address5"),
             postcode,sic07,employees, employment,turnover
           )
