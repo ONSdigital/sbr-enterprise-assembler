@@ -78,20 +78,20 @@ class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with 
       val newReportingUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
         generateRurn(row,appconf),
         row.getAs[String]("ern"),
-        getValueOrEmptyStr(row,"BusinessName"),
-        getValueOrEmptyStr(row,"entref"),//will not be present
-        getValueOrNull(row,"ruref"),//will not be present
-        getValueOrNull(row,"trading_style"),//will not be present
-        getValueOrEmptyStr(row,"address1"),
-        getValueOrNull(row, "address2"),
-        getValueOrNull(row, "address3"),
-        getValueOrNull(row, "address4"),
-        getValueOrNull(row, "address5"),
-        getValueOrEmptyStr(row,"PostCode"),
-        getValueOrEmptyStr(row,"IndustryCode"),
-        getValueOrNull(row, "paye_jobs"),
-        getValueOrEmptyStr(row,"employment"),
-        getValueOrEmptyStr(row,"turnover"),//will not be present
+        row.getValueOrEmptyStr("BusinessName"),
+        row.getValueOrEmptyStr("entref"),//will not be present
+        row.getValueOrNull("ruref"),//will not be present
+        row.getValueOrNull("trading_style"),//will not be present
+        row.getValueOrEmptyStr("address1"),
+        row.getValueOrNull( "address2"),
+        row.getValueOrNull( "address3"),
+        row.getValueOrNull( "address4"),
+        row.getValueOrNull( "address5"),
+        row.getValueOrEmptyStr("PostCode"),
+        row.getValueOrEmptyStr("IndustryCode"),
+        row.getValueOrNull( "paye_jobs"),
+        row.getValueOrEmptyStr("employment"),
+        row.getValueOrEmptyStr("turnover"),//will not be present
         generatePrn(row,appconf)
       ),ruRowSchema))
 
@@ -104,24 +104,24 @@ class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with 
 
         row.getAs[String]("id"),
         row.getAs[String]("ern"),
-        getValueOrNull(row,"CompanyNo"),
-        getValueOrEmptyStr(row,"BusinessName"),
-        getValueOrNull(row,"trading_style"),//will not be present
-        getValueOrEmptyStr(row,"address1"),
-        getValueOrNull(row, "address2"),
-        getValueOrNull(row, "address3"),
-        getValueOrNull(row, "address4"),
-        getValueOrNull(row, "address5"),
-        getValueOrEmptyStr(row,"PostCode"),
-        getValueOrEmptyStr(row,"IndustryCode"),
-        getValueOrNull(row, "paye_jobs"),
-        getValueOrNull(row, "Turnover"),
-        getValueOrEmptyStr(row,"LegalStatus"),
-        getValueOrNull(row, "TradingStatus"),
-        getValueOrEmptyStr(row,"birth_date"),
-        getValueOrNull(row,"death_date"),
-        getValueOrNull(row,"death_code"),
-        getValueOrNull(row,"UPRN")
+        row.getValueOrNull("CompanyNo"),
+        row.getValueOrEmptyStr("BusinessName"),
+        row.getValueOrNull("trading_style"),//will not be present
+        row.getValueOrEmptyStr("address1"),
+        row.getValueOrNull( "address2"),
+        row.getValueOrNull( "address3"),
+        row.getValueOrNull( "address4"),
+        row.getValueOrNull( "address5"),
+        row.getValueOrEmptyStr("PostCode"),
+        row.getValueOrEmptyStr("IndustryCode"),
+        row.getValueOrNull( "paye_jobs"),
+        row.getValueOrNull( "Turnover"),
+        row.getValueOrEmptyStr("LegalStatus"),
+        row.getValueOrNull( "TradingStatus"),
+        row.getValueOrEmptyStr("birth_date"),
+        row.getValueOrNull("death_date"),
+        row.getValueOrNull("death_code"),
+        row.getValueOrNull("UPRN")
       ),leuRowSchema))
 
       spark.createDataFrame(newLegalUnitsDS,leuRowSchema)

@@ -114,6 +114,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
               getCellValue("entref"),
               getCellValue("ruref"),
               getCellValue("trading_style"),
+              getCellValue("legal_status"),
               getCellValue("address1"),
               getCellValue("address2"),
               getCellValue("address3"),

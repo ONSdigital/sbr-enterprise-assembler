@@ -44,6 +44,7 @@ trait HBaseDao extends Serializable{
     truncateEntsTable
     truncateLousTable
     truncateLeusTable
+    truncateRusTable
   }
 
   def truncateTable(tableName:String)(implicit connection:Connection,appParams:AppParams) =  wrapTransaction(tableName){ (table, admin) =>
@@ -55,6 +56,7 @@ trait HBaseDao extends Serializable{
   def truncateEntsTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(entsTableName(appParams))
   def truncateLousTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(lousTableName(appParams))
   def truncateLeusTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(leusTableName(appParams))
+  def truncateRusTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(rusTableName(appParams))
 
   def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
     val localConfCopy = conf
@@ -130,6 +132,12 @@ trait HBaseDao extends Serializable{
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LEGALUNITS_HFILE), admin,table,regionLocator)
+  }
+
+  def loadRusHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(rusTableName(appParams)){ (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_REPORTINGUNITS_HFILE), admin,table,regionLocator)
   }
 
   private def wrapTransaction(fullTableName:String)(action:(Table,Admin) => Unit)(implicit connection:Connection){

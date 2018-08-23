@@ -32,6 +32,7 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
          HBaseDao.loadEnterprisesHFile(con,appconf)
          HBaseDao.loadLousHFile(con,appconf)
          HBaseDao.loadLeusHFile(con,appconf)
+         HBaseDao.loadRusHFile(con,appconf)
 
                }
   }

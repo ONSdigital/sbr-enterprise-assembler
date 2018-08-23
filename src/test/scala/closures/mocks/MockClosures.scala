@@ -34,6 +34,12 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
     ("MERCATURA INVESTMENTS LIMITED" -> "333333333-TEST-RURN"),
     ("NEW ENTERPRISE LU" -> "444444444-TEST-RURN")
   )
+  val prnMapping: Map[String, String] = Map(
+    ("5TH PROPERTY TRADING LIMITED" ->  "111111111-TEST-PRN"),
+    ("ACCLAIMED HOMES LIMITED" ->       "222222222-TEST-PRN"),
+    ("MERCATURA INVESTMENTS LIMITED" -> "333333333-TEST-PRN"),
+    ("NEW ENTERPRISE LU" -> "444444444-TEST-PRN")
+  )
 
   override def generateErn(row: Row, appParams: AppParams) = ernMapping(row.getString("BusinessName").get)
 
@@ -44,6 +50,11 @@ trait MockClosures{this:BaseClosure with HFileUtils =>
   override def generateRurn(row: Row, appParams: AppParams) = {
     val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
     rurnMapping(key)
+  }
+
+  override def generatePrn(row: Row, appParams: AppParams) = {
+    val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
+    prnMapping(key)
   }
 
   override def generateLurnFromEnt(row: Row, appParams: AppParams) = lurnMapping(generateLurn(row, appParams))

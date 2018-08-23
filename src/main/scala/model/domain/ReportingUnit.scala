@@ -45,7 +45,7 @@ object ReportingUnit {
           val legalStatus = entry._2.find (_._1 == "legal_status").get._2
           val employees = entry._2.find (_._1 == "employees").get._2
           val employment = entry._2.find (_._1 == "employment").get._2
-          val turnover = entry._2.find (_._1 == "employment").get._2
+          val turnover = entry._2.find (_._1 == "turnover").get._2
           val prn = entry._2.find (_._1 == "prn").get._2
 
           new ReportingUnit(
