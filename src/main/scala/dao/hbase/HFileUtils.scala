@@ -123,25 +123,6 @@ trait HFileUtils extends Serializable{
     ).collect { case Some(v) => v }
   }
 
-/**
-   "ern",mandatory
-  "name",mandatory
-  "entref",optional
-  "ruref",optional
-  "trading_style",optional
-  "address1",mandatory
-  "address2",optional
-  "address3",optional
-  "address4",optional
-  "address5",optional
-  "postcode",mandatory
-  "sic07",mandatory
-  "employees",mandatory
-  "employment",mandatory
-  "turnover",mandatory
-  "prn",mandatory
-  */
-
   def rowToReportingUnit(row: Row, appParams: AppParams):Seq[(String, HFileCell)] = {
     val rurn = row.getStringOption("rurn").get
     val ern = row.getStringOption("ern").get

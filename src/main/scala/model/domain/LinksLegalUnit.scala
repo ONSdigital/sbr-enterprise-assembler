@@ -24,17 +24,17 @@ object LinkRecord{
   //def getId(rows:Seq[String], unitCode:String) = rows.collect{case HFileRow(key,cells) if(key.contains(s"~$unitCode~")) => key.split("~").head}
 
   def getLinkRecords(rows:Seq[HFileRow]) = {
-    val erns: Seq[String] = rows.collect{case HFileRow(key,cells) if(key.contains("~ENT~")) => key.split("~").head}
+    val erns: Seq[String] = rows.collect{case HFileRow(key,cells) if(key.contains("ENT~")) => key.split("~").last}
     erns.map(ern => {
-      val ubrns = rows.collect{case HFileRow(key,cells) if(key.contains("~LEU~") && cells.find(_.value==ern).isDefined) => key.split("~").head}.sortBy(identity(_))
+      val ubrns = rows.collect{case HFileRow(key,cells) if(key.contains("LEU~") && cells.find(_.value==ern).isDefined) => key.split("~").last}.sortBy(identity(_))
       val leus = ubrns.map(ubrn => {
-        val ch = rows.collect{case HFileRow(key,cells) if(key.contains("~CH~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.headOption
-        val payeRefs = rows.collect{case HFileRow(key,cells) if(key.contains("~PAYE~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.sortBy(identity(_))
-        val vatRefs = rows.collect{case HFileRow(key,cells) if(key.contains("~VAT~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").head}.sortBy(identity(_))
+        val ch = rows.collect{case HFileRow(key,cells) if(key.contains("CH~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").last}.headOption
+        val payeRefs = rows.collect{case HFileRow(key,cells) if(key.contains("PAYE~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").last}.sortBy(identity(_))
+        val vatRefs = rows.collect{case HFileRow(key,cells) if(key.contains("VAT~") && cells.find(cell => cell.value==ubrn && cell.column=="p_LEU").isDefined) => key.split("~").last}.sortBy(identity(_))
         LegalUnitLink(ubrn,ch,payeRefs, vatRefs)
       }).sortBy(_.ubrn)
 
-      val lurns = rows.collect{case HFileRow(key,cells) if(key.contains(s"$ern~ENT~")) => cells.collect{case cell if (cell.value=="LOU") => cell.column.replace("c_","")}}.flatten.sortBy(identity(_))
+      val lurns = rows.collect{case HFileRow(key,cells) if(key.contains(s"ENT~$ern")) => cells.collect{case cell if (cell.value=="LOU") => cell.column.replace("c_","")}}.flatten.sortBy(identity(_))
       new LinkRecord(ern, lurns, leus)}
     ).sortBy(_.ern)
   }

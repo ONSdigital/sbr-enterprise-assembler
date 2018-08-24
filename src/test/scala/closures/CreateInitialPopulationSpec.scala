@@ -9,14 +9,14 @@ import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader._
-import utils.{Paths, TestDataUtils}
+import utils.Paths
 import utils.data.expected.ExpectedDataForCreatePopulationScenario
 
 import scala.reflect.io.File
 /**
   *
   */
-class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with TestDataUtils with ExpectedDataForCreatePopulationScenario{
+class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExpectedDataForCreatePopulationScenario{
 
   lazy val testDir = "create"
 
@@ -56,7 +56,7 @@ class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with
    File(louHfilePath).deleteRecursively()
  }
 
- "assembler" should {
+ /*"assembler" should {
    "create hfiles populated with expected enterprise data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -72,7 +72,7 @@ class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with
      spark.stop()
 
    }
- }
+ }*/
 
 
 "assembler" should {

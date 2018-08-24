@@ -15,6 +15,7 @@ trait TestIds {
   val missingLouRurn = "MISS-LOU-TEST-RURN"
   val missingLouRuref = "MISS-LOU-TEST-RUREF"
   val entWithMissingLouId = "2000000011"
+  val entPrnWithMissingLouId = "0.11111"
 
 
 }

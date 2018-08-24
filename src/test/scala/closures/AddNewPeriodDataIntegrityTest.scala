@@ -13,12 +13,12 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
-import utils.{Paths, TestDataUtils}
+import utils.Paths
 
 /**
   *
   */
-class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario {
 
   lazy val testDir = "newperiod"
 

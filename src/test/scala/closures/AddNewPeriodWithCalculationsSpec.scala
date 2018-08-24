@@ -18,7 +18,7 @@ import spark.extensions.rdd.HBaseDataReader._
 import utils.data.TestIds
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
-import utils.{Paths, TestDataUtils}
+import utils.Paths
 
 import scala.reflect.io.File
 /**
@@ -26,7 +26,7 @@ import scala.reflect.io.File
   */
 
 
-class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario{
 
   lazy val testDir = "newperiod"
 
@@ -68,8 +68,8 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
    override def beforeAll() = {
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        //createRecords(appConfs)(spark)
-        //ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+        createRecords(appConfs)(spark)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
         //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
          conf.set("hbase.zookeeper.quorum", "localhost")
          conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -79,16 +79,16 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         spark.stop
 
   }
-/*  override def afterAll() = {
+  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
         File(leuHfilePath).deleteRecursively()
         File(entHfilePath).deleteRecursively()
         File(louHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
-  /*"assembler" should {
+  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -98,7 +98,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       actual shouldBe expected
       spark.stop()
     }
-  }*/
+  }
 /**
   * +------------------+-----------+---------+-------------+------------+------------+------------+------------+
   * |               ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover|
@@ -124,7 +124,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
   }
 
 
-/*"assembler" should {
+"assembler" should {
     "create hfiles populated with expected reporting units data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -135,43 +135,43 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       actual shouldBe expected
       spark.stop()
     }
-  }
+}
 
-"assembler" should {
-    "create hfiles populated with expected legal units data" in {
+  "assembler" should {
+      "create hfiles populated with expected legal units data" in {
 
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val existing = readEntitiesFromHFile[LegalUnit](existingLeusRecordHFiles).collect.toList.sortBy(_.ubrn)
-      val actual: List[LegalUnit] = readEntitiesFromHFile[LegalUnit](leuHfilePath).collect.toList.sortBy(_.ubrn)
-      val expected: List[LegalUnit] = newPeriodLegalUnits.sortBy(_.ubrn)
-      actual shouldBe expected
-      spark.stop()
+        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+        val existing = readEntitiesFromHFile[LegalUnit](existingLeusRecordHFiles).collect.toList.sortBy(_.ubrn)
+        val actual: List[LegalUnit] = readEntitiesFromHFile[LegalUnit](leuHfilePath).collect.toList.sortBy(_.ubrn)
+        val expected: List[LegalUnit] = newPeriodLegalUnits.sortBy(_.ubrn)
+        actual shouldBe expected
+        spark.stop()
 
+      }
     }
-  }
 
 
-    "assembler" should {
-    "create hfiles populated with expected links data" in {
+      "assembler" should {
+      "create hfiles populated with expected links data" in {
 
-      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      val confs = appConfs
-      val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
-      val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-      val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
-      val actualLinksRecords: Seq[LinkRecord] = LinkRecord.getLinkRecords(actualHFileRows).sortBy(_.ern)
-      val expectedHFileRows: Seq[HFileRow] = newPeriodLinks.sortBy(sortByKeyAndEntityName)
-      val expectedlLinksRecords: Seq[LinkRecord] = LinkRecord.getLinkRecords(expectedHFileRows).sortBy(_.ern)
-      actualLinksRecords shouldBe expectedlLinksRecords
-      spark.close()
+        implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
+        val confs = appConfs
+      /*
+        val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
+        val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
+      */
+        val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
+        val actualLinksRecords: Seq[LinkRecord] = LinkRecord.getLinkRecords(actualHFileRows).sortBy(_.ern)
+        actualLinksRecords shouldBe expectedNewPeriodLinks.sortBy(_.ern)
+        spark.close()
+      }
     }
-  }*/
 
   def sortByKeyAndEntityName(row:HFileRow) = {
 
-      val keyBlocks= row.key.split("~")
-      val id = keyBlocks.head
-      val entityName = keyBlocks.tail.head
+      val keyBlocks = row.key.split("~")
+      val id = keyBlocks.last
+      val entityName = keyBlocks.head
       entityName+id
   }
 
