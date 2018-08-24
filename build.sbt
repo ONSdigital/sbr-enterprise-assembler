@@ -91,6 +91,7 @@ lazy val addNewPeriodWithCalculationsParams = Array(
                                   "LEU", "ons", "d", "src/main/resources/data/newperiod/legal-unit/hfile",
                                   "ENT", "ons", "d", "src/main/resources/data/newperiod/enterprise/hfile",
                                   "LOU", "ons", "d", "src/main/resources/data/newperiod/local-unit/hfile",
+                                  "REU", "ons", "d", "src/main/resources/data/newperiod/reporting-unit/hfile",
                                   "src/main/resources/data/newperiod/sample.parquet",
                                   "localhost",
                                   "2181",

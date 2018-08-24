@@ -25,7 +25,7 @@ try{
       case "addperiod" => loadNewPeriodData(appParams)
       case "calculate" => addCalculations(appParams)
       case "refresh" => refresh(appParams)
-      case "create" => createNewPopulationFromParquet(appParams)
+      case "create" => loadNewPeriodWithCalculationsData(appParams)
       case "data-integrity-report" => {
         conf.setInt("spark.sql.broadcastTimeout", 2400)
         printReport(appParams)

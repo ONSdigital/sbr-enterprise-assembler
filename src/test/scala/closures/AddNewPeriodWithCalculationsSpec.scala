@@ -57,7 +57,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       "LEU", "ons", "d", leuHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
-      "ROU", "ons", "d",ruHfilePath,
+      "REU", "ons", "d",ruHfilePath,
       parquetPath,
       "201804",payeFilePath,
       vatFilePath,
