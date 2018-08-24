@@ -92,7 +92,7 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     ReportingUnit("2000000002",None,"3000000011",Some("9900000126"),"3333333333","BLACKWELLGROUP LTD",Some("B"), "1","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","4","3","500"),
     ReportingUnit("5000000005",None,"4000000011",Some("9900000242"),"6666666666","IBM LTD",Some("C"), "1","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","34567","7","6","800"),
     ReportingUnit("6000000006",None,"5000000011",Some("9900000777"),"7777777777","MBI LTD",Some("U"), "5","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044","8","7","900"),
-    ReportingUnit("11111111-TEST-RURN",None,"111111111-TEST-ERN",None,newRuPrn,"NEW ENTERPRISE LU",None,"9","",None,None,None,None,"W1A 1AA","10001","","","")
+    ReportingUnit("11111111-TEST-RURN",None,"111111111-TEST-ERN",None,newRuPrn,"NEW ENTERPRISE LU",None,"9","",None,None,None,None,"W1A 1AA","10001","3","","")
 
   )
 
