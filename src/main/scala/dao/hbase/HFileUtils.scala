@@ -274,7 +274,7 @@ trait HFileUtils extends Serializable{
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateRurn(row:Row, appParams:AppParams) = generateUniqueKey
-  def generatePrn(row:Row, appParams:AppParams) = (Configs.DEFAULT_PRN.toDouble + 0.001D).toString
+  def generatePrn(row:Row, appParams:AppParams) = "0."+Random.nextLong().toString.tail//(Configs.DEFAULT_PRN.toDouble + 0.001D).toString
   def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey
 
