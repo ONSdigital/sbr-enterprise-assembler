@@ -22,7 +22,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
   def getLinkId = key.split("~").last
 
   def getValueOrNull(key: String, byKey: Boolean = true) = getCellValue(key,byKey).getOrElse(null)
-  
+
   def getValueOrStr(key: String, byKey: Boolean = true,default:String = "") = getCellValue(key,byKey).getOrElse(default)
 
   def getCellValue(key: String, byKey: Boolean) = if (byKey) cells.collect { case KVCell(`key`, value) => Option(value)}.headOption.flatten//.getOrElse(null)
