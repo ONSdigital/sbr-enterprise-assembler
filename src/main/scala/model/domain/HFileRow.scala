@@ -1,13 +1,12 @@
 package model.domain
 
-import global.{AppParams, Configs}
+import global.Configs
 import model.hfile
 import model.hfile.HFileCell
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
-import org.apache.spark.sql.Row
+import org.apache.hadoop.hbase.{HConstants, KeyValue}
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.extensions.rdd.HBaseDataReader
 
@@ -23,6 +22,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
   def getLinkId = key.split("~").last
 
   def getValueOrNull(key: String, byKey: Boolean = true) = getCellValue(key,byKey).getOrElse(null)
+  
   def getValueOrStr(key: String, byKey: Boolean = true,default:String = "") = getCellValue(key,byKey).getOrElse(default)
 
   def getCellValue(key: String, byKey: Boolean) = if (byKey) cells.collect { case KVCell(`key`, value) => Option(value)}.headOption.flatten//.getOrElse(null)
