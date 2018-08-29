@@ -156,7 +156,7 @@ object InputAnalyser extends RddLogging{
   def getOrphanLus(lus:RDD[HFileRow], orphanLuErns:RDD[String])(implicit spark: SparkSession) = {
     val numberOfPartitions = lus.getNumPartitions
     val orphanLuErnsRows: RDD[(String,String)] = getRepartionedRdd(orphanLuErns.map(ern => (ern,ern))) //create tuple of 2 duplicate erns
-    val luRows: RDD[(String, (String, String))] = getRepartionedRdd(lus.map(row => (row.getCellValue("p_ENT"),(row.key.split("~").head , row.key))) )//tuple(ern,(ubrn,row key))
+    val luRows: RDD[(String, (String, String))] = getRepartionedRdd(lus.map(row => (row.getValueOrStr("p_ENT"),(row.key.split("~").head , row.key))) )//tuple(ern,(ubrn,row key))
     val joined: RDD[(String, ((String, String), Option[String]))] = luRows.leftOuterJoin(orphanLuErnsRows)
     val orphanLuUbrn = joined.collect { case (ern, ((ubrn,key), None)) => (ern, (ubrn,key)) }
     orphanLuUbrn.coalesce(numberOfPartitions)
@@ -166,7 +166,7 @@ object InputAnalyser extends RddLogging{
     def getOrphanLos(los:RDD[HFileRow], orphanLoErns:RDD[String])(implicit spark: SparkSession) = {
       val numberOfPartitions = los.getNumPartitions
       val orphanLoErnsRows: RDD[(String,String)] = getRepartionedRdd(orphanLoErns.map(ern => (ern,ern)))
-      val loRows: RDD[(String, (String, String))] = getRepartionedRdd(los.map(row => (row.getCellValue("ern"),(row.key.split("~").last , row.key))))
+      val loRows: RDD[(String, (String, String))] = getRepartionedRdd(los.map(row => (row.getValueOrStr("ern"),(row.key.split("~").last , row.key))))
       val joined: RDD[(String, ((String, String), Option[String]))] = loRows.leftOuterJoin(orphanLoErnsRows)
       val orphanLoLurn = joined.collect { case (ern, ((lurn,key), None)) => (ern, (lurn,key)) }
       orphanLoLurn.coalesce(numberOfPartitions)
