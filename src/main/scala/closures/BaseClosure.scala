@@ -187,8 +187,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val regionLocator = connection.getRegionLocator(tableName)
     val partitioner = HFilePartitioner(connection.getConfiguration, regionLocator.getStartKeys, 1)
 
-    val lousLinks: RDD[(String, hfile.HFileCell)] = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
     val rusLinks: RDD[(String, hfile.HFileCell)] = ruDF.map(row => ruToLinks(row, appconf)).flatMap(identity(_)).rdd
+    val lousLinks: RDD[(String, hfile.HFileCell)] = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
     val restOfLinks: RDD[(String, hfile.HFileCell)] = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
 
     val allLinks: RDD[((String,String), hfile.HFileCell)] = lousLinks.union(rusLinks).union(restOfLinks).filter(_._2.value!=null).map(entry => ((entry._1,entry._2.qualifier),entry._2) ).repartitionAndSortWithinPartitions(partitioner)
