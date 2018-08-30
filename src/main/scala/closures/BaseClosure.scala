@@ -166,7 +166,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
   }
 
   /**
-    * returns existing ~LEU~ links DF
+    * returns existing LEU~ links DF
     * fields:
     * ubrn, ern, CompanyNo, PayeRefs, VatRefs
     **/

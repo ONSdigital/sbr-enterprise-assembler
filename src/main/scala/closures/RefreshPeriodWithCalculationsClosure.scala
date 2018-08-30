@@ -33,11 +33,11 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val allLeusDF = getAllLeus(allEntsDF,appconf,Configs.conf).cache()
 
-    saveLinks(allLousDF,allRusDF,allLinksLeusDF,appconf)
     saveEnts(allEntsDF,appconf)
+    saveRus(allRusDF,appconf)
     saveLous(allLousDF,appconf)
     saveLeus(allLeusDF,appconf)
-    saveRus(allRusDF,appconf)
+    saveLinks(allLousDF,allRusDF,allLinksLeusDF,appconf)
 
     allLinksLeusDF.unpersist()
     allEntsDF.unpersist()
@@ -146,7 +146,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val entsWithoutRus: DataFrame = allEntsDF.join(existingRUs.select("ern"),Seq("ern"),"left_anti")
 
-    val newAndMissingRusDF: DataFrame =  createNewRus(entsWithoutRus,appconf)
+    val newAndMissingRusDF: DataFrame = createNewRus(entsWithoutRus,appconf)
 
     existingRUs.union(newAndMissingRusDF)
   }
