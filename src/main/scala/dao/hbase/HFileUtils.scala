@@ -85,8 +85,8 @@ trait HFileUtils extends Serializable{
     val ruKey = generateReportingUnitLinksKey(rurn)
     val entKey = generateLinkKey(ern,enterprise)
     Seq(
-      createLinksRecord(ruKey,s"$parentPrefix$reportingUnit",ern,appParams),
-      createLinksRecord(entKey,s"$childPrefix$rurn",localUnit,appParams)
+      createLinksRecord(ruKey,s"$parentPrefix$enterprise",ern,appParams),
+      createLinksRecord(entKey,s"$childPrefix$rurn",reportingUnit,appParams)
     )
   }
 
