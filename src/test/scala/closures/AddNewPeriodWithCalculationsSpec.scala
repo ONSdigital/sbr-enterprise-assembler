@@ -74,7 +74,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
          conf.set("hbase.zookeeper.quorum", "localhost")
          conf.set("hbase.zookeeper.property.clientPort", "2181")
         withHbaseConnection { implicit connection:Connection =>
-          MockRefreshPeriodWithCalculationsClosure.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark, connection)
+          MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
         }
         spark.stop
 

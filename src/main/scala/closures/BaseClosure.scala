@@ -19,6 +19,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
   val hbaseDao: HBaseDao = HBaseDao
 
 
+  def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit
+
   /**
     * Fields:
     * id,BusinessName, UPRN, PostCode,IndustryCode,LegalStatus,

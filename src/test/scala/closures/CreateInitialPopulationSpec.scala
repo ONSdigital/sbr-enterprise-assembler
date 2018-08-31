@@ -42,7 +42,7 @@ class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with
 
     ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     withHbaseConnection { implicit connection: Connection =>
-      MockCreateNewPopulationClosure.parquetCreateNewToHFile(spark, connection,confs)
+      MockCreateNewPopulationClosure.createUnitsHfiles(spark, connection,confs)
     }
     spark.stop()
 

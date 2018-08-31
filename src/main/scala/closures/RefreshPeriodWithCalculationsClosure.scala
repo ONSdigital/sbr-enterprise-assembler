@@ -12,7 +12,7 @@ import spark.RddLogging
 import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
 
-trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
+trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with RddLogging with Serializable{
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
@@ -21,7 +21,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * Does not work currently because it's using previous period when looking up existing entities
     * and saving fresh data with new period key
     * */
-  def createHFilesWithRefreshPeriodDataWithCalculations(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit = {
+  override def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 

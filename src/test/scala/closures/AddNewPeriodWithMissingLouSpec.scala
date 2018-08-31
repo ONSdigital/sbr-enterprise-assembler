@@ -59,7 +59,7 @@ class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths w
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     withHbaseConnection { implicit connection: Connection =>
-      MockRefreshPeriodWithCalculationsClosure$.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark, connection)
+      MockRefreshPeriodWithCalculationsClosure$.createUnitsHfiles(appConfs)(spark, connection)
     }
         spark.stop()
   }

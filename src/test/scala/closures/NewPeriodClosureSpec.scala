@@ -49,7 +49,7 @@ class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSp
     createRecords(confs)(spark)
     ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
     withHbaseConnection { implicit connection: Connection =>
-      MockNewPeriodClosure.addNewPeriodData(appConfs)(spark,connection)
+      MockNewPeriodClosure.createUnitsHfiles(appConfs)(spark,connection)
     }
     spark.stop()
   }

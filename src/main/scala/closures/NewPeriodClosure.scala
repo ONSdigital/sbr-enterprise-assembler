@@ -21,7 +21,7 @@ class NewPeriodClosure extends HFileUtils with BaseClosure with RddLogging with 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
 
-  def addNewPeriodData(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit = {
+  override def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
 
 
 

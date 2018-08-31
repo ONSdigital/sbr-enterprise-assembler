@@ -14,7 +14,7 @@ import spark.extensions.sql._
 trait CreateClosures extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
-  def parquetCreateNewToHFile(implicit spark:SparkSession, con:Connection, appconf:AppParams){
+  override def createUnitsHfiles(appconf:AppParams)(implicit spark:SparkSession, con:Connection){
 
     val appArgs = appconf
 
