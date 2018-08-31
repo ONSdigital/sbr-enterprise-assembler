@@ -74,9 +74,18 @@ class DataConsistencyCheck[T<:BaseClosure](val testDir:String, closure:T) extend
       val  leus = readEntitiesFromHFile[LegalUnit](leuHfilePath).collect.toList
       val  rus = readEntitiesFromHFile[ReportingUnit](ruHfilePath).collect.toList
       val links: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList
-
+      val res = checkIntegrity(ents, lous, leus, rus,links )
+      res shouldBe true
       spark.stop()
     }
+  }
+
+  def checkIntegrity(ents:Seq[Enterprise], lous:Seq[LocalUnit],leus:Seq[LegalUnit],rus:Seq[ReportingUnit], links:Seq[HFileRow]) = {
+    val lousOK = checkLous(lous, links)
+    val leusOK = checkLeus(leus, links)
+    val rusOK = checkRus(rus, links)
+    val rusVsLousOK = checkLousAgainstRus(rus, links)
+    lousOK && leusOK && rusOK && rusVsLousOK
   }
 
   def checkLous(lous:Seq[LocalUnit], links:Seq[HFileRow]) = {
