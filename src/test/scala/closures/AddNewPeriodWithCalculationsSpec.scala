@@ -18,7 +18,7 @@ import spark.extensions.rdd.HBaseDataReader._
 import utils.data.TestIds
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
-import utils.Paths
+import utils.{HFileTestUtils, Paths}
 
 import scala.reflect.io.File
 /**
@@ -26,7 +26,7 @@ import scala.reflect.io.File
   */
 
 
-class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario{
+class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
 
   lazy val testDir = "newperiod"
 
@@ -167,29 +167,6 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       }
     }
 
-  def sortByKeyAndEntityName(row:HFileRow) = {
-
-      val keyBlocks = row.key.split("~")
-      val id = keyBlocks.last
-      val entityName = keyBlocks.head
-      entityName+id
-  }
-
-  def saveLinksToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
-    val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows).map(row => row.copy(cells = row.cells.toList.sortBy(_.column)))
-    val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
-    cells.sortBy(cell => cell._1)
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(path,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
-  }
-
-  def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
-    val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
-    val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
-    cells.sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(path,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
-  }
 
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)

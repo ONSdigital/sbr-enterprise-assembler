@@ -1,17 +1,29 @@
-package closures.mocks
+package closures
 
-import closures.RefreshPeriodWithCalculationsClosure
+import closures.mocks.{MockCreateNewPeriodHBaseDao, MockDataReader}
+import dao.hbase.{HBaseConnectionManager, HFileUtils}
+import dao.parquet.ParquetDao
 import global.AppParams
 import global.Configs.conf
 import model.domain._
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
+import utils.{HFileTestUtils, Paths}
 import utils.data.consistency.DataConsistencyCheck
+import utils.data.existing.ExistingData
+import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
 
-class NewPeriodConsistencyCheck extends DataConsistencyCheck("newperiod",RefreshPeriodWithCalculationsClosure){
+class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with DataConsistencyCheck with HFileTestUtils{
+
+  lazy val testDir = "newperiod"
+
+  object MockClosure extends RefreshPeriodWithCalculationsClosure with MockDataReader{
+    override val hbaseDao = MockCreateNewPeriodHBaseDao
+  }
 
   val appConfs = AppParams(
     (Array[String](
@@ -27,8 +39,11 @@ class NewPeriodConsistencyCheck extends DataConsistencyCheck("newperiod",Refresh
       "add-calculated-period"
     )))
 
+
   override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    createRecords(appConfs)(spark)
+    ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
     //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -39,10 +54,12 @@ class NewPeriodConsistencyCheck extends DataConsistencyCheck("newperiod",Refresh
 
   }
   override def afterAll() = {
+    File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(leuHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
+    File(existingRecordsDir).deleteRecursively()
   }
 
 
@@ -59,5 +76,14 @@ class NewPeriodConsistencyCheck extends DataConsistencyCheck("newperiod",Refresh
       res shouldBe true
       spark.stop()
     }
+  }
+
+
+  def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
+    saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
+    saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
+    saveToHFile(existingRusForNewPeriodScenario,appconf.HBASE_REPORTINGUNITS_COLUMN_FAMILY, appconf, existingRusRecordHFiles)
+    saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
+    saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
   }
 }

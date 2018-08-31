@@ -1,9 +1,10 @@
 package utils.data.consistency
 
-import closures.BaseClosure
-import closures.mocks.{MockCreateNewPeriodHBaseDao, MockDataReader}
-import dao.hbase.{HBaseConnectionManager, HFileUtils}
+import dao.hbase.HBaseConnectionManager
+import global.AppParams
 import model.domain._
+import org.apache.hadoop.hbase.client.Connection
+import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import utils.Paths
 import utils.data.existing.ExistingData
@@ -13,11 +14,9 @@ import utils.data.expected.ExpectedDataForAddNewPeriodScenario
   */
 
 
-class DataConsistencyCheck[T<:BaseClosure](val testDir:String, closure:T) extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario{
+trait DataConsistencyCheck extends HBaseConnectionManager{
 
-  object MockClosure extends T with HFileUtils with MockDataReader{this:T =>
-    override val hbaseDao = MockCreateNewPeriodHBaseDao
-  }
+
 
   def checkIntegrity(ents:Seq[Enterprise], lous:Seq[LocalUnit],leus:Seq[LegalUnit],rus:Seq[ReportingUnit], links:Seq[HFileRow]) = {
     val lousOK = checkLous(lous, links)
@@ -92,8 +91,12 @@ class DataConsistencyCheck[T<:BaseClosure](val testDir:String, closure:T) extend
   def checkLousAgainstRus(rus:Seq[ReportingUnit], links:Seq[HFileRow]) = {
 
 
-    def childLouLurns(ru:ReportingUnit) = links.collect{case HFileRow("REU~"+ru.rurn,cells) =>
-                                          cells.collect{case KVCell(column, "LOU") => column.stripPrefix("c_")}}.flatten
+    def childLouLurns(ru:ReportingUnit) = {
+      val key = s"REU~${ru.rurn}"
+      links.collect { case HFileRow(key, cells) =>
+        cells.collect { case KVCell(column, "LOU") => column.stripPrefix("c_") }
+      }.flatten
+    }
 
     def parentLurns(ru:ReportingUnit) = links.collect{case row if(row.key.startsWith("LOU")) =>
                             row.cells.collect{case KVCell("p_REU", ru.rurn) => row.key.stripPrefix("LOU~")}}.flatten

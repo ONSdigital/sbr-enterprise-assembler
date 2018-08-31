@@ -100,7 +100,7 @@ class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths w
 }
 
 
-def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
+override def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
     cells.sortBy(t => s"${t._2.key}${t._2.qualifier}")
