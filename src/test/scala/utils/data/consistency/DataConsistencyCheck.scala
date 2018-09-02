@@ -36,7 +36,7 @@ trait DataConsistencyCheck extends HBaseConnectionManager{
 
     def hasParentEntRef(lou:LocalUnit) = links.exists(row => {
       val ids = row.key.split("~")
-      (ids.head=="LOU" && ids.last==lou.lurn) && (row.cells.exists(_.column==s"p_${lou.ern}"))
+      (ids.head=="LOU" && ids.last==lou.lurn) && (row.cells.exists(cell => cell.column==s"p_ENT" && cell.value==lou.ern))
     })
 
     val notConsistentLous = lous.filterNot(lou => {
@@ -56,7 +56,7 @@ trait DataConsistencyCheck extends HBaseConnectionManager{
 
     def hasParentEntRef(leu:LegalUnit) = links.exists(row => {
       val ids = row.key.split("~")
-      (ids.head=="LEU" && ids.last==leu.ubrn) && (row.cells.exists(_.column==s"p_${leu.ern}"))
+      (ids.head=="LEU" && ids.last==leu.ubrn) && (row.cells.exists(cell => cell.column=="p_ENT" && cell.value==leu.ern))
     })
 
     val notConsistentLeus = leus.filterNot(leu => {
@@ -75,9 +75,9 @@ trait DataConsistencyCheck extends HBaseConnectionManager{
       (ids.head=="ENT" && ids.last==ru.ern) && (row.cells.exists(_.column==s"c_${ru.rurn}"))
     })
 
-    def hasParentEntRef(leu:ReportingUnit) = links.exists(row => {
+    def hasParentEntRef(ru:ReportingUnit) = links.exists(row => {
       val ids = row.key.split("~")
-      (ids.head=="LEU" && ids.last==leu.rurn) && (row.cells.exists(_.column==s"p_${leu.ern}"))
+      (ids.head=="REU" && ids.last==ru.rurn) && (row.cells.exists(cell => cell.column==s"p_ENT" && cell.value==ru.ern))
     })
 
     val inConsistentLeus = rus.filterNot(ru => {

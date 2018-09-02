@@ -53,14 +53,14 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
     spark.stop
 
   }
-  override def afterAll() = {
+/*  override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(leuHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }
+  }*/
 
 
   "assembler" should {
@@ -68,7 +68,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val  ents = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList
-      val  lous = readEntitiesFromHFile[LocalUnit](entHfilePath).collect.toList
+      val  lous = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList
       val  leus = readEntitiesFromHFile[LegalUnit](leuHfilePath).collect.toList
       val  rus = readEntitiesFromHFile[ReportingUnit](ruHfilePath).collect.toList
       val links: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList
@@ -83,7 +83,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
     saveToHFile(existingRusForNewPeriodScenario,appconf.HBASE_REPORTINGUNITS_COLUMN_FAMILY, appconf, existingRusRecordHFiles)
-    saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
+    saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_LEGALUNITS_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
     saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
   }
 }
