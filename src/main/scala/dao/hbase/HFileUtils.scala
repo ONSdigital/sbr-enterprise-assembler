@@ -68,13 +68,13 @@ trait HFileUtils extends Serializable{
     val lurn = row.getStringOption("lurn").get
     val ern = row.getStringOption("ern").get
     val rurn = row.getStringOption("rurn").get
-    val loKey = generateLocalUnitLinksKey(lurn)
+    val louKey = generateLocalUnitLinksKey(lurn)
     val entKey = generateLinkKey(ern,enterprise)
     val ruKey = generateReportingUnitLinksKey(rurn)
     Seq(
-      createLinksRecord(loKey,s"$parentPrefix$enterprise",ern,appParams),
-      createLinksRecord(loKey,s"$parentPrefix$reportingUnit",rurn,appParams),
-      createLinksRecord(ruKey,s"$childPrefix$localUnit",rurn,appParams),
+      createLinksRecord(louKey,s"$parentPrefix$enterprise",ern,appParams),
+      createLinksRecord(louKey,s"$parentPrefix$reportingUnit",rurn,appParams),
+      createLinksRecord(ruKey,s"$childPrefix$localUnit",lurn,appParams),
       createLinksRecord(entKey,s"$childPrefix$lurn",localUnit,appParams)
     )
   }
