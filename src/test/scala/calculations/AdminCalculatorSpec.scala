@@ -54,22 +54,6 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
   }
 
 
-  "AdminDataCalculator" should {
-    "aggregateDF payeRef data" in {
-
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val legalUnitDF = spark.read.parquet(appConfs.PATH_TO_PARQUET)
-      val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-      val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
-      val df: DataFrame = AdminDataCalculator.calculate(legalUnitDF, appConfs)
-      val actualRows = df.collect()
-      spark.close()
-      val actual = actualRows.map(Calculations(_)).toSeq.sortBy(_.ern)
-      val expected = expectedCalculations
-      actual shouldBe expected
-    }
-  }
-
 
   "AdminDataCalculator.generateCalculateAvgSQL" should {
     "return sql query which results in expected set of emp_avg when executed" in {
@@ -79,7 +63,8 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
       val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
       val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
       import spark.implicits._
-      val resDF = generateCalculateAverageSqlTest(legalUnitDF,payeDF).map(row => Option(row.getAs[Int](10)))
+      val fullResults = generateCalculateAverageSqlTest(legalUnitDF, payeDF)
+      val resDF = fullResults.map(row => Option(row.getAs[Int](10)))
       val res = resDF.rdd.collect()
       spark.close()
       res shouldBe expected
@@ -99,6 +84,23 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
       resDF shouldBe expected
     }
   }
+
+  "AdminDataCalculator" should {
+    "aggregateDF payeRef data" in {
+
+      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      val legalUnitDF = spark.read.parquet(appConfs.PATH_TO_PARQUET)
+      val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
+      val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
+      val df: DataFrame = AdminDataCalculator.calculate(legalUnitDF, appConfs)
+      val actualRows = df.collect()
+      spark.close()
+      val actual = actualRows.map(Calculations(_)).toSeq.sortBy(_.ern)
+      val expected = expectedCalculations
+      actual shouldBe expected
+    }
+  }
+
 
 
   def generateCalculateAverageSqlTest(unitsDF:DataFrame,payeDF:DataFrame)(implicit spark: SparkSession ) = {
