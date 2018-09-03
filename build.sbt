@@ -20,20 +20,19 @@ libraryDependencies ++= Seq(
   "org.apache.hbase" % "hbase-hadoop-compat" % "1.4.2",
   "com.typesafe" % "config" % "1.3.2",
   ("org.apache.hbase" % "hbase-server" % Versions.hbase)
-    .exclude("com.sun.jersey","jersey-server")
-    .exclude("org.mortbay.jetty","jsp-api-2.1"),
+                                                          .exclude("com.sun.jersey","jersey-server")
+                                                          .exclude("org.mortbay.jetty","jsp-api-2.1"),
   "org.apache.hbase" % "hbase-common" % Versions.hbase,
   "org.apache.hbase" %  "hbase-client" % Versions.hbase,
-  /*  ("org.apache.hbase" % "hbase-spark" % "2.0.0-alpha4")
-      .exclude("com.fasterxml.jackson.module","jackson-module-scala_2.10"),*/
+/*  ("org.apache.hbase" % "hbase-spark" % "2.0.0-alpha4")
+    .exclude("com.fasterxml.jackson.module","jackson-module-scala_2.10"),*/
   ("org.apache.spark" %% "spark-core" % Versions.spark)
-    .exclude("aopalliance","aopalliance")
-    .exclude("commons-beanutils","commons-beanutils"),
+                                                        .exclude("aopalliance","aopalliance")
+                                                        .exclude("commons-beanutils","commons-beanutils"),
   "org.apache.spark" %% "spark-sql" % Versions.spark,
   ("org.apache.crunch" % "crunch-hbase" % "0.15.0")   .exclude("com.sun.jersey","jersey-server")
 
 )
-
 
 
 assemblyMergeStrategy in assembly := {
@@ -107,7 +106,6 @@ lazy val addNewPeriodWithCalculationsParams = Array(
                                   "add-calculated-period"
                                 )
 
-//LINKS ons l src/main/resources/data/newperiod/links/hfile LEU ons d src/main/resources/data/newperiod/legal-unit/hfile ENT ons d src/main/resources/data/newperiod/enterprise/hfile LOU ons d src/main/resources/data/newperiod/local-unit/hfile src/main/resources/data/newperiod/sample.parquet localhost 2181 201804 src/main/resources/data/newperiod/newPeriodPaye.csv src/main/resources/data/newperiod/newPeriodVat.csv local add-calculated-period
 
 
 lazy val deletePeriodParams = Array(
