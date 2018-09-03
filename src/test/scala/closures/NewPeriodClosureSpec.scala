@@ -16,14 +16,14 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
-import utils.{Paths, TestDataUtils}
+import utils.Paths
 
 import scala.reflect.io.File
 /**
   *
   *
   */
-class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario {
 
   lazy val testDir = "calculations"
 
@@ -49,20 +49,20 @@ class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSp
     createRecords(confs)(spark)
     ParquetDao.jsonToParquet(jsonOrigFilePath)(spark, confs)
     withHbaseConnection { implicit connection: Connection =>
-      MockNewPeriodClosure.addNewPeriodData(appConfs)(spark,connection)
+      MockNewPeriodClosure.createUnitsHfiles(appConfs)(spark,connection)
     }
     spark.stop()
   }
 
-  override def afterAll() = {
+  /*override def afterAll() = {
       File(parquetPath).deleteRecursively()
       File(linkHfilePath).deleteRecursively()
       File(entHfilePath).deleteRecursively()
       File(louHfilePath).deleteRecursively()
       File(existingRecordsDir).deleteRecursively()
-  }
+  }*/
 
-  "assembler" should {
+ /* "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -73,7 +73,7 @@ class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSp
       actual shouldBe expected
       spark.stop()
     }
-  }
+  }*/
 
   "assembler" should {
     "create hfiles populated with expected local units data" in {
@@ -95,7 +95,7 @@ class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSp
   }
 
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
-    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
+    saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
     saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
   }

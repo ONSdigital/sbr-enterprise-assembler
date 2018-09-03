@@ -1,13 +1,12 @@
 package model.domain
 
-import global.{AppParams, Configs}
+import global.Configs
 import model.hfile
 import model.hfile.HFileCell
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.{Cell, HConstants, KeyValue}
-import org.apache.spark.sql.Row
+import org.apache.hadoop.hbase.{HConstants, KeyValue}
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import spark.extensions.rdd.HBaseDataReader
 
@@ -22,8 +21,12 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
   def getLinkId = key.split("~").last
 
-  def getCellValue(key: String, byKey: Boolean = true, default: String = "") = if (byKey) cells.collect { case KVCell(`key`, value) => if (value == null) default else value }.headOption.getOrElse(null)
-  else cells.collect { case KVCell(value, `key`) => if (value == null) default else value }.headOption.getOrElse(null)
+  def getValueOrNull(key: String, byKey: Boolean = true) = getCellValue(key,byKey).getOrElse(null)
+
+  def getValueOrStr(key: String, byKey: Boolean = true,default:String = "") = getCellValue(key,byKey).getOrElse(default)
+
+  def getCellValue(key: String, byKey: Boolean) = if (byKey) cells.collect { case KVCell(`key`, value) => Option(value)}.headOption.flatten//.getOrElse(null)
+  else cells.collect { case KVCell(value, `key`) => Option(value)}.headOption.flatten//.getOrElse(null)
 
   def getCellArrayValue(key: String) = {
 
@@ -47,40 +50,94 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     try {
       new GenericRowWithSchema(Array(
 
-        getCellValue("ern"),
-        Option(getCellValue("prn")).getOrElse(Configs.DEFAULT_PRN),
-        getCellValue("entref"),
-        getCellValue("name"),
-        getCellValue("trading_style"),
-        getCellValue("address1"),
-        getCellValue("address2"),
-        getCellValue("address3"),
-        getCellValue("address4"),
-        getCellValue("address5"),
-        getCellValue("postcode"),
-        getCellValue("sic07"),
-        getCellValue("legal_status")
+        getValueOrStr("ern"),
+        getValueOrStr("prn",default=Configs.DEFAULT_PRN),
+        getValueOrNull("entref"),
+        getValueOrStr("name"),
+        getValueOrNull("trading_style"),
+        getValueOrStr("address1"),
+        getValueOrNull("address2"),
+        getValueOrNull("address3"),
+        getValueOrNull("address4"),
+        getValueOrNull("address5"),
+        getValueOrStr("postcode"),
+        getValueOrStr("sic07"),
+        getValueOrStr("legal_status")
       ), entRowSchema)
     } catch {
         case e: java.lang.RuntimeException => {
-          println(s"(toEntRow)Exception reading enterprise row with ern: ${getCellValue("ern")}")
+          println(s"(toEntRow)Exception reading enterprise row with ern: ${getValueOrStr("ern")}")
           throw e
         }
     }
   }
 
-    def toLuRow = {
+
+  def toLeuRow = {
+    import spark.extensions.sql._
+    try {
+      new GenericRowWithSchema(Array(
+
+        getValueOrStr("ubrn"),
+        getValueOrStr("ern"),
+        getValueOrNull("crn"),
+        getValueOrStr("name"),
+        getValueOrNull("trading_style"),
+        getValueOrStr("address1"),
+        getValueOrNull("address2"),
+        getValueOrNull("address3"),
+        getValueOrNull("address4"),
+        getValueOrNull("address5"),
+        getValueOrStr("postcode"),
+        getValueOrStr("sic07"),
+        getValueOrNull("paye_jobs"),
+        getValueOrNull("turnover"),
+        getValueOrStr("legal_status"),
+        getValueOrNull("trading_status"),
+        getValueOrStr("birth_date"),
+        getValueOrNull("death_date"),
+        getValueOrNull("death_code"),
+        getValueOrNull("uprn")
+      ), leuRowSchema)
+    } catch {
+      case e: java.lang.RuntimeException => {
+        println(s"(toLuRow)Exception reading enterprise row with ern: ${getValueOrStr("ern")}")
+        throw e
+      }
+    }}
+
+    def toRuRow = {
+      import spark.extensions.sql._
+
+        new GenericRowWithSchema(Array(
+              getValueOrStr("rurn"),
+              getValueOrStr("ern"),
+              getValueOrStr("name"),
+              getValueOrNull("entref"),
+              getValueOrNull("ruref"),
+              getValueOrNull("trading_style"),
+              getValueOrStr("legal_status"),
+              getValueOrStr("address1"),
+              getValueOrNull("address2"),
+              getValueOrNull("address3"),
+              getValueOrNull("address4"),
+              getValueOrNull("address5"),
+              getValueOrStr("postcode"),
+              getValueOrStr("sic07"),
+              getValueOrStr("employees"),
+              getValueOrStr("employment"),
+              getValueOrStr("turnover"),
+              getValueOrStr("prn")
+        ),ruRowSchema)
+    }
+
+    def toLeuLinksRow = {
       import spark.extensions.sql._
 
       new GenericRowWithSchema(Array(
         getLinkId,
-        getCellValue("p_ENT"),
-        {
-          val ch: String = getCellValue("CH", false)
-          if (ch != null && ch.nonEmpty && ch.startsWith("c_")) {
-            ch.substring(2)
-          } else ch
-        },
+        getValueOrStr("p_ENT"),
+        getCellValue("CH", false).map(_.substring(2)).getOrElse(null),
         Try {
           getCellArrayValue("PAYE").map(paye => if (paye.startsWith("c_")) {
             paye.substring(2)
@@ -91,7 +148,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
             vat.substring(2)
           } else vat)
         }.getOrElse(null)
-      ), luRowSchema)
+      ), linksLeuRowSchema)
     }
 
     def toUbrnErnRow = {
@@ -99,7 +156,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
       new GenericRowWithSchema(Array(
         getLinkId,
-        getCellValue("p_ENT")
+        getValueOrStr("p_ENT")
       ), existingLuBiRowSchema)
     }
 
@@ -109,24 +166,26 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       try {
         new GenericRowWithSchema(Array(
 
-          getCellValue("lurn"),
-          getCellValue("luref"),
-          getCellValue("ern"),
-          getCellValue("name"),
-          getCellValue("entref"),
-          getCellValue("tradingstyle"),
-          getCellValue("address1"),
-          getCellValue("address2"),
-          getCellValue("address3"),
-          getCellValue("address4"),
-          getCellValue("address5"),
-          getCellValue("postcode"),
-          getCellValue("sic07"),
+          getValueOrStr("lurn"),
+          getValueOrNull("luref"),
+          getValueOrStr("ern"),
+          getValueOrStr("rurn"),
+          getValueOrNull("ruref"),
+          getValueOrStr("name"),
+          getValueOrNull("entref"),
+          getValueOrNull("trading_style"),
+          getValueOrStr("address1"),
+          getValueOrNull("address2"),
+          getValueOrNull("address3"),
+          getValueOrNull("address4"),
+          getValueOrNull("address5"),
+          getValueOrStr("postcode"),
+          getValueOrStr("sic07"),
           cells.find(_.column == "employees").map(_.value).getOrElse(null)
         ), louRowSchema)
       }catch {
         case e: java.lang.RuntimeException => {
-          println(s"Exception reading enterprise row with ern: ${getCellValue("ern")}")
+          println(s"Exception reading enterprise row with ern: ${getValueOrStr("ern")}")
           throw e
         }
       }

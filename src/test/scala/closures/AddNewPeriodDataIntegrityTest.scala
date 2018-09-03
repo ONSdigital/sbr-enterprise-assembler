@@ -13,12 +13,12 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
-import utils.{Paths, TestDataUtils}
+import utils.Paths
 
 /**
   *
   */
-class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with TestDataUtils{
+class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario {
 
   lazy val testDir = "newperiod"
 
@@ -116,7 +116,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
   def checkIntegrity(ents: Seq[Enterprise],links: Seq[LinkRecord],lous: Seq[LocalUnit]) = {
     val newErnFromEnt: String = ents.collect{case ent if(isNewId(ent.ern)) => ent.ern}.head
     val newLurnFromLinks: String = links.collect{case LinkRecord(`newErnFromEnt`,lurns,_) => lurns.find(isNewId)}.head.get
-    val newLurnFromLou: String = lous.collect{case LocalUnit(lurn,_,`newErnFromEnt`,_,_,_,_,_,_,_,_,_,_,_) if(isNewId(lurn)) => lurn}.head
+    val newLurnFromLou: String = lous.collect{case LocalUnit(lurn,_,`newErnFromEnt`,_,_,_,_,_,_,_,_,_,_,_,_,_) if(isNewId(lurn)) => lurn}.head
     newLurnFromLinks shouldBe newLurnFromLou
   }
 
@@ -138,7 +138,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
   def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
     saveToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
-    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
+    saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
   }
 
 }

@@ -15,7 +15,7 @@ trait AdminCalculationService extends HBaseConnectionManager with SparkSessionMa
 
     withHbaseConnection{implicit con:Connection =>
 
-      CalculateClosure.updateCalculations(appconf)
+      CalculateClosure.createUnitsHfiles(appconf)
       HBaseDao.loadEnterprisesHFile(con,appconf)
       HBaseDao.loadLousHFile(con,appconf)
 

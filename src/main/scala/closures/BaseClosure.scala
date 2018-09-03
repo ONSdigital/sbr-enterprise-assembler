@@ -1,28 +1,25 @@
 package closures
 
 
-import java.nio.file.{Files, Paths}
-
 import dao.hbase.{HBaseDao, HFileUtils}
 import global.{AppParams, Configs}
 import model.hfile
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
-import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql._
 
-import scala.util.Try
-
 trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
   val hbaseDao: HBaseDao = HBaseDao
 
+
+  def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession,con:Connection): Unit
 
   /**
     * Fields:
@@ -45,7 +42,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getAs[String]("BusinessName"),
         row.getAs[String]("IndustryCode"),
         row.getAs[String]("LegalStatus"),
-        getValueOrEmptyStr(row,"PostCode"),
+        row.getValueOrEmptyStr("PostCode"),
         row.getAs[String]("TradingStatus"),
         row.getAs[String]("Turnover"),
         row.getAs[String]("UPRN"),
@@ -56,6 +53,50 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     spark.createDataFrame(rows, biWithErnSchema)
   }
 
+
+
+  def createNewRus(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+
+    spark.createDataFrame(
+      ents.rdd.map(row => Row(
+        generateRurn(row,appconf),
+        row.getAs[String]("ern"),
+        row.getAs[String]("name"),
+        row.getValueOrNull("entref"),
+        row.getValueOrNull("ruref"),
+        row.getValueOrNull("trading_style"),
+        row.getAs[String]("legal_status"),
+        row.getAs[String]("address1"),
+        row.getValueOrNull("address2"),
+        row.getValueOrNull("address3"),
+        row.getValueOrNull("address4"),
+        row.getValueOrNull("address5"),
+        row.getValueOrEmptyStr("postcode"),
+        row.getValueOrEmptyStr("sic07"),
+        row.getValueOrEmptyStr("paye_empees"),
+        row.getValueOrEmptyStr("employment"),
+        row.getValueOrEmptyStr("turnover"),
+        generatePrn(row,appconf)
+      )), ruRowSchema)
+  }
+
+
+  def createNewEnts(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
+    newLEUsCalculatedDF.rdd.map(row => Row(
+      row.getAs[String]("ern"),
+      generatePrn(row,appconf),
+      row.getValueOrNull("entref"),
+      row.getAs[String]("BusinessName"),
+      null, //trading_style
+      row.getValueOrEmptyStr("address1"),
+      null, null, null, null, //address2,3,4,5
+      row.getAs[String]("PostCode"),
+      row.getValueOrEmptyStr("IndustryCode"),
+      row.getAs[String]("LegalStatus")
+    )
+    ), entRowSchema)
+
+
   /**
     * Creates new Enterprises from new LEUs with calculations
     * schema: completeNewEntSchema
@@ -63,64 +104,57 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * AND calculations:
     * paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
     * */
-  //paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
-  def createNewEnts(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
-    newLEUsCalculatedDF.rdd.map(row => Row(
-      row.getAs[String]("ern"),
-      generatePrn(row,appconf),
-      Try {row.getAs[String]("entref")}.getOrElse(null),
-      row.getAs[String]("BusinessName"),
-      null, //trading_style
-      Try {row.getAs[String]("address1")}.getOrElse(""),
-      null, null, null, null, //address2,3,4,5
-      row.getAs[String]("PostCode"),
-      Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
-      row.getAs[String]("LegalStatus")
-    )
-    ), entRowSchema)
-
     def createNewEntsWithCalculations(newLEUsCalculatedDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = spark.createDataFrame(
-    newLEUsCalculatedDF.rdd.map(row => Row(
-      row.getAs[String]("ern"),
-      generatePrn(row,appconf),
-      Try {row.getAs[String]("entref")}.getOrElse(null),
-      row.getAs[String]("BusinessName"),
-      null, //trading_style
-      Try {row.getAs[String]("address1")}.getOrElse(""),
-      null, null, null, null, //address2,3,4,5
-      row.getAs[String]("PostCode"),
-      Try {row.getAs[String]("IndustryCode")}.getOrElse(""),
-      row.getAs[String]("LegalStatus"),
-      Try {row.getAs[String]("paye_empees")}.getOrElse(null),
-      Try {row.getAs[String]("paye_jobs")}.getOrElse(null),
-      Try {row.getAs[String]("cntd_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("app_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("std_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("grp_turnover")}.getOrElse(null),
-      Try {row.getAs[String]("ent_turnover")}.getOrElse(null)
-    )), completeEntSchema)
+
+      newLEUsCalculatedDF.rdd.map(row => Row(
+          row.getAs[String]("ern"),
+          generatePrn(row,appconf),
+          row.getValueOrNull("entref"),
+          row.getAs[String]("BusinessName"),
+          null, //trading_style
+          row.getValueOrEmptyStr("address1"),
+          null, null, null, null, //address2,3,4,5
+          row.getAs[String]("PostCode"),
+          row.getValueOrEmptyStr("IndustryCode"),
+          row.getAs[String]("LegalStatus"),
+          row.getValueOrNull("paye_empees"),
+          row.getValueOrNull("paye_jobs"),
+          row.getValueOrNull("cntd_turnover"),
+          row.getValueOrNull("app_turnover"),
+          row.getValueOrNull("std_turnover"),
+          row.getValueOrNull("grp_turnover"),
+          row.getValueOrNull("ent_turnover")
+        )), completeEntSchema)
 
 
 
-  def createNewLOUs(ents: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+  def createNewLous(rus: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 
     spark.createDataFrame(
-      ents.rdd.map(row => Row(
+      rus.rdd.map(row => Row(
         generateLurn(row,appconf),
-        Try {row.getAs[String]("luref")}.getOrElse(null),
+        row.getValueOrNull("luref"),//will not be present
         row.getAs[String]("ern"),
+        row.getAs[String]("rurn"),
+        row.getValueOrNull("ruref"),
         row.getAs[String]("name"),
-        Try {row.getAs[String]("entref")}.getOrElse(null),
-        Try {row.getAs[String]("trading_style")}.getOrElse(null),
+        row.getValueOrNull("entref"),
+        row.getValueOrNull("trading_style"),
         row.getAs[String]("address1"),
-        Try {row.getAs[String]("address2")}.getOrElse(null),
-        Try {row.getAs[String]("address3")}.getOrElse (null),
-        Try {row.getAs[String]("address4")}.getOrElse (null),
-        Try {row.getAs[String]("address5")}.getOrElse (null),
-        getValueOrEmptyStr(row,"postcode"),
-        getValueOrEmptyStr(row,"sic07"),
-        getValueOrEmptyStr(row,"paye_empees")
+        row.getValueOrNull("address2"),
+        row.getValueOrNull("address3"),
+        row.getValueOrNull("address4"),
+        row.getValueOrNull("address5"),
+        row.getValueOrEmptyStr("postcode"),
+        row.getValueOrEmptyStr("sic07"),
+        row.getValueOrEmptyStr("employees")
       )), louRowSchema)
+  }
+
+
+  def getExistingRusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    val ruHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf, confs, HBaseDao.rusTableName(appconf)).map(_.toRuRow)
+    spark.createDataFrame(ruHFileRowRdd, ruRowSchema)
   }
 
   def getExistingLousDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
@@ -134,31 +168,34 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
   }
 
   /**
-    * returns existing ~LEU~ links DF
+    * returns existing LEU~ links DF
     * fields:
     * ubrn, ern, CompanyNo, PayeRefs, VatRefs
     **/
-  def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
-    val tableData = hbaseDao.readLinksWithKeyFilter(confs,appconf, "^(LEU~)(\\w)")
-    val existingLinks: RDD[Row] = tableData.map(_.toLuRow)
-    spark.createDataFrame(existingLinks, luRowSchema)
-
+  def getExistingLinksLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    val leuHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.linksTableName(appconf)).map(_.toLeuLinksRow)
+    spark.createDataFrame(leuHFileRowRdd, linksLeuRowSchema)
   }
 
-  def saveLinks(louDF: DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
+  def getExistingLeusDF(appconf: AppParams, confs: Configuration)(implicit spark: SparkSession) = {
+    val leuHFileRowRdd: RDD[Row] = hbaseDao.readTable(appconf,confs, HBaseDao.leusTableName(appconf)).map(_.toLeuRow)
+    spark.createDataFrame(leuHFileRowRdd, leuRowSchema)
+  }
+
+  def saveLinks(louDF: DataFrame, ruDF:DataFrame, leuDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession,connection:Connection) = {
     import spark.implicits._
 
     val tableName = TableName.valueOf(hbaseDao.linksTableName(appconf))
     val regionLocator = connection.getRegionLocator(tableName)
     val partitioner = HFilePartitioner(connection.getConfiguration, regionLocator.getStartKeys, 1)
 
+    val rusLinks: RDD[(String, hfile.HFileCell)] = ruDF.map(row => ruToLinks(row, appconf)).flatMap(identity(_)).rdd
     val lousLinks: RDD[(String, hfile.HFileCell)] = louDF.map(row => louToLinks(row, appconf)).flatMap(identity(_)).rdd
     val restOfLinks: RDD[(String, hfile.HFileCell)] = leuDF.map(row => leuToLinks(row, appconf)).flatMap(identity(_)).rdd
 
-    val allLinks: RDD[((String,String), hfile.HFileCell)] = lousLinks.union(restOfLinks).filter(_._2.value!=null).map(entry => ((entry._1,entry._2.qualifier),entry._2) ).repartitionAndSortWithinPartitions(partitioner)
-    //Files.deleteIfExists(Paths.get(appconf.PATH_TO_LINKS_HFILE))
+    val allLinks: RDD[((String,String), hfile.HFileCell)] = lousLinks.union(rusLinks).union(restOfLinks).filter(_._2.value!=null).map(entry => ((entry._1,entry._2.qualifier),entry._2) ).repartitionAndSortWithinPartitions(partitioner)
     allLinks.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+        .saveAsNewAPIHadoopFile(appconf.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
   def saveEnts(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
@@ -177,31 +214,28 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
       .saveAsNewAPIHadoopFile(appconf.PATH_TO_LOCALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
+
+  def saveLeus(leusDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+    import spark.implicits._
+    val hfileCells = leusDF.map(row => rowToLegalUnit(row, appconf)).flatMap(identity(_)).rdd
+    hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_LEGALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+  }
+
+  def saveRus(rusDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
+    import spark.implicits._
+    val hfileCells = rusDF.map(row => rowToReportingUnit(row, appconf)).flatMap(identity(_)).rdd
+    hfileCells.filter(_._2.value!=null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(appconf.PATH_TO_REPORTINGUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+  }
+
   def getEntHFileCells(entsDF: DataFrame, appconf: AppParams)(implicit spark: SparkSession): RDD[(String, hfile.HFileCell)] = {
     import spark.implicits._
     val res: RDD[(String, hfile.HFileCell)] = entsDF.map(row => rowToEnt(row, appconf)).flatMap(identity).rdd
     res
   }
 
-  def getValueOrEmptyStr(row:Row, fieldName:String) = Try{
-    val value = row.getAs[String](fieldName)
-    value.size //just to trigger NullPointerException if is null
-    value
-  }.getOrElse("")
-
-  class KeyFamilyQualifier(val rowKey:Array[Byte], val family:Array[Byte], val qualifier:Array[Byte])
-    extends Comparable[KeyFamilyQualifier] with Serializable {
-    override def compareTo(o: KeyFamilyQualifier): Int = {
-      var result = Bytes.compareTo(rowKey, o.rowKey)
-      if (result == 0) {
-        result = Bytes.compareTo(family, o.family)
-        if (result == 0) result = Bytes.compareTo(qualifier, o.qualifier)
-      }
-      result
-    }
-    override def toString: String = {
-      Bytes.toString(rowKey) + ":" + Bytes.toString(family) + ":" + Bytes.toString(qualifier)
-    }
-  }
 
 }

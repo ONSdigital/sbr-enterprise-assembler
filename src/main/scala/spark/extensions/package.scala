@@ -3,6 +3,8 @@ package spark.extensions
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 
+import scala.util.Try
+
 /**
   *
   */
@@ -36,6 +38,48 @@ package object sql {
     .add(StructField("PayeRefs", ArrayType(StringType,true),true))
     .add(StructField("VatRefs", ArrayType(StringType,true),true))
 
+  val ruRowSchema = new StructType()
+    .add(StructField("rurn", StringType,false))
+    .add(StructField("ern", StringType,false))
+    .add(StructField("name", StringType,false))
+    .add(StructField("entref", StringType,true))
+    .add(StructField("ruref", StringType,true))
+    .add(StructField("trading_style", StringType,true))
+    .add(StructField("legal_status", StringType,false))
+    .add(StructField("address1", StringType,false))
+    .add(StructField("address2", StringType,true))
+    .add(StructField("address3", StringType,true))
+    .add(StructField("address4", StringType,true))
+    .add(StructField("address5", StringType,true))
+    .add(StructField("postcode", StringType,false))
+    .add(StructField("sic07", StringType,false))
+    .add(StructField("employees", StringType,false))
+    .add(StructField("employment", StringType,false))
+    .add(StructField("turnover", StringType,false))
+    .add(StructField("prn", StringType,false))
+
+  val leuRowSchema = new StructType()
+    .add(StructField("ubrn", StringType,false))
+    .add(StructField("ern", StringType,false))
+    .add(StructField("crn", StringType,true))
+    .add(StructField("name", StringType,false))
+    .add(StructField("trading_style", StringType,true))
+    .add(StructField("address1", StringType,false))
+    .add(StructField("address2", StringType,true))
+    .add(StructField("address3", StringType,true))
+    .add(StructField("address4", StringType,true))
+    .add(StructField("address5", StringType,true))
+    .add(StructField("postcode", StringType,false))
+    .add(StructField("sic07", StringType,false))
+    .add(StructField("paye_jobs", StringType,true))
+    .add(StructField("turnover", StringType,true))
+    .add(StructField("legal_status", StringType,false))
+    .add(StructField("trading_status", StringType,true))
+    .add(StructField("birth_date", StringType,false))
+    .add(StructField("death_date", StringType,true))
+    .add(StructField("death_code", StringType,true))
+    .add(StructField("uprn", StringType,true))
+
   val preCalculateDfSchema = new StructType()
     .add(StructField("ern", StringType,true))
     .add(StructField("id", StringType,true))
@@ -48,7 +92,7 @@ package object sql {
     .add(StructField("id", StringType,true))
     .add(StructField("ern", StringType,true))
 
-  val luRowSchema = new StructType()
+  val linksLeuRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,true))
     .add(StructField("CompanyNo", StringType,true))
@@ -58,10 +102,12 @@ package object sql {
   val louRowSchema = new StructType()
     .add(StructField("lurn", StringType,false))
     .add(StructField("luref", StringType,true))
-    .add(StructField("ern", StringType,true))
+    .add(StructField("ern", StringType,false))
+    .add(StructField("rurn", StringType,false))
+    .add(StructField("ruref", StringType,true))
     .add(StructField("name", StringType,false))
     .add(StructField("entref", StringType,true))
-    .add(StructField("tradingstyle", StringType,true))
+    .add(StructField("trading_style", StringType,true))
     .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
     .add(StructField("address3", StringType,true))
@@ -119,16 +165,16 @@ package object sql {
     .add(StructField("ern", StringType,false))
     .add(StructField("prn", StringType,false))
     .add(StructField("entref", StringType,true))
-    .add(StructField("name", StringType,true))
+    .add(StructField("name", StringType,false))
     .add(StructField("trading_style", StringType,true))
-    .add(StructField("address1", StringType,true))
+    .add(StructField("address1", StringType,false))
     .add(StructField("address2", StringType,true))
     .add(StructField("address3", StringType,true))
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
-    .add(StructField("postcode", StringType,true))
-    .add(StructField("sic07", StringType,true))
-    .add(StructField("legal_status", StringType,true))
+    .add(StructField("postcode", StringType,false))
+    .add(StructField("sic07", StringType,false))
+    .add(StructField("legal_status", StringType,false))
     .add(StructField("paye_empees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
     .add(StructField("cntd_turnover", StringType,true))
@@ -169,13 +215,29 @@ val calculationsSchema = new StructType()
     }
 /**
   * returns option of value
-  * Retruns None if field is present but value is null, if field is not present
+  * Retuns None if field is present but value is null or if field is not present
   * returns Some(VALUE_OF_THE_FIELD) otherwise
   * */
     def getOption[T](field:String)= {
       if(row.isNull(field)) None
       else Option[T](row.getAs[T](field))
     }
+
+    /**
+      * Returns None if:
+      * 1. row does not contain field with given name
+      * 2. value is null
+      * 3. value's data type is not String
+      * returns Some(...) of value
+      * otherwise
+      * */
+    def getStringOption(name:String) = {
+      getOption[String](name)
+    }
+
+    def getValueOrEmptyStr(fieldName:String) = getStringOption(fieldName).getOrElse("")
+
+    def getValueOrNull(fieldName:String) = getStringOption(fieldName).getOrElse(null)
 
     def getString(field:String): Option[String] = getValue[String](field)
 
@@ -190,35 +252,35 @@ val calculationsSchema = new StructType()
     def getSeq[T](fieldName:String, eval:Option[T => Boolean] = None): Option[Seq[T]] = if(isNull(fieldName)) None else Some(row.getSeq[T](row.fieldIndex(fieldName)).filter(v => v!=null && eval.map(_(v)).getOrElse(true)))
 
     def isNull(field:String) = try {
-          row.isNullAt(row.fieldIndex(field))
+          row.isNullAt(row.fieldIndex(field))  //if field exists and the value is null
         }catch {
-          case iae:IllegalArgumentException => true
+          case iae:IllegalArgumentException => true  //if field does not exist
           case e: Throwable => {
               println(s"field: ${if (field==null) "null" else field.toString()}")
               throw e
              }
         }
 
-      def getCalcValue(fieldName:String): Option[String] = {
-        val v = isNull(fieldName)
-        v match{
-          case true  => Some("")
-          case false => Some(row.getAs(fieldName).toString)
-        }}
+    def getCalcValue(fieldName:String): Option[String] = {
+      val v = isNull(fieldName)
+      v match{
+        case true  => Some("")
+        case false => Some(row.getAs(fieldName).toString)
+      }}
 
-      def getValue[T](
-                       fieldName:String,
-                       eval:Option[T => Boolean] = None
-                     ): Option[T] = if(isNull(fieldName)) None else {
+    def getValue[T](
+                     fieldName:String,
+                     eval:Option[T => Boolean] = None
+                   ): Option[T] = if(isNull(fieldName)) None else {
 
-        val v = row.getAs[T](fieldName)
-        if (v.isInstanceOf[String] && v.asInstanceOf[String].trim.isEmpty) None
-        else if (v==null) None
-        else eval match{
-          case Some(f) => if(f(v)) Some(v) else None
-          case None  => Some(v)
-        }}
-    }
+      val v = row.getAs[T](fieldName)
+      if (v.isInstanceOf[String] && v.asInstanceOf[String].trim.isEmpty) None
+      else if (v==null) None
+      else eval match{
+        case Some(f) => if(f(v)) Some(v) else None
+        case None  => Some(v)
+      }}
+  }
 
 
 }

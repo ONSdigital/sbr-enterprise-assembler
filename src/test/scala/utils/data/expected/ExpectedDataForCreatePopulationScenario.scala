@@ -24,14 +24,14 @@ trait ExpectedDataForCreatePopulationScenario {
   HFileRow("222222222-TEST-ERN~ENT",List(KVCell("c_21840175","LEU"), KVCell("c_22222222-TEST-LURN","LOU")))
   )
 
-  val expectedEnts = List(
+  /*val expectedEnts = List(
 
       Enterprise("111111111-TEST-ERN",Some("9999999999"),"5TH PROPERTY TRADING LIMITED","",None,None,None,None,"HQ92 3GV",None,"90481","3",Some("2"),Some("4"),None,None,None,None,None),
       Enterprise("222222222-TEST-ERN",Some("9999999999"),"ACCLAIMED HOMES LIMITED","",None,None,None,None,"LB07 6UT",None,"00742","3",None,None,None,Some("85"),Some("85"),None,None),
       Enterprise("333333333-TEST-ERN",Some("9999999999"),"MERCATURA INVESTMENTS LIMITED","",None,None,None,None,"FS20 3OS",None,"70176","6",Some("8"),Some("10"),None,Some("45"),Some("45"),None,None)
-  )
+  )*/
 
-  val expectedLous = List(
+  /*val expectedLous = List(
     new LocalUnit(
       lurn="11111111-TEST-LURN",
       luref=None,
@@ -82,5 +82,5 @@ trait ExpectedDataForCreatePopulationScenario {
       employees = "8"
     )
 
-  )
+  )*/
 }

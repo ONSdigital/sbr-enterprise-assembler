@@ -20,7 +20,7 @@ trait CalculateClosure extends AdminDataCalculator with BaseClosure with  RddLog
 
   val confs = Configs.conf
 
-  def updateCalculations(appconf:global.AppParams)(implicit spark:SparkSession) = {
+  override def createUnitsHfiles(appconf:global.AppParams)(implicit spark:SparkSession, con:Connection) = {
     val allLUsDF: DataFrame = getExistingLousDF(appconf,confs)
     val allEntsDF: DataFrame = getExistingEntsDF(appconf,confs)
     val allLousDF: DataFrame = getExistingLousDF(appconf,confs)

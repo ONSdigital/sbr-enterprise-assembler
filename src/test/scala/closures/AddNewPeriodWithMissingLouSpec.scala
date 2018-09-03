@@ -59,7 +59,7 @@ class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths w
         createRecords(confs)(spark)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, confs)
     withHbaseConnection { implicit connection: Connection =>
-      MockRefreshPeriodWithCalculationsClosure$.createHFilesWithRefreshPeriodDataWithCalculations(appConfs)(spark, connection)
+      MockRefreshPeriodWithCalculationsClosure$.createUnitsHfiles(appConfs)(spark, connection)
     }
         spark.stop()
   }
@@ -100,7 +100,7 @@ class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths w
 }
 
 
-def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
+override def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows)
     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
     cells.sortBy(t => s"${t._2.key}${t._2.qualifier}")
@@ -109,7 +109,7 @@ def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:St
 }
 
 def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
-    saveToHFile(ents,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
+    saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
     saveToHFile(existingLinksForMissingLousScenario,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(louForLouMissingScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
 }

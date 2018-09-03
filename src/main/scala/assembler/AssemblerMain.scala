@@ -12,10 +12,10 @@ object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefre
 
   def main(args: Array[String]) {
 
-    conf.set("hbase.zookeeper.quorum", args(13))
-    conf.set("hbase.zookeeper.property.clientPort", args(14))
+    conf.set("hbase.zookeeper.quorum", args(21))
+    conf.set("hbase.zookeeper.property.clientPort", args(22))
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 500)
-    val params = args.take(13)++args.takeRight(5)
+    val params = args.take(21)++args.takeRight(5)
 
     val appParams = AppParams(params)
 try{
@@ -25,7 +25,7 @@ try{
       case "addperiod" => loadNewPeriodData(appParams)
       case "calculate" => addCalculations(appParams)
       case "refresh" => refresh(appParams)
-      case "create" => createNewPopulationFromParquet(appParams)
+      case "create" => loadNewPeriodWithCalculationsData(appParams)
       case "data-integrity-report" => {
         conf.setInt("spark.sql.broadcastTimeout", 2400)
         printReport(appParams)
@@ -39,6 +39,8 @@ try{
           entHFile.deleteRecursively()
           val linksHFile =  File(appParams.PATH_TO_LINKS_HFILE)
           linksHFile.deleteRecursively()
+          val leuHFile =  File(appParams.PATH_TO_LEGALUNITS_HFILE)
+          leuHFile.deleteRecursively()
           val louHFile =  File(appParams.PATH_TO_LOCALUNITS_HFILE)
           louHFile.deleteRecursively()
 

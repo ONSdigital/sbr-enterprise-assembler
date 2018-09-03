@@ -12,6 +12,11 @@ case class AppParams(
                       HBASE_LINKS_COLUMN_FAMILY:String,
                       PATH_TO_LINKS_HFILE:String,
 
+                      HBASE_LEGALUNITS_TABLE_NAME:String,
+                      HBASE_LEGALUNITS_TABLE_NAMESPACE:String,
+                      HBASE_LEGALUNITS_COLUMN_FAMILY:String,
+                      PATH_TO_LEGALUNITS_HFILE:String,
+
                       HBASE_ENTERPRISE_TABLE_NAME:String,
                       HBASE_ENTERPRISE_TABLE_NAMESPACE:String,
                       HBASE_ENTERPRISE_COLUMN_FAMILY:String,
@@ -21,6 +26,11 @@ case class AppParams(
                       HBASE_LOCALUNITS_TABLE_NAMESPACE:String,
                       HBASE_LOCALUNITS_COLUMN_FAMILY:String,
                       PATH_TO_LOCALUNITS_HFILE:String,
+
+                      HBASE_REPORTINGUNITS_TABLE_NAME:String,
+                      HBASE_REPORTINGUNITS_TABLE_NAMESPACE:String,
+                      HBASE_REPORTINGUNITS_COLUMN_FAMILY:String,
+                      PATH_TO_REPORTINGUNITS_HFILE:String,
 
                       PATH_TO_PARQUET:String,
                       TIME_PERIOD:String,
@@ -54,7 +64,15 @@ object AppParams{
                                                   args(14),
                                                   args(15),
                                                   args(16),
-                                                  args(17)
-                                                )
+                                                  args(17),
+                                                  args(18),
+                                                  args(19),
+                                                  args(20),
+                                                  args(21),
+                                                  args(22),
+                                                  args(23),
+                                                  args(24),
+                                                  args(25)
+                                                 )
   
 }
