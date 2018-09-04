@@ -1,6 +1,5 @@
 package closures
 
-import dao.hbase.HFileUtils
 import global.{AppParams, Configs}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
@@ -55,7 +54,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val joinedLUs = incomingBiDataDF.join(
       existingLinksLeusDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
-      Seq("id"), "left_outer")//.repartition(numOfPartitions)
+      Seq("id"), "left_outer")
 
     getAllLUs(joinedLUs, appconf)
 

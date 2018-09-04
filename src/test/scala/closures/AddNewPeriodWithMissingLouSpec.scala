@@ -15,7 +15,7 @@ import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader._
-import utils.{HFileTestUtils, Paths}
+import utils.Paths
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 

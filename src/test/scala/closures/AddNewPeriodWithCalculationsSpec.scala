@@ -2,25 +2,16 @@ package closures
 
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
 import dao.hbase.HBaseConnectionManager
-import dao.parquet.ParquetDao
+import global.AppParams
 import global.Configs.conf
-import global.{AppParams, Configs}
 import model.domain._
-import model.hfile
-import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.client.Connection
-import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import spark.extensions.rdd.HBaseDataReader._
-import utils.data.TestIds
+import utils.Paths
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
-import utils.{HFileTestUtils, Paths}
-
-import scala.reflect.io.File
 /**
   *
   */
@@ -67,17 +58,17 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
 
    override def beforeAll() = {
-        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        createRecords(appConfs)(spark)
-        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
-        //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
-         conf.set("hbase.zookeeper.quorum", "localhost")
-         conf.set("hbase.zookeeper.property.clientPort", "2181")
-        withHbaseConnection { implicit connection:Connection =>
+     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+     conf.set("hbase.zookeeper.quorum", "localhost")
+     conf.set("hbase.zookeeper.property.clientPort", "2181")
+     withHbaseConnection { implicit connection:Connection =>
+       createRecords(appConfs)
+       //ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+          //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
+
           MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
         }
         spark.stop
-
   }
   override def afterAll() = {
         File(parquetPath).deleteRecursively()
@@ -85,6 +76,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         File(leuHfilePath).deleteRecursively()
         File(entHfilePath).deleteRecursively()
         File(louHfilePath).deleteRecursively()
+        File(ruHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
   }
 
@@ -124,18 +116,18 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
   }
 
 
-"assembler" should {
-    "create hfiles populated with expected reporting units data" in {
+  "assembler" should {
+      "create hfiles populated with expected reporting units data" in {
 
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-      val existing = readEntitiesFromHFile[ReportingUnit](existingRusRecordHFiles).collect.toList
-      val actualHFileRows: List[HFileRow] = readEntitiesFromHFile[HFileRow](ruHfilePath).collect.toList
-      val actual: List[ReportingUnit] = readEntitiesFromHFile[ReportingUnit](ruHfilePath).collect.toList.sortBy(_.rurn)
-      val expected: List[ReportingUnit] = newPeriodReportingUnits.sortBy(_.rurn)
-      actual shouldBe expected
-      spark.stop()
-    }
-}
+        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+        val existing = readEntitiesFromHFile[ReportingUnit](existingRusRecordHFiles).collect.toList
+        val actualHFileRows: List[HFileRow] = readEntitiesFromHFile[HFileRow](ruHfilePath).collect.toList
+        val actual: List[ReportingUnit] = readEntitiesFromHFile[ReportingUnit](ruHfilePath).collect.toList.sortBy(_.rurn)
+        val expected: List[ReportingUnit] = newPeriodReportingUnits.sortBy(_.rurn)
+        actual shouldBe expected
+        spark.stop()
+      }
+  }
 
   "assembler" should {
       "create hfiles populated with expected legal units data" in {
@@ -151,24 +143,24 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     }
 
 
-      "assembler" should {
+   "assembler" should {
       "create hfiles populated with expected links data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
         val confs = appConfs
-      /*
+
         val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
         val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
-      */
         val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
-        val actualLinksRecords: Seq[LinkRecord] = LinkRecord.getLinkRecords(actualHFileRows).sortBy(_.ern)
-        actualLinksRecords shouldBe expectedNewPeriodLinks.sortBy(_.ern)
+        val actualLinksRecords: Seq[LinkRecord] = LinkRecord.getLinks(actualHFileRows).sortBy(_.ern)
+        val expectedLinks = expectedNewPeriodLinks.sortBy(_.ern)
+        actualLinksRecords shouldBe expectedLinks
         spark.close()
       }
     }
 
 
-  def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
+  def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
     saveToHFile(existingRusForNewPeriodScenario,appconf.HBASE_REPORTINGUNITS_COLUMN_FAMILY, appconf, existingRusRecordHFiles)

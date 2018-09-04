@@ -22,13 +22,11 @@ trait ExistingLinks {this:TestIds =>
     HFileRow("LEU~100000508723",List(KVCell("c_04223165","CH"), KVCell("c_111000111","VAT"), KVCell("c_1188L","PAYE"), KVCell("c_1199L","PAYE"), KVCell("p_ENT","4000000011"))),
     HFileRow("LEU~100000508724",List(KVCell("c_00012345","CH"), KVCell("c_5555L","PAYE"), KVCell("c_999888777","VAT"), KVCell("p_ENT","4000000011"))),
     HFileRow("LEU~100000827984",List(KVCell("c_00032263","CH"), KVCell("c_1154L","PAYE"), KVCell("c_1155L","PAYE"), KVCell("c_222333444","VAT"), KVCell("p_ENT","3000000011"))),
-
     HFileRow("LEU~100000601835",List(KVCell("c_01012444","CH"), KVCell("c_9876L","PAYE"), KVCell("c_555666777003","VAT"), KVCell("p_ENT","5000000011"))),
-
     HFileRow("LEU~100002826247",List(KVCell("c_00032261","CH"), KVCell("c_1151L","PAYE"), KVCell("c_123123123","VAT"), KVCell("p_ENT",entWithMissingLouId))),
-    HFileRow("VAT~111000111",List(KVCell("p_LEU","100000508723"))),
-    HFileRow("VAT~111222333",List(KVCell("p_LEU","100000246017"))),
 
+  HFileRow("VAT~111000111",List(KVCell("p_LEU","100000508723"))),
+    HFileRow("VAT~111222333",List(KVCell("p_LEU","100000246017"))),
     HFileRow("VAT~555666777003",List(KVCell("p_LEU","100000601835"))),
 
     HFileRow("PAYE~1151L",List(KVCell("p_LEU","100002826247"))),
@@ -40,25 +38,31 @@ trait ExistingLinks {this:TestIds =>
     HFileRow("PAYE~1177L",List(KVCell("p_LEU","100000459235"))),
     HFileRow("PAYE~1188L",List(KVCell("p_LEU","100000508723"))),
     HFileRow("PAYE~1199L",List(KVCell("p_LEU","100000508723"))),
-
     HFileRow("PAYE~9876L",List(KVCell("p_LEU","100000601835"))),
-
     HFileRow("VAT~123123123",List(KVCell("p_LEU","100002826247"))),
-    HFileRow(s"ENT~5000000011",List(KVCell("c_100000601835","LEU"), KVCell("c_550000088","LOU"), KVCell("c_6000000006","REU"))),
-    HFileRow(s"ENT~$entWithMissingLouId",List(KVCell("c_100002826247","LEU"), KVCell(s"c_$missingLouLurn","LOU"))),
-    HFileRow(s"LOU~$missingLouLurn",List(KVCell("p_ENT",entWithMissingLouId))),
-    HFileRow("VAT~222333444",List(KVCell("p_LEU","100000827984"))),
-    HFileRow("VAT~222666000",List(KVCell("p_LEU","100000459235"))),
-    HFileRow("ENT~3000000011",List(KVCell("c_100000246017","LEU"), KVCell("c_100000827984","LEU"), KVCell("c_300000088","LOU"), KVCell("c_300000099","LOU"))),
-    HFileRow("LOU~300000055",List(KVCell("p_ENT","4000000011"))),
-    HFileRow("LOU~300000066",List(KVCell("p_ENT","4000000011"))),
-    HFileRow("LOU~300000077",List(KVCell("p_ENT","4000000011"))),
-    HFileRow("LOU~300000088",List(KVCell("p_ENT","3000000011"))),
-    HFileRow("LOU~300000099",List(KVCell("p_ENT","3000000011"))),
+  HFileRow("VAT~222333444",List(KVCell("p_LEU","100000827984"))),
+  HFileRow("VAT~222666000",List(KVCell("p_LEU","100000459235"))),
 
-    HFileRow("LOU~550000088",List(KVCell("p_ENT","5000000011"))),
+  HFileRow(s"ENT~5000000011",List(KVCell("c_100000601835","LEU"), KVCell("c_550000088","LOU"), KVCell("c_REU","6000000006"))),
+  HFileRow("LOU~550000088",List(KVCell("p_ENT","5000000011"),KVCell("p_REU","6000000006"))),
+  HFileRow("REU~6000000006",List(KVCell("p_ENT","5000000011"),KVCell("c_LOU","550000088"))),
 
-    HFileRow("ENT~4000000011",List(KVCell("c_100000459235","LEU"), KVCell("c_100000508723","LEU"), KVCell("c_100000508724","LEU"), KVCell("c_300000055","LOU"), KVCell("c_300000066","LOU"), KVCell("c_300000077","LOU"))),
+  HFileRow(s"ENT~$entWithMissingLouId",List(KVCell("c_100002826247","LEU"), KVCell(s"c_$missingLouLurn","LOU"),KVCell(s"c_REU",missingLouRurn))),
+  HFileRow(s"LOU~$missingLouLurn",List(KVCell("p_ENT",entWithMissingLouId),KVCell(s"p_$missingLouRurn","REU"))),
+  HFileRow(s"REU~$missingLouRurn",List(KVCell("p_ENT",entWithMissingLouId),KVCell(s"c_$missingLouRurn","LOU"))),
+
+
+  HFileRow("ENT~3000000011",List(KVCell("c_100000246017","LEU"), KVCell("c_100000827984","LEU"), KVCell("c_300000088","LOU"), KVCell("c_300000099","LOU"), KVCell("c_REU","2000000002"))),
+  HFileRow("LOU~300000088",List(KVCell("p_ENT","3000000011"),KVCell("p_REU","2000000002"))),
+  HFileRow("LOU~300000099",List(KVCell("p_ENT","3000000011"),KVCell("p_REU","2000000002"))),
+  HFileRow(s"REU~2000000002",List(KVCell("p_ENT","3000000011"),KVCell(s"c_300000088","LOU"),KVCell(s"c_300000099","LOU"))),
+
+  HFileRow("ENT~4000000011",List(KVCell("c_100000459235","LEU"), KVCell("c_100000508723","LEU"), KVCell("c_100000508724","LEU"), KVCell("c_300000055","LOU"), KVCell("c_300000066","LOU"), KVCell("c_300000077","LOU"), KVCell("c_REU", "5000000005"))),
+  HFileRow("LOU~300000055",List(KVCell("p_ENT","4000000011"), KVCell("p_5000000005", "REU"))),
+  HFileRow("LOU~300000066",List(KVCell("p_ENT","4000000011"), KVCell("p_5000000005", "REU"))),
+  HFileRow("LOU~300000077",List(KVCell("p_ENT","4000000011"), KVCell("p_5000000005", "REU"))),
+  HFileRow(s"REU~5000000005",List(KVCell("p_ENT","4000000011"),KVCell(s"c_300000055","LOU"),KVCell(s"c_300000066","LOU"),KVCell(s"c_300000077","LOU"))),
+
     HFileRow("PAYE~5555L",List(KVCell("p_LEU","100000508724"))),
     HFileRow("VAT~555666777",List(KVCell("p_LEU","100000459235"))),
     HFileRow("VAT~999888777",List(KVCell("p_LEU","100000508724"))),

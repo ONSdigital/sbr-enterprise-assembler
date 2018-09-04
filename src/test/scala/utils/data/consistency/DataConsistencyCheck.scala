@@ -86,7 +86,7 @@ trait DataConsistencyCheck extends HBaseConnectionManager{
 
     def childLouLurns(ru:ReportingUnit) = {
       val key = s"REU~${ru.rurn}"
-      links.collect { case HFileRow(key, cells) =>
+      links.collect { case HFileRow(`key`, cells) =>
         cells.collect { case KVCell(column, "LOU") => column.stripPrefix("c_") }
       }.flatten
     }
@@ -96,8 +96,8 @@ trait DataConsistencyCheck extends HBaseConnectionManager{
 
 
     val inConsistentLeus = rus.filterNot(ru => {
-      val children = childLouLurns(ru)
-      val parents = parentLurns(ru)
+      val children = childLouLurns(ru).toSet
+      val parents = parentLurns(ru).toSet
       children.equals(parents)
     })
     inConsistentLeus.isEmpty
