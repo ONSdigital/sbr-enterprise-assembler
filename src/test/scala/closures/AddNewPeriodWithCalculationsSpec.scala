@@ -12,6 +12,8 @@ import spark.extensions.rdd.HBaseDataReader._
 import utils.Paths
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
+
+import scala.reflect.io.File
 /**
   *
   */
