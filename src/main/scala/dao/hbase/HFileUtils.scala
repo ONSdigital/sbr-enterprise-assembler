@@ -255,7 +255,13 @@ trait HFileUtils extends Serializable{
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateRurn(row:Row, appParams:AppParams) = generateUniqueKey
-  def generatePrn(row:Row, appParams:AppParams) = "0."+Random.nextLong().toString.tail//(Configs.DEFAULT_PRN.toDouble + 0.001D).toString
+  def generatePrn(row:Row, appParams:AppParams) = {
+
+                                                        val rnd = new scala.util.Random
+                                                        val numStore = rnd.nextInt(scala.math.pow(2, 31).toInt)
+                                                        val prnTest = (numStore % 1000000000) + 1
+                                                        "0."+prnTest.toString
+  }//"0."+Random.nextLong().toString.tail//(Configs.DEFAULT_PRN.toDouble + 0.001D).toString
   def generateLurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateLurnFromEnt(row:Row, appParams:AppParams) = generateUniqueKey
 
