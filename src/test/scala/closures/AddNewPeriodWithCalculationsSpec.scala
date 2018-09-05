@@ -2,6 +2,7 @@ package closures
 
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
 import dao.hbase.HBaseConnectionManager
+import dao.parquet.ParquetDao
 import global.AppParams
 import global.Configs.conf
 import model.domain._
@@ -65,12 +66,11 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      conf.set("hbase.zookeeper.property.clientPort", "2181")
      withHbaseConnection { implicit connection:Connection =>
        createRecords(appConfs)
-       //ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+       ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
           //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
-
-          MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
-        }
-        spark.stop
+       MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
+      }
+     spark.stop
   }
   override def afterAll() = {
         File(parquetPath).deleteRecursively()
