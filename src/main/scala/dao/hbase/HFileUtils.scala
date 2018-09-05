@@ -74,7 +74,7 @@ trait HFileUtils extends Serializable{
     Seq(
       createLinksRecord(louKey,s"$parentPrefix$enterprise",ern,appParams),
       createLinksRecord(louKey,s"$parentPrefix$reportingUnit",rurn,appParams),
-      createLinksRecord(ruKey,s"$childPrefix$localUnit",lurn,appParams),
+      createLinksRecord(ruKey,s"$childPrefix$lurn",localUnit,appParams),
       createLinksRecord(entKey,s"$childPrefix$lurn",localUnit,appParams)
     )
   }

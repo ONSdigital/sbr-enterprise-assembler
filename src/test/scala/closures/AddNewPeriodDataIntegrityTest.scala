@@ -100,7 +100,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
     val louLurns: Seq[String] = lous.map(_.lurn).sorted
     val louErns: Seq[String] = lous.map(_.ern).distinct.sorted
     val linksErns: Seq[String] = links.map(_.ern).distinct.sorted
-    val linksLurns: Seq[String]  = links.map(_.lurns).flatten.distinct.sorted
+    val linksLurns: Seq[String] = links.map(_.rus.map(_.lurns)).flatten.flatten.distinct.sorted
 
     val r1 = entsErns==louErns
     val r2 = louErns==linksErns
@@ -115,7 +115,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
 
   def checkIntegrity(ents: Seq[Enterprise],links: Seq[LinkRecord],lous: Seq[LocalUnit]) = {
     val newErnFromEnt: String = ents.collect{case ent if(isNewId(ent.ern)) => ent.ern}.head
-    val newLurnFromLinks: String = links.collect{case LinkRecord(`newErnFromEnt`,lurns,_) => lurns.find(isNewId)}.head.get
+    val newLurnFromLinks: String = links.collect{case LinkRecord(`newErnFromEnt`,rus,_) => rus.map(_.lurns).flatten.find(isNewId)}.head.get
     val newLurnFromLou: String = lous.collect{case LocalUnit(lurn,_,`newErnFromEnt`,_,_,_,_,_,_,_,_,_,_,_,_,_) if(isNewId(lurn)) => lurn}.head
     newLurnFromLinks shouldBe newLurnFromLou
   }
@@ -124,7 +124,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
 
   def readLinks(implicit spark:SparkSession) = {
     val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList
-    LinkRecord.getLinkRecords(actualHFileRows)
+    LinkRecord.getLinks(actualHFileRows)
   }
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {

@@ -1,7 +1,7 @@
 package closures
 
 import closures.mocks.{MockCreateNewPeriodHBaseDao, MockDataReader}
-import dao.hbase.{HBaseConnectionManager, HFileUtils}
+import dao.hbase.HBaseConnectionManager
 import dao.parquet.ParquetDao
 import global.AppParams
 import global.Configs.conf
@@ -10,10 +10,9 @@ import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
-import utils.{HFileTestUtils, Paths}
+import utils.Paths
 import utils.data.consistency.DataConsistencyCheck
 import utils.data.existing.ExistingData
-import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
 
@@ -42,25 +41,26 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
 
   override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-    createRecords(appConfs)(spark)
-    ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
-    //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
     withHbaseConnection { implicit connection:Connection =>
-      MockClosure.createUnitsHfiles(appConfs)(spark, connection)
+        createRecords(appConfs)
+        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+          //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
+
+        MockClosure.createUnitsHfiles(appConfs)(spark, connection)
     }
     spark.stop
 
   }
-/*  override def afterAll() = {
+  override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(leuHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
 
   "assembler" should {
@@ -79,7 +79,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
   }
 
 
-  def createRecords(appconf:AppParams)(implicit spark:SparkSession) = {
+  def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
     saveToHFile(existingRusForNewPeriodScenario,appconf.HBASE_REPORTINGUNITS_COLUMN_FAMILY, appconf, existingRusRecordHFiles)

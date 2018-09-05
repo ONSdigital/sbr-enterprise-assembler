@@ -1,12 +1,13 @@
-package utils
+package closures
 
 import global.{AppParams, Configs}
 import model.domain._
 import model.hfile
 import model.hfile.HFileCell
-import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
+import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 /**
@@ -37,12 +38,18 @@ trait HFileTestUtils {
     entityName+id
   }
 
-  def saveLinksToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
+  def saveLinksToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark: SparkSession,connection:Connection) = {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows).map(row => row.copy(cells = row.cells.toList.sortBy(_.column)))
     val cells: RDD[(String, hfile.HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
-    cells.sortBy(cell => cell._1)
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(path,classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+
+    val tableName = TableName.valueOf(s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}")
+    val regionLocator = connection.getRegionLocator(tableName)
+    val partitioner = HFilePartitioner(connection.getConfiguration, regionLocator.getStartKeys, 1)
+
+
+    val repartitionedCells: RDD[((String, String), HFileCell)] = cells.map(entry => ((entry._1,entry._2.qualifier),entry._2) ).repartitionAndSortWithinPartitions(partitioner)
+    repartitionedCells.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(path, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
   }
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
