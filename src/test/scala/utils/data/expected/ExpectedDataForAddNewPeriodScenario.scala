@@ -77,13 +77,13 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
     Enterprise("5000000011","0.511",Some("9900000777"),"MBI LTD","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU",Some("U"),"44044","5",Some("5"),Some("5"),Some("555"),Some("555"),None,None,Some("1000"))
   )
 
-/*  val newPeriodEntsWithoutCalculations = List(
-    Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU",Some("C"),"34567","1",None,None,None,None,None,None,None),
+  val newPeriodEntsWithoutCalculations = List[Enterprise](
+    /*Enterprise("4000000011",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU",Some("C"),"34567","1",None,None,None,None,None,None,None),
     Enterprise("3000000011",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",None,None,None,None,None,None,None),
     Enterprise(entWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL",Some("A"),"12345","1",None,None,None,None,None,None,None),
     Enterprise(newEntErn_2,None,"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",None,None,None,None,None,None,None),
-    Enterprise("5000000011",Some("9900000777"),"MBI LTD","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU",Some("U"),"44044","5",None,None,None,None,None,None,None)
-  )*/
+    Enterprise("5000000011",Some("9900000777"),"MBI LTD","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU",Some("U"),"44044","5",None,None,None,None,None,None,None)*/
+  )
 
   val newPeriodLocalUnits = List(
     LocalUnit(missingLouLurn,Some("100002826247"),entWithMissingLouId,missingLouRurn,Some(missingLouRuref),"INDUSTRIES LTD",Some("6600000006"),Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345","2"),

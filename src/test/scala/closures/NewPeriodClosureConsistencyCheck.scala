@@ -59,6 +59,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
     File(leuHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
+    File(ruHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
   }
 
