@@ -153,9 +153,11 @@ trait HFileUtils extends Serializable{
   def rowToLegalUnit(row: Row, appParams: AppParams):Seq[(String, HFileCell)] = {
     val lurn = row.getStringOption("ubrn").get
     val ern = row.getStringOption("ern").get
+    val prn = row.getStringOption("prn").get
     Seq(
       createLegalUnitCell(lurn,ern, "ubrn", lurn, appParams),
       createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "prn", prn, appParams),
       createLocalUnitCell(lurn,ern, "name", row.getString("name").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "address1", row.getValueOrEmptyStr("address1"), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getValueOrEmptyStr("postcode"), appParams),

@@ -61,6 +61,7 @@ package object sql {
   val leuRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("crn", StringType,true))
     .add(StructField("name", StringType,false))
     .add(StructField("trading_style", StringType,true))

@@ -69,12 +69,12 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
-    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")//.repartition(numOfPartitions)
-    val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")//.repartition(numOfPartitions)
-    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")//.repartition(numOfPartitions)
+    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
+    val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
+    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF,appconf).rdd,completeEntSchema)
-    val newLegalUnitsDF: DataFrame = getNewLeusDF(newLEUsCalculatedDF)
+    val newLegalUnitsDF: DataFrame = getNewLeusDF(newLEUsCalculatedDF,appconf)
     newLegalUnitsDF.cache()//TODO: check if this is actually needed
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
@@ -108,11 +108,12 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     newReportingUnitsDF
   }
 
-  def getNewLeusDF(newLEUsCalculatedDF:DataFrame)(implicit spark: SparkSession) = {
+  def getNewLeusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
     val newLegalUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
 
                   row.getAs[String]("id"),
                   row.getAs[String]("ern"),
+                  generatePrn(row,appconf),
                   row.getValueOrNull("CompanyNo"),
                   row.getValueOrEmptyStr("BusinessName"),
                   row.getValueOrNull("trading_style"),//will not be present
@@ -166,18 +167,8 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   def getAllLeus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
-    val tempDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
-    existingLEUs.createOrReplaceTempView("EXISTINGLEUS")
-    val sql =
-      s"""
-         SELECT * FROM EXISTINGLEUS
-         UNION
-         SELECT * FROM $newLeusViewName
-
-       """.stripMargin
-
-    spark.sql(sql)
-
+    val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
+    existingLEUs.union(newLeusDF)
   }
 
 }

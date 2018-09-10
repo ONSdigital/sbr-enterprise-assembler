@@ -80,6 +80,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
         getValueOrStr("ubrn"),
         getValueOrStr("ern"),
+        getValueOrStr("prn"),
         getValueOrNull("crn"),
         getValueOrStr("name"),
         getValueOrNull("trading_style"),

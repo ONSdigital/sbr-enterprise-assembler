@@ -106,14 +106,14 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
   )
 
   val newPeriodLegalUnits = List[LegalUnit](
-    LegalUnit("100000246017","3000000011",Some("00032262"),"BLACKWELLGROUP LTD",Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456",Some("2"),Some("200"),"1",Some("A"),"02/042017",None,None,None),
-    LegalUnit("100000459235","4000000011",Some("04223164"),"IBM LTD",Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"CF23 9EU","3344",Some("2"),None,"1",Some("A"),"04/06/2015",None,None,None),
-    LegalUnit("100000508723","4000000011",Some("04223165"),"2-ND LU OF IBM LTD",Some("A"),"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233",Some("2"),None,"1",Some("B"),"05/07/2014",None,None,None),
-    LegalUnit("100000508724","4000000011",Some("00012345"),"3-RD LU OF IBM LTD",Some("B"),"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344",Some("1"),None,"1",Some("C"),"06/08/2013",None,None,None),
-    LegalUnit("100000601835","5000000011",Some("00032262"),"MBI LTD",Some("U"),"99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044",Some("4"),None,"2",Some("C"),"06/08/2010",None,None,None),
-    LegalUnit("100000827984","3000000011",Some("100000827984"),"2-ND LU OF BLACKWELLGROUP LTD",Some("B"),"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122",Some("2"),None,"1",Some("C"),"03/05/2016",None,None,None),
-    LegalUnit("100002826247","2000000011",Some("00032262"),"INDUSTRIES LTD",Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345",Some("4"),Some("500"),"1",Some("B"),"01/03/2018",None,None,None),
-    LegalUnit("999000508999","111111111-TEST-ERN",Some("33322444"),"NEW ENTERPRISE LU",None,"",None,None,None,None,"W1A 1AA","10001",Some("5"),Some("X"),"9",Some("W"),"",None,None,Some("123456"))
+    LegalUnit("100000246017","3000000011","0.222222222",Some("00032262"),"BLACKWELLGROUP LTD",Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456",Some("2"),Some("200"),"1",Some("A"),"02/042017",None,None,None),
+    LegalUnit("100000459235","4000000011","0.444444444",Some("04223164"),"IBM LTD",Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"CF23 9EU","3344",Some("2"),None,"1",Some("A"),"04/06/2015",None,None,None),
+    LegalUnit("100000508723","4000000011","0.555555555",Some("04223165"),"2-ND LU OF IBM LTD",Some("A"),"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233",Some("2"),None,"1",Some("B"),"05/07/2014",None,None,None),
+    LegalUnit("100000508724","4000000011","0.666666666",Some("00012345"),"3-RD LU OF IBM LTD",Some("B"),"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344",Some("1"),None,"1",Some("C"),"06/08/2013",None,None,None),
+    LegalUnit("100000601835","5000000011","0.777777777",Some("00032262"),"MBI LTD",Some("U"),"99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044",Some("4"),None,"2",Some("C"),"06/08/2010",None,None,None),
+    LegalUnit("100000827984","3000000011","0.333333333",Some("100000827984"),"2-ND LU OF BLACKWELLGROUP LTD",Some("B"),"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122",Some("2"),None,"1",Some("C"),"03/05/2016",None,None,None),
+    LegalUnit("100002826247","2000000011","0.111111111",Some("00032262"),"INDUSTRIES LTD",Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345",Some("4"),Some("500"),"1",Some("B"),"01/03/2018",None,None,None),
+    LegalUnit("999000508999","111111111-TEST-ERN","11111111-TEST-PRN",Some("33322444"),"NEW ENTERPRISE LU",None,"",None,None,None,None,"W1A 1AA","10001",Some("5"),Some("X"),"9",Some("W"),"",None,None,Some("123456"))
       )
 
   val newPeriodLocalUnitsWithoutCalculations = newPeriodLocalUnits/*List(
