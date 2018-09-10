@@ -101,10 +101,12 @@ trait HFileUtils extends Serializable{
   def rowToLocalUnit(row: Row, appParams: AppParams):Seq[(String, HFileCell)] = {
     val lurn = row.getAs[String]("lurn")
     val ern = row.getAs[String]("ern")
+    val prn = row.getAs[String]("prn")
     val rurn = row.getAs[String]("rurn")
     Seq(
       createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
       createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "prn", prn, appParams),
       createLocalUnitCell(lurn,ern, "rurn", rurn, appParams),
       createLocalUnitCell(lurn,ern, "name", row.getValueOrEmptyStr("name"), appParams),
       createLocalUnitCell(lurn,ern, "address1", row.getValueOrEmptyStr("address1"), appParams),

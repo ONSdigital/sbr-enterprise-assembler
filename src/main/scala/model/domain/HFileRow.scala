@@ -170,6 +170,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getValueOrStr("lurn"),
           getValueOrNull("luref"),
           getValueOrStr("ern"),
+          getValueOrStr("prn"),
           getValueOrStr("rurn"),
           getValueOrNull("ruref"),
           getValueOrStr("name"),

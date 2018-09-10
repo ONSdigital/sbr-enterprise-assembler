@@ -59,20 +59,19 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       "add-calculated-period"
     )))
 
-/*
    override def beforeAll() = {
      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
      conf.set("hbase.zookeeper.quorum", "localhost")
      conf.set("hbase.zookeeper.property.clientPort", "2181")
      withHbaseConnection { implicit connection:Connection =>
-       //createRecords(appConfs)
-       //ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
+       createRecords(appConfs)
+       ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
           //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
        MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
       }
      spark.stop
-  }*/
-  /*override def afterAll() = {
+  }
+  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
         File(leuHfilePath).deleteRecursively()
@@ -80,7 +79,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         File(louHfilePath).deleteRecursively()
         File(ruHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {

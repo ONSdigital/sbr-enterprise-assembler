@@ -135,6 +135,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         generateLurn(row,appconf),
         row.getValueOrNull("luref"),//will not be present
         row.getAs[String]("ern"),
+        generatePrn(row,appconf),
         row.getAs[String]("rurn"),
         row.getValueOrNull("ruref"),
         row.getAs[String]("name"),

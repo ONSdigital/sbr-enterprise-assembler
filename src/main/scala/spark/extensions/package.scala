@@ -104,6 +104,7 @@ package object sql {
     .add(StructField("lurn", StringType,false))
     .add(StructField("luref", StringType,true))
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("rurn", StringType,false))
     .add(StructField("ruref", StringType,true))
     .add(StructField("name", StringType,false))
