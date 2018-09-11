@@ -74,9 +74,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getValueOrEmptyStr("postcode"),
         row.getValueOrEmptyStr("sic07"),
         row.getValueOrEmptyStr("paye_empees"),
-        row.getValueOrEmptyStr("employment"),
         row.getValueOrEmptyStr("turnover"),
-        generatePrn(row,appconf)
+        generatePrn(row,appconf),
+        row.getValueOrEmptyStr("region"),
+        row.getValueOrEmptyStr("employment")
       )), ruRowSchema)
   }
 
@@ -117,13 +118,16 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
           row.getAs[String]("PostCode"),
           row.getValueOrEmptyStr("IndustryCode"),
           row.getAs[String]("LegalStatus"),
+          row.getValueOrEmptyStr("region"),
           row.getValueOrNull("paye_empees"),
           row.getValueOrNull("paye_jobs"),
           row.getValueOrNull("cntd_turnover"),
           row.getValueOrNull("app_turnover"),
           row.getValueOrNull("std_turnover"),
           row.getValueOrNull("grp_turnover"),
-          row.getValueOrNull("ent_turnover")
+          row.getValueOrNull("ent_turnover"),
+          row.getStringOption("working_props").getOrElse("0"),
+          row.getStringOption("employment").getOrElse("0")
         )), completeEntSchema)
 
 

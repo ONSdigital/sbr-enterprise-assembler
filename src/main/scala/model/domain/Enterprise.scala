@@ -5,7 +5,8 @@ import scala.util.Try
 /**
   *
   */
-case class Enterprise(ern:String,
+case class Enterprise(
+                      ern:String,
                       prn:String,
                       idbrref:Option[String],
                       businessName:String,
@@ -24,8 +25,10 @@ case class Enterprise(ern:String,
                       entTurnover:Option[String],
                       cntdTurnover:Option[String],
                       stdTurnover:Option[String],
-                      grp_turnover:Option[String]
-
+                      grp_turnover:Option[String],
+                      working_props:String,
+                      employment:String,
+                      region:String
                      )
 
 object Enterprise{
@@ -54,29 +57,35 @@ object Enterprise{
     val cntdTurnover= cells.find(_.column == "cntd_turnover")
     val stdTurnover= cells.find(_.column == "std_turnover")
     val grpTurnover= cells.find(_.column == "grp_turnover")
+    val working_props= cells.find(_.column == "working_props")
+    val employment= cells.find(_.column == "employment")
+    val region = cells.find(_.column == "region")
 
     new Enterprise(
-        ern.get.value,
-        prn.get.value,
-        entref.map(_.value),
-        name.get.value,
-        address1.get.value,
-        address2.map(_.value),
-        address3.map(_.value),
-        address4.map(_.value),
-        address5.map(_.value),
-        postcode.get.value,
-        tradingStyle.map(_.value),
-        sic07.get.value,
-        legalStatus.get.value,
-        empees.map(_.value),
-        jobs.map(_.value),
-        appTurnover.map(_.value),
-        entTurnover.map(_.value),
-        cntdTurnover.map(_.value),
-        stdTurnover.map(_.value),
-        grpTurnover.map(_.value)
-    )
+                    ern.get.value,
+                    prn.get.value,
+                    entref.map(_.value),
+                    name.get.value,
+                    address1.get.value,
+                    address2.map(_.value),
+                    address3.map(_.value),
+                    address4.map(_.value),
+                    address5.map(_.value),
+                    postcode.get.value,
+                    tradingStyle.map(_.value),
+                    sic07.get.value,
+                    legalStatus.get.value,
+                    empees.map(_.value),
+                    jobs.map(_.value),
+                    appTurnover.map(_.value),
+                    entTurnover.map(_.value),
+                    cntdTurnover.map(_.value),
+                    stdTurnover.map(_.value),
+                    grpTurnover.map(_.value),
+                    working_props.get.value,
+                    employment.get.value,
+                    region.get.value
+                  )
   }
 
   def apply(entry:(String, Iterable[(String, String)])) = buildFromHFileDataMap(entry)
@@ -92,9 +101,10 @@ object Enterprise{
     }
     val ern = entry._2.find(_._1=="ern").get._2
     val prn = entry._2.find(_._1=="prn").get._2
-//ern	entref	name	trading_style	address1	address2	address3	address4	address5	postcode	legal_status	sic07
-    //paye_empees
-    //paye_jobs
+    val working_props = entry._2.find(_._1 == "working_props").get._2
+    val employment = entry._2.find(_._1 == "employment").get._2
+    val region = entry._2.find(_._1 == "region").get._2
+
     new Enterprise(
       ern,
       prn,
@@ -115,7 +125,10 @@ object Enterprise{
       getValue("ent_turnover"),
       getValue("cntd_turnover"),
       getValue("std_turnover"),
-      getValue("grp_turnover")
+      getValue("grp_turnover"),
+      working_props,
+      employment,
+      region
     )
   }
 

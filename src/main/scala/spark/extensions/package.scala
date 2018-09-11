@@ -54,9 +54,11 @@ package object sql {
     .add(StructField("postcode", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("employees", StringType,false))
-    .add(StructField("employment", StringType,false))
     .add(StructField("turnover", StringType,false))
     .add(StructField("prn", StringType,false))
+    .add(StructField("region", StringType,false))
+    .add(StructField("employment", StringType,false))
+
 
   val leuRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
@@ -118,6 +120,7 @@ package object sql {
     .add(StructField("postcode", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("employees", StringType,false))
+  //TODO: add employment,region
 
   val ernToEmployeesSchema = new StructType()
     .add(StructField("ern", StringType,true))
@@ -144,6 +147,7 @@ package object sql {
     .add(StructField("postcode", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("legal_status", StringType,false))
+    .add(StructField("region", StringType,false))
 
 
   val entRowWithEmplDataSchema = new StructType()
@@ -177,6 +181,7 @@ package object sql {
     .add(StructField("postcode", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("legal_status", StringType,false))
+    .add(StructField("region", StringType,false))
     .add(StructField("paye_empees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
     .add(StructField("cntd_turnover", StringType,true))
@@ -184,6 +189,8 @@ package object sql {
     .add(StructField("std_turnover", StringType,true))
     .add(StructField("grp_turnover", StringType,true))
     .add(StructField("ent_turnover", StringType,true))
+    .add(StructField("working_props", StringType,false))
+    .add(StructField("employment", StringType,false))
 
 
 val calculationsSchema = new StructType()

@@ -6,7 +6,7 @@ import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{col, _}
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
@@ -60,16 +60,28 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def getAllEntsCalculated(allLinksLusDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+  def recalculateRegion(entsDF:DataFrame)(implicit spark: SparkSession) = {
+    import org.apache.spark.sql.functions.udf
+    import entsDF.sqlContext.implicits.StringToColumn
 
-    //val numOfPartitions = allLUsDF.rdd.getNumPartitions
+    def calculation = udf(
+      (postcode: String) => lookupRegionByPostcode(postcode))
+
+    entsDF.withColumn("region",calculation($"postcode"))
+
+  }
+
+  def getAllEntsCalculated(allLinksLusDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
     val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
     calculatedDF.cache()
 
-
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
-    val existingEntCalculatedDF = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
+    val existingEntsWithRegionRecalculatedDF = recalculateRegion(existingEntDF)
+    val existingEntCalculatedDF = {
+                                    val calculatedExistingRdd = existingEntsWithRegionRecalculatedDF.join(calculatedDF,Seq("ern"), "left_outer")
+                                    spark.createDataFrame(calculatedExistingRdd.rdd, completeEntSchema)
+                                  }
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
@@ -138,11 +150,25 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
+  def calculateRuEmployees(entsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+
+    val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
+
+    val ruWithEmploymentReCalculated = existingRUs.drop("employment","region").join(entsDF.select(col("ern"), col("region"), col("employment")),Seq("ern"),"inner")
+
+    val columns: Seq[String] = ruWithEmploymentReCalculated.columns
+
+    val reorderedColumns: Seq[String] = columns(1)+:columns(0) +: columns.drop(2)
+   //reorder columns to comply with schema: ruRowSchema
+    ruWithEmploymentReCalculated.select(reorderedColumns.head,reorderedColumns.tail: _*)
+
+
+  }
 
 
   def getAllRus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
+    val existingRUs: DataFrame = calculateRuEmployees(allEntsDF,appconf,confs)
 
     val entsWithoutRus: DataFrame = allEntsDF.join(existingRUs.select("ern"),Seq("ern"),"left_anti")
 
