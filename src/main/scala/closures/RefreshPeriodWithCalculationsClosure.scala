@@ -95,30 +95,6 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     allEntsDF
   }
 
-  def getNewRusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
-    val newReportingUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
-      generateRurn(row,appconf),
-      row.getAs[String]("ern"),
-      row.getValueOrEmptyStr("BusinessName"),
-      row.getValueOrEmptyStr("entref"),//will not be present
-      row.getValueOrNull("ruref"),//will not be present
-      row.getValueOrNull("trading_style"),//will not be present
-      row.getValueOrEmptyStr("address1"),
-      row.getValueOrNull("address2"),
-      row.getValueOrNull("address3"),
-      row.getValueOrNull("address4"),
-      row.getValueOrNull("address5"),
-      row.getValueOrEmptyStr("PostCode"),
-      row.getValueOrEmptyStr("IndustryCode"),
-      row.getValueOrNull("paye_jobs"),
-      row.getValueOrEmptyStr("employment"),
-      row.getValueOrEmptyStr("turnover"),//will not be present
-      generatePrn(row,appconf)
-    ),ruRowSchema))
-
-    val newReportingUnitsDF: DataFrame = spark.createDataFrame(newReportingUnitsDS,ruRowSchema)
-    newReportingUnitsDF
-  }
 
   def getNewLeusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
     val newLegalUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
@@ -150,7 +126,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def calculateRuEmployees(entsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def recalculateRuEmploymentAndRegion(entsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
 
@@ -158,17 +134,27 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val columns: Seq[String] = ruWithEmploymentReCalculated.columns
 
-    val reorderedColumns: Seq[String] = columns(1)+:columns(0) +: columns.drop(2)
+    val reorderedColumns: Seq[String] = existingRUs.columns
    //reorder columns to comply with schema: ruRowSchema
     ruWithEmploymentReCalculated.select(reorderedColumns.head,reorderedColumns.tail: _*)
+  }
 
+  def recalculateLouEmploymentAndRegion(ruDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+
+    val existingLous: DataFrame = getExistingLousDF(appconf,confs)
+
+    val lousWithEmploymentReCalculated = existingLous.drop("employment","region").join(ruDF.select(col("rurn"), col("region"), col("employment")),Seq("rurn"),"inner")
+
+    val columnsOrdered = existingLous.columns
+
+    lousWithEmploymentReCalculated.select(columnsOrdered.head,columnsOrdered.tail: _*)
 
   }
 
 
   def getAllRus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingRUs: DataFrame = calculateRuEmployees(allEntsDF,appconf,confs)
+    val existingRUs: DataFrame = recalculateRuEmploymentAndRegion(allEntsDF,appconf,confs)
 
     val entsWithoutRus: DataFrame = allEntsDF.join(existingRUs.select("ern"),Seq("ern"),"left_anti")
 
@@ -179,9 +165,9 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   def getAllLous(allRus:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingLous: DataFrame = getExistingLousDF(appconf,confs)
+    val existingLous: DataFrame = recalculateLouEmploymentAndRegion(allRus,appconf,confs)
 
-    val rusWithoutLous: DataFrame = allRus.join(existingLous.select("ern"),Seq("ern"),"left_anti")
+    val rusWithoutLous: DataFrame = allRus.join(existingLous.select("rurn"),Seq("rurn"),"left_anti")
 
     val newAndMissingLousDF: DataFrame =  createNewLous(rusWithoutLous,appconf)
 

@@ -66,7 +66,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      withHbaseConnection { implicit connection:Connection =>
        createRecords(appConfs)
        ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
-       val existingDF = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect
+       //val existingDF = readEntitiesFromHFile[HFileRow](existingEntRecordHFiles).collect
        MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
       }
      spark.stop
@@ -92,7 +92,6 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       spark.stop()
     }
   }
-
 "assembler" should {
     "create hfiles populated with expected local units data" in {
 
@@ -149,6 +148,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         spark.close()
       }
     }
+
 
   def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)

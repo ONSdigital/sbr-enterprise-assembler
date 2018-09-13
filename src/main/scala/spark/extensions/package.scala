@@ -118,9 +118,11 @@ package object sql {
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,false))
+    .add(StructField("region", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("employees", StringType,false))
-  //TODO: add employment,region
+    .add(StructField("employment", StringType,false))
+
 
   val ernToEmployeesSchema = new StructType()
     .add(StructField("ern", StringType,true))

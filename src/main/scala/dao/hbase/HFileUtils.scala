@@ -111,8 +111,10 @@ trait HFileUtils extends Serializable{
       createLocalUnitCell(lurn,ern, "name", row.getValueOrEmptyStr("name"), appParams),
       createLocalUnitCell(lurn,ern, "address1", row.getValueOrEmptyStr("address1"), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getValueOrEmptyStr("postcode"), appParams),
+      createLocalUnitCell(lurn,ern, "region", row.getValueOrEmptyStr("region"), appParams),
       createLocalUnitCell(lurn,ern, "sic07", row.getValueOrEmptyStr("sic07"), appParams),
-      createLocalUnitCell(lurn,ern, "employees", row.getValueOrEmptyStr("employees"), appParams) //this one is still long as defined by df schema  of entAdminCalculation
+      createLocalUnitCell(lurn,ern, "employees", row.getValueOrEmptyStr("employees"), appParams),
+      createLocalUnitCell(lurn,ern, "employment", row.getValueOrEmptyStr("employment"), appParams)
     ) ++ Seq(
       row.getString("ruref").map(bn => createLocalUnitCell(lurn,ern, "ruref", bn, appParams)),
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),

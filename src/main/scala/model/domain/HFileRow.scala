@@ -212,8 +212,10 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getValueOrNull("address4"),
           getValueOrNull("address5"),
           getValueOrStr("postcode"),
+          getValueOrStr("region"),
           getValueOrStr("sic07"),
-          cells.find(_.column == "employees").map(_.value).getOrElse(null)
+          cells.find(_.column == "employees").map(_.value).getOrElse(null),
+          cells.find(_.column == "employment").map(_.value).getOrElse(null)
         ), louRowSchema)
       }catch {
         case e: java.lang.RuntimeException => {

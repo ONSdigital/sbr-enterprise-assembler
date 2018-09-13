@@ -4,7 +4,7 @@ import scala.util.Try
 
 case class LocalUnit(lurn:String,	luref:Option[String],	ern:String,	prn:String, rurn:String, ruref:Option[String],name:String,entref:Option[String],	tradingstyle:Option[String],
                      address1:String,	address2:Option[String],	address3:Option[String],address4:Option[String],address5:Option[String],
-                     postcode:String,sic07:String,employees:String) {
+                     postcode:String,region:String,sic07:String,employees:String,employment:String) {
 
 }
 
@@ -25,13 +25,15 @@ object LocalUnit {
     val name = entry._2.find(_._1=="name").map(_._2).getOrElse("No Name found")
     val address1 = entry._2.find(_._1=="address1").get._2
     val postcode = entry._2.find(_._1=="postcode").get._2
+    val region = entry._2.find(_._1=="region").get._2
     val sic07 = entry._2.find(_._1=="sic07").get._2
     val employees = entry._2.find(_._1=="employees").get._2
+    val employment = entry._2.find(_._1=="employment").get._2
 
     new LocalUnit(
       lurn, getValue(entry,"luref"),ern, prn,rurn, getValue(entry,"ruref"),  name, getValue(entry,"entref"),getValue(entry,"trading_style"), address1,
       getValue(entry,"address2"),getValue(entry,"address3"),getValue(entry,"address4"),getValue(entry,"address5"),
-      postcode,sic07,employees
+      postcode,region,sic07,employees,employment
     )
 
   }
