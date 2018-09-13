@@ -61,9 +61,10 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
         getValueOrNull("address4"),
         getValueOrNull("address5"),
         getValueOrStr("postcode"),
+        getValueOrStr("region"),
         getValueOrStr("sic07"),
         getValueOrStr("legal_status"),
-        calculate(getValueOrStr("postcode"))
+        calculate(getValueOrStr("employment"))
       ), entRowSchema)
     } catch {
       case e: java.lang.RuntimeException => {
@@ -89,9 +90,11 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
         getValueOrNull("address4"),
         getValueOrNull("address5"),
         getValueOrStr("postcode"),
+        getValueOrStr("region"),
         getValueOrStr("sic07"),
         getValueOrStr("legal_status"),
-        getValueOrStr("region")
+        getValueOrStr("employment",default = "0")
+
       ), entRowSchema)
     } catch {
         case e: java.lang.RuntimeException => {
@@ -158,7 +161,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
               getValueOrStr("turnover"),
               getValueOrStr("prn"),
               getValueOrStr("region"),
-              getValueOrStr("employment")
+              getValueOrStr("employment", default = "0")
         ),ruRowSchema)
     }
 
@@ -214,8 +217,8 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getValueOrStr("postcode"),
           getValueOrStr("region"),
           getValueOrStr("sic07"),
-          cells.find(_.column == "employees").map(_.value).getOrElse(null),
-          cells.find(_.column == "employment").map(_.value).getOrElse(null)
+          getValueOrNull("employees"),
+          getValueOrStr("employment",default = "0")
         ), louRowSchema)
       }catch {
         case e: java.lang.RuntimeException => {
