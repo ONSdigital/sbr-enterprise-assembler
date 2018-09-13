@@ -67,7 +67,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     def calculation = udf(
       (postcode: String) => lookupRegionByPostcode(postcode))
 
-    entsDF.withColumn("region",calculation($"postcode"))
+      entsDF.withColumn("region",calculation($"postcode"))
 
   }
 

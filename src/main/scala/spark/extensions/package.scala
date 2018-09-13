@@ -147,9 +147,9 @@ package object sql {
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,false))
+    .add(StructField("region", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("legal_status", StringType,false))
-    .add(StructField("region", StringType,false))
 
 
   val entRowWithEmplDataSchema = new StructType()
@@ -181,9 +181,9 @@ package object sql {
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,false))
+    .add(StructField("region", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("legal_status", StringType,false))
-    .add(StructField("region", StringType,false))
     .add(StructField("paye_empees", StringType,true))
     .add(StructField("paye_jobs", StringType,true))
     .add(StructField("cntd_turnover", StringType,true))

@@ -116,9 +116,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
           row.getValueOrEmptyStr("address1"),
           null, null, null, null, //address2,3,4,5
           row.getAs[String]("PostCode"),
+          row.getValueOrEmptyStr("region"),
           row.getValueOrEmptyStr("IndustryCode"),
           row.getAs[String]("LegalStatus"),
-          row.getValueOrEmptyStr("region"),
           row.getValueOrNull("paye_empees"),
           row.getValueOrNull("paye_jobs"),
           row.getValueOrNull("cntd_turnover"),
