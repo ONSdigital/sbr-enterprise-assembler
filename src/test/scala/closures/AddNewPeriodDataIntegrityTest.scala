@@ -116,7 +116,7 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
   def checkIntegrity(ents: Seq[Enterprise],links: Seq[LinkRecord],lous: Seq[LocalUnit]) = {
     val newErnFromEnt: String = ents.collect{case ent if(isNewId(ent.ern)) => ent.ern}.head
     val newLurnFromLinks: String = links.collect{case LinkRecord(`newErnFromEnt`,rus,_) => rus.map(_.lurns).flatten.find(isNewId)}.head.get
-    val newLurnFromLou: String = lous.collect{case LocalUnit(lurn,_,`newErnFromEnt`,_,_,_,_,_,_,_,_,_,_,_,_,_) if(isNewId(lurn)) => lurn}.head
+    val newLurnFromLou: String = lous.collect{case LocalUnit(lurn,_,`newErnFromEnt`,_,_,_,_,_,_,_,_,_,_,_,_,_,_) if(isNewId(lurn)) => lurn}.head
     newLurnFromLinks shouldBe newLurnFromLou
   }
 
