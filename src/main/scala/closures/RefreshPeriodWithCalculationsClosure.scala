@@ -60,7 +60,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def recalculateRegion(entsDF:DataFrame)(implicit spark: SparkSession) = {
+  def calculateRegion(entsDF:DataFrame)(implicit spark: SparkSession) = {
     import org.apache.spark.sql.functions.udf
     import entsDF.sqlContext.implicits.StringToColumn
 
@@ -70,17 +70,35 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
+
+  def calculateWorkingProps(entsDF:DataFrame)(implicit spark: SparkSession) = {
+    import org.apache.spark.sql.functions.udf
+    import entsDF.sqlContext.implicits.StringToColumn
+
+    def calculation = udf((legalStatus: String) => getWorkingPropsByLegalStatus(legalStatus))
+
+    entsDF.withColumn("working_props",calculation($"legal_status"))
+
+  }
+
+
+
   def getAllEntsCalculated(allLinksLusDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
     val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
-    val existingEntsWithRegionRecalculatedDF = recalculateRegion(existingEntDF)
+    val existingEntsWithRegionRecalculatedDF = calculateRegion(existingEntDF)
+    val existingEntsWithWorkingPropsRecalculatedDF = calculateWorkingProps(existingEntsWithRegionRecalculatedDF)
     val existingEntCalculatedDF = {
-                                    val calculatedExistingRdd = existingEntsWithRegionRecalculatedDF.join(calculatedDF,Seq("ern"), "left_outer")
-                                    val withDefaultValues = calculatedExistingRdd.na.fill("0", Seq("employment","working_props"))
-                                    spark.createDataFrame(withDefaultValues.rdd, completeEntSchema)
+                                    val calculatedExistingRdd = existingEntsWithWorkingPropsRecalculatedDF.join(calculatedDF,Seq("ern"), "left_outer")
+                                    val withDefaultValues = calculatedExistingRdd.na.fill("0", Seq("employment"))
+                                    val withReorderedColumns = {
+                                    val columns = completeEntSchema.fieldNames
+                                    withDefaultValues.select(columns.head,columns.tail: _*)
+                                    }
+                                    spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")

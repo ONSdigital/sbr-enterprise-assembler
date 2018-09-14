@@ -271,6 +271,8 @@ trait HFileUtils extends Serializable{
 
   def lookupRegionByPostcode(postcode:String) = ""
 
+  def getWorkingPropsByLegalStatus(legalStatus:String) = "0"
+
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateRurn(row:Row, appParams:AppParams) = generateUniqueKey
   def generatePrn(row:Row, appParams:AppParams) = {

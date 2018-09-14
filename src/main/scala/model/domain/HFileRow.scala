@@ -59,7 +59,6 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
                                         getValueOrNull("address4"),
                                         getValueOrNull("address5"),
                                         getValueOrStr("postcode"),
-                                        getValueOrStr("region"),
                                         getValueOrStr("sic07"),
                                         getValueOrStr("legal_status")
                                       ), entRowSchema)

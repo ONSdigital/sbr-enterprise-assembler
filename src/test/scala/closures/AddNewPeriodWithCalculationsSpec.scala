@@ -71,7 +71,8 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       }
      spark.stop
   }
-  /*override def afterAll() = {
+  
+  override def afterAll() = {
         File(parquetPath).deleteRecursively()
         File(linkHfilePath).deleteRecursively()
         File(leuHfilePath).deleteRecursively()
@@ -79,7 +80,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         File(louHfilePath).deleteRecursively()
         File(ruHfilePath).deleteRecursively()
         File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
