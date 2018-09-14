@@ -45,35 +45,6 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
   //put type set as default
   def toHFileCells(columnFamily: String, kvType: Int = KeyValue.Type.Put.ordinal()) = cells.map(cell => HFileCell(key, columnFamily, cell.column, cell.value, kvType))
 
-  def reCalculateRegion(calculate:(String) => String) = {
-    import spark.extensions.sql._
-    try {
-      new GenericRowWithSchema(Array(
-
-        getValueOrStr("ern"),
-        getValueOrStr("prn",default=Configs.DEFAULT_PRN),
-        getValueOrNull("entref"),
-        getValueOrStr("name"),
-        getValueOrNull("trading_style"),
-        getValueOrStr("address1"),
-        getValueOrNull("address2"),
-        getValueOrNull("address3"),
-        getValueOrNull("address4"),
-        getValueOrNull("address5"),
-        getValueOrStr("postcode"),
-        getValueOrStr("region"),
-        getValueOrStr("sic07"),
-        getValueOrStr("legal_status"),
-        calculate(getValueOrStr("employment"))
-      ), entRowSchema)
-    } catch {
-      case e: java.lang.RuntimeException => {
-        println(s"(toEntRow)Exception reading enterprise row with ern: ${getValueOrStr("ern")}")
-        throw e
-      }
-    }
-  }
-
   def toEntRow = {
     import spark.extensions.sql._
     try {
