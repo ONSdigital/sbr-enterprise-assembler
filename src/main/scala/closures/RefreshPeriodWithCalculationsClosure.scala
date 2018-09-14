@@ -197,6 +197,9 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   def getAllLeus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
+    println("EXISTING LEU START******************************************")
+    existingLEUs.show(100)
+    println("EXISTING LEU END********************************************")
     val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
     existingLEUs.union(newLeusDF)
   }
