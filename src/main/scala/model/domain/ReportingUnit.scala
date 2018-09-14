@@ -21,6 +21,7 @@ case class ReportingUnit(
                           address5:Option[String],
                           postcode:String,
                           sic07:String,
+                          region:String,
                           employees:String,
                           employment:String,
                           turnover:String
@@ -44,6 +45,7 @@ object ReportingUnit {
           val sic07 = entry._2.find (_._1 == "sic07").get._2
           val legalStatus = entry._2.find (_._1 == "legal_status").get._2
           val employees = entry._2.find (_._1 == "employees").get._2
+          val region = entry._2.find (_._1 == "region").get._2
           val employment = entry._2.find (_._1 == "employment").get._2
           val turnover = entry._2.find (_._1 == "turnover").get._2
           val prn = entry._2.find (_._1 == "prn").get._2
@@ -54,7 +56,7 @@ object ReportingUnit {
             ern,
             getValue(entry,"entref"),prn,name,getValue(entry,"trading_style"),legalStatus,address1,
             getValue(entry,"address2"),getValue(entry,"address3"),getValue(entry,"address4"),getValue(entry,"address5"),
-            postcode,sic07,employees, employment,turnover
+            postcode,sic07,region,employees, employment,turnover
           )
     }
 }

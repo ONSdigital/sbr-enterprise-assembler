@@ -70,11 +70,11 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
   )
 
   val newPeriodEnts = List(
-    Enterprise(newEntErn,newRuPrn,None,"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",Some("3"),Some("5"),None,Some("85"),Some("85"),None,None),
-    Enterprise("2000000011",entPrnWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL",Some("A"),"12345","1",Some("2"),Some("4"),None,Some("390"),None,Some("390"),None),
-    Enterprise("3000000011","0.311",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",Some("19"),Some("20"),None,Some("585"),Some("585"),None,None),
-    Enterprise("4000000011","0.411",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU",Some("C"),"34567","1",Some("4"),Some("8"),Some("444"),Some("704"),None,Some("260"),Some("1000")),
-    Enterprise("5000000011","0.511",Some("9900000777"),"MBI LTD","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU",Some("U"),"44044","5",Some("5"),Some("5"),Some("555"),Some("555"),None,None,Some("1000"))
+    Enterprise(newEntErn,newRuPrn,None,"NEW ENTERPRISE LU","",None,None,None,None,"W1A 1AA",None,"10001","9",Some("3"),Some("5"),None,Some("85"),Some("85"),None,None,"0","0",""),
+    Enterprise("2000000011",entPrnWithMissingLouId,Some("9900000009"),"INDUSTRIES LTD","P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL",Some("A"),"12345","1",Some("2"),Some("4"),None,Some("390"),None,Some("390"),None,"0","0",""),
+    Enterprise("3000000011","0.311",Some("9900000126"),"BLACKWELLGROUP LTD","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX",Some("B"),"23456","1",Some("19"),Some("20"),None,Some("585"),Some("585"),None,None,"0","0",""),
+    Enterprise("4000000011","0.411",Some("9900000242"),"IBM LTD","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU",Some("C"),"34567","1",Some("4"),Some("8"),Some("444"),Some("704"),None,Some("260"),Some("1000"),"0","0",""),
+    Enterprise("5000000011","0.511",Some("9900000777"),"MBI LTD","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU",Some("U"),"44044","5",Some("5"),Some("5"),Some("555"),Some("555"),None,None,Some("1000"),"0","0","")
   )
 
   val newPeriodEntsWithoutCalculations = List[Enterprise](
@@ -86,34 +86,34 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
   )
 
   val newPeriodLocalUnits = List(
-    LocalUnit(missingLouLurn,Some("100002826247"),entWithMissingLouId,missingLouRurn,Some(missingLouRuref),"INDUSTRIES LTD",Some("6600000006"),Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345","2"),
-    LocalUnit("300000088",Some("100000827984"),"3000000011","2000000002",Some("9900000126"),"2-ND LU OF BLACKWELLGROUP LTD",Some("9900000999"),Some("B"),"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122","2"),
-    LocalUnit("300000099",Some("100000246017"),"3000000011","2000000002",Some("9900000126"),"BLACKWELLGROUP LTD",Some("9900000999"),Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","2"),
-    LocalUnit("400000055",Some("100000508724"),"4000000011","5000000005", Some("9900000242"),"3-RD LU OF IBM LTD",Some("8800000888"),Some("B"),"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344","1"),
-    LocalUnit("400000066",Some("100000508723"),"4000000011","5000000005",Some("9900000242"),"2-ND LU OF IBM LTD",Some("8800000888"),Some("A"),"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233","2"),
-    LocalUnit("400000077",Some("100000459235"),"4000000011","5000000005", Some("9900000242"),"IBM LTD",Some("8800000888"),Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","34567","2"),
-    LocalUnit("550000088",Some("100000601835"),"5000000011","6000000006", Some("9900000777"),"MBI LTD",Some("7700000777"),Some("U"),"99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044","5"),
-    LocalUnit(newLouLurn, None, newEntErn, newRuRurn,None,"NEW ENTERPRISE LU",None,  None, "", None, None, None, None, "W1A 1AA", "10001", "3")
+    LocalUnit(missingLouLurn,Some("100002826247"),entWithMissingLouId,"0.121212121",missingLouRurn,Some(missingLouRuref),"INDUSTRIES LTD",Some("6600000006"),Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","","12345","2","0"),
+    LocalUnit("300000088",Some("100000827984"),"3000000011","0.232323232","2000000002",Some("9900000126"),"2-ND LU OF BLACKWELLGROUP LTD",Some("9900000999"),Some("B"),"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","","1122","2","0"),
+    LocalUnit("300000099",Some("100000246017"),"3000000011","0.343434343","2000000002",Some("9900000126"),"BLACKWELLGROUP LTD",Some("9900000999"),Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","","23456","2","0"),
+    LocalUnit("400000055",Some("100000508724"),"4000000011","0.454545454","5000000005", Some("9900000242"),"3-RD LU OF IBM LTD",Some("8800000888"),Some("B"),"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","","3344","1","0"),
+    LocalUnit("400000066",Some("100000508723"),"4000000011","0.565656565","5000000005",Some("9900000242"),"2-ND LU OF IBM LTD",Some("8800000888"),Some("A"),"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","","2233","2","0"),
+    LocalUnit("400000077",Some("100000459235"),"4000000011","0.676767676","5000000005", Some("9900000242"),"IBM LTD",Some("8800000888"),Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","","34567","2","0"),
+    LocalUnit("550000088",Some("100000601835"),"5000000011","0.787878787","6000000006", Some("9900000777"),"MBI LTD",Some("7700000777"),Some("U"),"99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","","44044","5","0"),
+    LocalUnit(newLouLurn, None, newEntErn, "11111111-TEST-PRN", newRuRurn,None,"NEW ENTERPRISE LU",None,  None, "", None, None, None, None, "W1A 1AA","", "10001", "3","0")
   )
 
   val newPeriodReportingUnits = List[ReportingUnit](
-    ReportingUnit(missingLouRurn,None,entWithMissingLouId,Some("9900000009"),"1111111111","INDUSTRIES LTD",Some("A"), "1","P O BOX 22",Some("INDUSTRIES HOUSE"), Some("WHITE LANE"),Some("REDDITCH"), Some("WORCESTERSHIRE"), "B22 2TL","12345","2","1","300"),
-    ReportingUnit("2000000002",None,"3000000011",Some("9900000126"),"3333333333","BLACKWELLGROUP LTD",Some("B"), "1","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","4","3","500"),
-    ReportingUnit("5000000005",None,"4000000011",Some("9900000242"),"6666666666","IBM LTD",Some("C"), "1","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","34567","7","6","800"),
-    ReportingUnit("6000000006",None,"5000000011",Some("9900000777"),"7777777777","MBI LTD",Some("U"), "5","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044","8","7","900"),
-    ReportingUnit("11111111-TEST-RURN",None,"111111111-TEST-ERN",None,newRuPrn,"NEW ENTERPRISE LU",None,"9","",None,None,None,None,"W1A 1AA","10001","3","","")
+    ReportingUnit(missingLouRurn,None,entWithMissingLouId,Some("9900000009"),"1111111111","INDUSTRIES LTD",Some("A"), "1","P O BOX 22",Some("INDUSTRIES HOUSE"), Some("WHITE LANE"),Some("REDDITCH"), Some("WORCESTERSHIRE"), "B22 2TL","12345","","2","0","300"),
+    ReportingUnit("2000000002",None,"3000000011",Some("9900000126"),"3333333333","BLACKWELLGROUP LTD",Some("B"), "1","GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456","","4","0","500"),
+    ReportingUnit("5000000005",None,"4000000011",Some("9900000242"),"6666666666","IBM LTD",Some("C"), "1","BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"PO6 3AU","34567","","7","0","800"),
+    ReportingUnit("6000000006",None,"5000000011",Some("9900000777"),"7777777777","MBI LTD",Some("U"), "5","99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044","","8","0","900"),
+    ReportingUnit("11111111-TEST-RURN",None,"111111111-TEST-ERN",None,newRuPrn,"NEW ENTERPRISE LU",None,"9","",None,None,None,None,"W1A 1AA","10001","","3","0","")
 
   )
 
   val newPeriodLegalUnits = List[LegalUnit](
-    LegalUnit("100000246017","3000000011",Some("00032262"),"BLACKWELLGROUP LTD",Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456",Some("2"),Some("200"),"1",Some("A"),"02/042017",None,None,None),
-    LegalUnit("100000459235","4000000011",Some("04223164"),"IBM LTD",Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"CF23 9EU","3344",Some("2"),None,"1",Some("A"),"04/06/2015",None,None,None),
-    LegalUnit("100000508723","4000000011",Some("04223165"),"2-ND LU OF IBM LTD",Some("A"),"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233",Some("2"),None,"1",Some("B"),"05/07/2014",None,None,None),
-    LegalUnit("100000508724","4000000011",Some("00012345"),"3-RD LU OF IBM LTD",Some("B"),"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344",Some("1"),None,"1",Some("C"),"06/08/2013",None,None,None),
-    LegalUnit("100000601835","5000000011",Some("00032262"),"MBI LTD",Some("U"),"99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044",Some("4"),None,"2",Some("C"),"06/08/2010",None,None,None),
-    LegalUnit("100000827984","3000000011",Some("100000827984"),"2-ND LU OF BLACKWELLGROUP LTD",Some("B"),"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122",Some("2"),None,"1",Some("C"),"03/05/2016",None,None,None),
-    LegalUnit("100002826247","2000000011",Some("00032262"),"INDUSTRIES LTD",Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345",Some("4"),Some("500"),"1",Some("B"),"01/03/2018",None,None,None),
-    LegalUnit("999000508999","111111111-TEST-ERN",Some("33322444"),"NEW ENTERPRISE LU",None,"",None,None,None,None,"W1A 1AA","10001",Some("5"),Some("X"),"9",Some("W"),"",None,None,Some("123456"))
+    LegalUnit("100000246017","3000000011","0.222222222",Some("00032262"),"BLACKWELLGROUP LTD",Some("B"),"GOGGESHALL ROAD",Some("EARLS COLNE"),Some("COLCHESTER"),None,None,"CO6 2JX","23456",Some("2"),Some("200"),"1",Some("A"),"02/042017",None,None,None),
+    LegalUnit("100000459235","4000000011","0.444444444",Some("04223164"),"IBM LTD",Some("C"),"BSTER DEPT",Some("MAILPOINT A1F"),Some("P O BOX 41"),Some("NORTH HARBOUR"),Some("PORTSMOUTH"),"CF23 9EU","3344",Some("2"),None,"1",Some("A"),"04/06/2015",None,None,None),
+    LegalUnit("100000508723","4000000011","0.555555555",Some("04223165"),"2-ND LU OF IBM LTD",Some("A"),"IT DEPT",Some("1 Hight Street"),Some("Newport"),Some("SOUTH WALES"),None,"NP10 6XG","2233",Some("2"),None,"1",Some("B"),"05/07/2014",None,None,None),
+    LegalUnit("100000508724","4000000011","0.666666666",Some("00012345"),"3-RD LU OF IBM LTD",Some("B"),"IBM HOUSE",Some("Smile Street"),Some("Cardiff"),Some("SOUTH WALES"),None,"CF23 9EU","3344",Some("1"),None,"1",Some("C"),"06/08/2013",None,None,None),
+    LegalUnit("100000601835","5000000011","0.777777777",Some("00032262"),"MBI LTD",Some("U"),"99 Pen-Y-Lan Terrace",Some("Unit 11"),Some("Cardiff"),None,None,"CF23 9EU","44044",Some("4"),None,"2",Some("C"),"06/08/2010",None,None,None),
+    LegalUnit("100000827984","3000000011","0.333333333",Some("100000827984"),"2-ND LU OF BLACKWELLGROUP LTD",Some("B"),"North End Rd lane",Some("Croydon"),Some("Surrey"),None,None,"CR0 1AA","1122",Some("2"),None,"1",Some("C"),"03/05/2016",None,None,None),
+    LegalUnit("100002826247","2000000011","0.111111111",Some("00032262"),"INDUSTRIES LTD",Some("A"),"P O BOX 22",Some("INDUSTRIES HOUSE"),Some("WHITE LANE"),Some("REDDITCH"),Some("WORCESTERSHIRE"),"B22 2TL","12345",Some("4"),Some("500"),"1",Some("B"),"01/03/2018",None,None,None),
+    LegalUnit("999000508999","111111111-TEST-ERN","11111111-TEST-PRN",Some("33322444"),"NEW ENTERPRISE LU",None,"",None,None,None,None,"W1A 1AA","10001",Some("5"),Some("X"),"9",Some("W"),"",None,None,Some("123456"))
       )
 
   val newPeriodLocalUnitsWithoutCalculations = newPeriodLocalUnits/*List(

@@ -101,16 +101,20 @@ trait HFileUtils extends Serializable{
   def rowToLocalUnit(row: Row, appParams: AppParams):Seq[(String, HFileCell)] = {
     val lurn = row.getAs[String]("lurn")
     val ern = row.getAs[String]("ern")
+    val prn = row.getAs[String]("prn")
     val rurn = row.getAs[String]("rurn")
     Seq(
       createLocalUnitCell(lurn,ern, "lurn", lurn, appParams),
       createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "prn", prn, appParams),
       createLocalUnitCell(lurn,ern, "rurn", rurn, appParams),
       createLocalUnitCell(lurn,ern, "name", row.getValueOrEmptyStr("name"), appParams),
       createLocalUnitCell(lurn,ern, "address1", row.getValueOrEmptyStr("address1"), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getValueOrEmptyStr("postcode"), appParams),
+      createLocalUnitCell(lurn,ern, "region", row.getValueOrEmptyStr("region"), appParams),
       createLocalUnitCell(lurn,ern, "sic07", row.getValueOrEmptyStr("sic07"), appParams),
-      createLocalUnitCell(lurn,ern, "employees", row.getValueOrEmptyStr("employees"), appParams) //this one is still long as defined by df schema  of entAdminCalculation
+      createLocalUnitCell(lurn,ern, "employees", row.getValueOrEmptyStr("employees"), appParams),
+      createLocalUnitCell(lurn,ern, "employment", row.getValueOrEmptyStr("employment"), appParams)
     ) ++ Seq(
       row.getString("ruref").map(bn => createLocalUnitCell(lurn,ern, "ruref", bn, appParams)),
       row.getString("luref").map(bn => createLocalUnitCell(lurn,ern, "luref", bn, appParams)),
@@ -132,6 +136,7 @@ trait HFileUtils extends Serializable{
       createLocalUnitCell(rurn,ern, "name", row.getValueOrEmptyStr("name"), appParams),
       createLocalUnitCell(rurn,ern, "address1", row.getValueOrEmptyStr("address1"), appParams),
       createLocalUnitCell(rurn,ern, "postcode", row.getValueOrEmptyStr("postcode"), appParams),
+      createLocalUnitCell(rurn,ern, "region", row.getValueOrEmptyStr("region"), appParams),
       createLocalUnitCell(rurn,ern, "sic07", row.getValueOrEmptyStr("sic07"), appParams),
       createLocalUnitCell(rurn,ern, "employees", row.getValueOrEmptyStr("employees"), appParams), //this one is still long as defined by df schema  of entAdminCalculation
       createLocalUnitCell(rurn,ern, "employment", row.getValueOrEmptyStr("employment"), appParams),
@@ -153,9 +158,11 @@ trait HFileUtils extends Serializable{
   def rowToLegalUnit(row: Row, appParams: AppParams):Seq[(String, HFileCell)] = {
     val lurn = row.getStringOption("ubrn").get
     val ern = row.getStringOption("ern").get
+    val prn = row.getStringOption("prn").get
     Seq(
       createLegalUnitCell(lurn,ern, "ubrn", lurn, appParams),
-      createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      //createLocalUnitCell(lurn,ern, "ern", ern, appParams),
+      createLocalUnitCell(lurn,ern, "prn", prn, appParams),
       createLocalUnitCell(lurn,ern, "name", row.getString("name").getOrElse(""), appParams),
       createLocalUnitCell(lurn,ern, "address1", row.getValueOrEmptyStr("address1"), appParams),
       createLocalUnitCell(lurn,ern, "postcode", row.getValueOrEmptyStr("postcode"), appParams),
@@ -182,7 +189,16 @@ trait HFileUtils extends Serializable{
   def rowToEnt(row: Row, appParams: AppParams): Seq[(String, HFileCell)] = {
     val ern = row.getStringOption("ern").get //must be there
     val prn = row.getStringOption("prn").get //must be there
-    Seq(createEnterpriseCell(ern, "ern", ern, appParams),createEnterpriseCell(ern, "prn", prn, appParams)) ++
+    val workingProps = row.getStringOption("working_props").getOrElse("0") //must be there
+    val employment = row.getStringOption("employment").getOrElse("0") //must be there
+    val region = row.getStringOption("region").getOrElse("0") //must be there
+    Seq(
+      createEnterpriseCell(ern, "ern", ern, appParams),
+      createEnterpriseCell(ern, "prn", prn, appParams),
+      createEnterpriseCell(ern, "working_props", workingProps, appParams),
+      createEnterpriseCell(ern, "employment", employment, appParams),
+      createEnterpriseCell(ern, "region", region, appParams)
+    ) ++
       Seq(
         row.getStringOption("entref").map(ref => createEnterpriseCell(ern, "entref", ref, appParams)),
         row.getStringOption("name").map (name => createEnterpriseCell(ern, "name", name, appParams)),
@@ -205,6 +221,7 @@ trait HFileUtils extends Serializable{
         row.getStringOption("cntd_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString, appParams)),
         row.getStringOption("std_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard, appParams)),
         row.getStringOption("grp_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group, appParams))
+
       ).collect { case Some(v) => v }
   }
 
@@ -252,6 +269,9 @@ trait HFileUtils extends Serializable{
   private def generateLinkKey(id:String, prefix:String) = s"$prefix~$id"
 
 
+  def lookupRegionByPostcode(postcode:String) = ""
+
+  def getWorkingPropsByLegalStatus(legalStatus:String) = "0"
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateRurn(row:Row, appParams:AppParams) = generateUniqueKey

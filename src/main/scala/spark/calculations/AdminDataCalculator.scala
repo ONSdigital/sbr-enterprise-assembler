@@ -4,6 +4,7 @@ import global.AppParams
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import spark.RddLogging
+import org.apache.spark.sql.functions.lit
 
 
 trait AdminDataCalculator extends Serializable with RddLogging{
@@ -26,10 +27,19 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
     val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye)
 
-    aggregateDF(calculatedTurnovers)
+    val aggregatedDF = aggregateDF(calculatedTurnovers)
 
+    //val withWorkingPropsDF = calculateWorkingProps(aggregatedDF)
+
+    val withEmploymentDF = calculateEmployments(aggregatedDF)
+
+    withEmploymentDF
 
   }
+
+  //def calculateWorkingProps(df:DataFrame) = df.withColumn("working_props",lit("0"))
+  def calculateEmployments(df:DataFrame) = df.withColumn("employment",lit("0"))
+
 
   def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {
     val t = "CALCULATED"

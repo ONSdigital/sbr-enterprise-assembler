@@ -74,9 +74,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getValueOrEmptyStr("postcode"),
         row.getValueOrEmptyStr("sic07"),
         row.getValueOrEmptyStr("paye_empees"),
-        row.getValueOrEmptyStr("employment"),
         row.getValueOrEmptyStr("turnover"),
-        generatePrn(row,appconf)
+        generatePrn(row,appconf),
+        row.getValueOrEmptyStr("region"),
+        row.getValueOrEmptyStr("employment")
       )), ruRowSchema)
   }
 
@@ -115,6 +116,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
           row.getValueOrEmptyStr("address1"),
           null, null, null, null, //address2,3,4,5
           row.getAs[String]("PostCode"),
+          row.getValueOrEmptyStr("region"),
           row.getValueOrEmptyStr("IndustryCode"),
           row.getAs[String]("LegalStatus"),
           row.getValueOrNull("paye_empees"),
@@ -123,7 +125,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
           row.getValueOrNull("app_turnover"),
           row.getValueOrNull("std_turnover"),
           row.getValueOrNull("grp_turnover"),
-          row.getValueOrNull("ent_turnover")
+          row.getValueOrNull("ent_turnover"),
+          row.getStringOption("working_props").getOrElse("0"),
+          row.getStringOption("employment").getOrElse("0")
         )), completeEntSchema)
 
 
@@ -135,6 +139,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         generateLurn(row,appconf),
         row.getValueOrNull("luref"),//will not be present
         row.getAs[String]("ern"),
+        generatePrn(row,appconf),
         row.getAs[String]("rurn"),
         row.getValueOrNull("ruref"),
         row.getAs[String]("name"),
@@ -146,8 +151,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getValueOrNull("address4"),
         row.getValueOrNull("address5"),
         row.getValueOrEmptyStr("postcode"),
+        row.getValueOrEmptyStr("region"),
         row.getValueOrEmptyStr("sic07"),
-        row.getValueOrEmptyStr("employees")
+        row.getValueOrEmptyStr("employees"),
+        row.getValueOrEmptyStr("employment")
       )), louRowSchema)
   }
 

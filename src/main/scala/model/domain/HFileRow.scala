@@ -48,22 +48,20 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
   def toEntRow = {
     import spark.extensions.sql._
     try {
-      new GenericRowWithSchema(Array(
-
-        getValueOrStr("ern"),
-        getValueOrStr("prn",default=Configs.DEFAULT_PRN),
-        getValueOrNull("entref"),
-        getValueOrStr("name"),
-        getValueOrNull("trading_style"),
-        getValueOrStr("address1"),
-        getValueOrNull("address2"),
-        getValueOrNull("address3"),
-        getValueOrNull("address4"),
-        getValueOrNull("address5"),
-        getValueOrStr("postcode"),
-        getValueOrStr("sic07"),
-        getValueOrStr("legal_status")
-      ), entRowSchema)
+        new GenericRowWithSchema(Array( getValueOrStr("ern"),
+                                        getValueOrStr("prn",default=Configs.DEFAULT_PRN),
+                                        getValueOrNull("entref"),
+                                        getValueOrStr("name"),
+                                        getValueOrNull("trading_style"),
+                                        getValueOrStr("address1"),
+                                        getValueOrNull("address2"),
+                                        getValueOrNull("address3"),
+                                        getValueOrNull("address4"),
+                                        getValueOrNull("address5"),
+                                        getValueOrStr("postcode"),
+                                        getValueOrStr("sic07"),
+                                        getValueOrStr("legal_status")
+                                      ), entRowSchema)
     } catch {
         case e: java.lang.RuntimeException => {
           println(s"(toEntRow)Exception reading enterprise row with ern: ${getValueOrStr("ern")}")
@@ -75,11 +73,14 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
   def toLeuRow = {
     import spark.extensions.sql._
+
     try {
       new GenericRowWithSchema(Array(
 
         getValueOrStr("ubrn"),
-        getValueOrStr("ern"),
+        key.split("~").head.reverse,
+        //getValueOrStr("ern"),
+        getValueOrStr("prn"),
         getValueOrNull("crn"),
         getValueOrStr("name"),
         getValueOrNull("trading_style"),
@@ -125,9 +126,10 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
               getValueOrStr("postcode"),
               getValueOrStr("sic07"),
               getValueOrStr("employees"),
-              getValueOrStr("employment"),
               getValueOrStr("turnover"),
-              getValueOrStr("prn")
+              getValueOrStr("prn"),
+              getValueOrStr("region"),
+              getValueOrStr("employment", default = "0")
         ),ruRowSchema)
     }
 
@@ -169,6 +171,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getValueOrStr("lurn"),
           getValueOrNull("luref"),
           getValueOrStr("ern"),
+          getValueOrStr("prn"),
           getValueOrStr("rurn"),
           getValueOrNull("ruref"),
           getValueOrStr("name"),
@@ -180,8 +183,10 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
           getValueOrNull("address4"),
           getValueOrNull("address5"),
           getValueOrStr("postcode"),
+          getValueOrStr("region"),
           getValueOrStr("sic07"),
-          cells.find(_.column == "employees").map(_.value).getOrElse(null)
+          getValueOrNull("employees"),
+          getValueOrStr("employment",default = "0")
         ), louRowSchema)
       }catch {
         case e: java.lang.RuntimeException => {

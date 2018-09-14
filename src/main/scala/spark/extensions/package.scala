@@ -54,13 +54,16 @@ package object sql {
     .add(StructField("postcode", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("employees", StringType,false))
-    .add(StructField("employment", StringType,false))
     .add(StructField("turnover", StringType,false))
     .add(StructField("prn", StringType,false))
+    .add(StructField("region", StringType,false))
+    .add(StructField("employment", StringType,false))
+
 
   val leuRowSchema = new StructType()
     .add(StructField("ubrn", StringType,false))
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("crn", StringType,true))
     .add(StructField("name", StringType,false))
     .add(StructField("trading_style", StringType,true))
@@ -103,6 +106,7 @@ package object sql {
     .add(StructField("lurn", StringType,false))
     .add(StructField("luref", StringType,true))
     .add(StructField("ern", StringType,false))
+    .add(StructField("prn", StringType,false))
     .add(StructField("rurn", StringType,false))
     .add(StructField("ruref", StringType,true))
     .add(StructField("name", StringType,false))
@@ -114,8 +118,11 @@ package object sql {
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,false))
+    .add(StructField("region", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("employees", StringType,false))
+    .add(StructField("employment", StringType,false))
+
 
   val ernToEmployeesSchema = new StructType()
     .add(StructField("ern", StringType,true))
@@ -173,6 +180,7 @@ package object sql {
     .add(StructField("address4", StringType,true))
     .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,false))
+    .add(StructField("region", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("legal_status", StringType,false))
     .add(StructField("paye_empees", StringType,true))
@@ -182,6 +190,8 @@ package object sql {
     .add(StructField("std_turnover", StringType,true))
     .add(StructField("grp_turnover", StringType,true))
     .add(StructField("ent_turnover", StringType,true))
+    .add(StructField("working_props", StringType,false))
+    .add(StructField("employment", StringType,false))
 
 
 val calculationsSchema = new StructType()

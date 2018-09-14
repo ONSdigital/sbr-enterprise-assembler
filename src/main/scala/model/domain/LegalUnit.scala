@@ -8,6 +8,7 @@ import scala.util.Try
 case class LegalUnit(
                       ubrn:String,
                       ern:String,
+                      prn:String,
                       crn:Option[String],
                       name:String,
                       trading_style:Option[String],
@@ -38,7 +39,8 @@ object LegalUnit {
 
 
         val ubrn = entry._2.find(_._1=="ubrn").get._2
-        val ern = entry._2.find(_._1=="ern").get._2
+        val ern = entry._1.split("~").head.reverse
+        val prn = entry._2.find(_._1=="prn").get._2
         val name = entry._2.find(_._1=="name").map(_._2).getOrElse("")
         val address1 = entry._2.find(_._1=="address1").get._2
         val postcode = entry._2.find(_._1=="postcode").get._2
@@ -47,28 +49,28 @@ object LegalUnit {
         val dob = entry._2.find(_._1=="birth_date").get._2
 
         new LegalUnit(
-          ubrn,
-          ern,
-          getValue(entry,"crn"),
-          name,
-          getValue(entry,"trading_style"),
-          address1,
-          getValue(entry,"address2"),
-          getValue(entry,"address3"),
-          getValue(entry,"address4"),
-          getValue(entry,"address5"),
-          postcode,
-          sic07,
-          getValue(entry,"paye_jobs"),
-          getValue(entry,"turnover"),
-          legalStatus,
-          getValue(entry,"trading_status"),
-          dob,
-          getValue(entry,"death_date"),
-          getValue(entry,"death_code"),
-          getValue(entry,"uprn")
-
-        )
+                      ubrn,
+                      ern,
+                      prn,
+                      getValue(entry,"crn"),
+                      name,
+                      getValue(entry,"trading_style"),
+                      address1,
+                      getValue(entry,"address2"),
+                      getValue(entry,"address3"),
+                      getValue(entry,"address4"),
+                      getValue(entry,"address5"),
+                      postcode,
+                      sic07,
+                      getValue(entry,"paye_jobs"),
+                      getValue(entry,"turnover"),
+                      legalStatus,
+                      getValue(entry,"trading_status"),
+                      dob,
+                      getValue(entry,"death_date"),
+                      getValue(entry,"death_code"),
+                      getValue(entry,"uprn")
+                     )
 
       }
 }
