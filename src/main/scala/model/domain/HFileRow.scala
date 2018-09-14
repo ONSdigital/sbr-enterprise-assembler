@@ -73,11 +73,13 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
   def toLeuRow = {
     import spark.extensions.sql._
+
     try {
       new GenericRowWithSchema(Array(
 
         getValueOrStr("ubrn"),
-        getValueOrStr("ern"),
+        key.split("~").head.reverse,
+        //getValueOrStr("ern"),
         getValueOrStr("prn"),
         getValueOrNull("crn"),
         getValueOrStr("name"),

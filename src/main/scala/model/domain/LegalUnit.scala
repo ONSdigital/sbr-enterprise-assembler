@@ -39,7 +39,7 @@ object LegalUnit {
 
 
         val ubrn = entry._2.find(_._1=="ubrn").get._2
-        val ern = entry._2.find(_._1=="ern").get._2
+        val ern = entry._1.split("~").head.reverse
         val prn = entry._2.find(_._1=="prn").get._2
         val name = entry._2.find(_._1=="name").map(_._2).getOrElse("")
         val address1 = entry._2.find(_._1=="address1").get._2
