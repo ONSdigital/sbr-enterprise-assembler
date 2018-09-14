@@ -64,10 +64,9 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     import org.apache.spark.sql.functions.udf
     import entsDF.sqlContext.implicits.StringToColumn
 
-    def calculation = udf(
-      (postcode: String) => lookupRegionByPostcode(postcode))
+    def calculation = udf((postcode: String) => lookupRegionByPostcode(postcode))
 
-      entsDF.withColumn("region",calculation($"postcode"))
+    entsDF.withColumn("region",calculation($"postcode"))
 
   }
 

@@ -77,25 +77,22 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
   def toEntRow = {
     import spark.extensions.sql._
     try {
-      new GenericRowWithSchema(Array(
-
-        getValueOrStr("ern"),
-        getValueOrStr("prn",default=Configs.DEFAULT_PRN),
-        getValueOrNull("entref"),
-        getValueOrStr("name"),
-        getValueOrNull("trading_style"),
-        getValueOrStr("address1"),
-        getValueOrNull("address2"),
-        getValueOrNull("address3"),
-        getValueOrNull("address4"),
-        getValueOrNull("address5"),
-        getValueOrStr("postcode"),
-        getValueOrStr("region"),
-        getValueOrStr("sic07"),
-        getValueOrStr("legal_status"),
-        getValueOrStr("employment",default = "0")
-
-      ), entRowSchema)
+        new GenericRowWithSchema(Array( getValueOrStr("ern"),
+                                        getValueOrStr("prn",default=Configs.DEFAULT_PRN),
+                                        getValueOrNull("entref"),
+                                        getValueOrStr("name"),
+                                        getValueOrNull("trading_style"),
+                                        getValueOrStr("address1"),
+                                        getValueOrNull("address2"),
+                                        getValueOrNull("address3"),
+                                        getValueOrNull("address4"),
+                                        getValueOrNull("address5"),
+                                        getValueOrStr("postcode"),
+                                        getValueOrStr("region"),
+                                        getValueOrStr("sic07"),
+                                        getValueOrStr("legal_status"),
+                                        getValueOrStr("employment",default = "0")
+                                      ), entRowSchema)
     } catch {
         case e: java.lang.RuntimeException => {
           println(s"(toEntRow)Exception reading enterprise row with ern: ${getValueOrStr("ern")}")
