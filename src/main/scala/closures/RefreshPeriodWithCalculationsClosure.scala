@@ -30,7 +30,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val allLousDF = getAllLous(allRusDF,appconf,Configs.conf).cache()
 
-    val allLeusDF = getAllLeus(allEntsDF,appconf,Configs.conf).cache()
+    val allLeusDF = getAllLeus(appconf,Configs.conf).cache()
 
     saveEnts(allEntsDF,appconf)
     saveRus(allRusDF,appconf)
@@ -194,7 +194,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
 
 
-  def getAllLeus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllLeus(appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
 /*    println("EXISTING LEU START******************************************")
