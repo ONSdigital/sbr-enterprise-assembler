@@ -15,7 +15,7 @@ object AssemblerMain extends CreateInitialPopulationService with EnterpriseRefre
     conf.set("hbase.zookeeper.quorum", args(21))
     conf.set("hbase.zookeeper.property.clientPort", args(22))
     conf.setInt("hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily", 500)
-    val params = args.take(21)++args.takeRight(5)
+    val params = args.take(21)++args.takeRight(6)
 
     val appParams = AppParams(params)
 try{

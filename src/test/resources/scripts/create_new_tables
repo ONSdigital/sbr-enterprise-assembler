@@ -1,3 +1,4 @@
+create_namespace 'ons'
 create 'ons:ENT_201804','d'
 create 'ons:LINKS_201804','l'
 create 'ons:LEU_201804','d'

@@ -22,13 +22,15 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * */
   override def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
 
+    val regionsByPostcodeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_GEO).select("pcds","rgn").toDF("postcode", "region").cache()
+
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
-    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,appconf).cache()
+    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache()
 
-    val allRusDF = getAllRus(allEntsDF,appconf,Configs.conf).cache()
+    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
 
-    val allLousDF = getAllLous(allRusDF,appconf,Configs.conf).cache()
+    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
 
     val allLeusDF = getAllLeus(appconf,Configs.conf).cache()
 
@@ -43,6 +45,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     allRusDF.unpersist()
     allEntsDF.unpersist()
     allLinksLeusDF.unpersist()
+    regionsByPostcodeDF.unpersist()
   }
 
 
@@ -60,51 +63,31 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def calculateRegion(entsDF:DataFrame)(implicit spark: SparkSession) = {
-    import org.apache.spark.sql.functions.udf
-    import entsDF.sqlContext.implicits.StringToColumn
 
-    def calculation = udf((postcode: String) => lookupRegionByPostcode(postcode))
-
-    entsDF.withColumn("region",calculation($"postcode"))
-
-  }
-
-
-  def calculateWorkingProps(entsDF:DataFrame)(implicit spark: SparkSession) = {
-    import org.apache.spark.sql.functions.udf
-    import entsDF.sqlContext.implicits.StringToColumn
-
-    def calculation = udf((legalStatus: String) => getWorkingPropsByLegalStatus(legalStatus))
-
-    entsDF.withColumn("working_props",calculation($"legal_status"))
-
-  }
-
-
-
-  def getAllEntsCalculated(allLinksLusDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
     val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
-    val existingEntsWithRegionRecalculatedDF = calculateRegion(existingEntDF)
-    val existingEntsWithWorkingPropsRecalculatedDF = calculateWorkingProps(existingEntsWithRegionRecalculatedDF)
+
+
     val existingEntCalculatedDF = {
-                                    val calculatedExistingRdd = existingEntsWithWorkingPropsRecalculatedDF.join(calculatedDF,Seq("ern"), "left_outer")
-                                    val withDefaultValues = calculatedExistingRdd.na.fill("0", Seq("employment"))
+                                    val calculatedExistingRdd = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
+                                    val existingEntsWithAllDynamicValuesRecalculatedDF = calculateDynamicValues(calculatedExistingRdd, regionsByPostcodeDF)
                                     val withReorderedColumns = {
-                                    val columns = completeEntSchema.fieldNames
-                                    withDefaultValues.select(columns.head,columns.tail: _*)
+                                         val columns = completeEntSchema.fieldNames
+                                         existingEntsWithAllDynamicValuesRecalculatedDF.select( columns.head, columns.tail: _*)
                                     }
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
-    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLEUsCalculatedDF,appconf).rdd,completeEntSchema)
-    val newLegalUnitsDF: DataFrame = getNewLeusDF(newLEUsCalculatedDF,appconf)
+    val lusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
+
+    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(lusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
+    val newLegalUnitsDF: DataFrame = getNewLeusDF(lusWithWorkingPropsAndRegionDF,appconf)
     newLegalUnitsDF.cache()//TODO: check if this is actually needed
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
@@ -144,62 +127,59 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   }
 
-  def recalculateRuEmploymentAndRegion(entsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
-
-    val ruWithEmploymentReCalculated = existingRUs.drop("employment","region").join(entsDF.select(col("ern"), col("region"), col("employment")),Seq("ern"),"inner")
-
-    val columns: Seq[String] = ruWithEmploymentReCalculated.columns
-
-    val reorderedColumns: Seq[String] = existingRUs.columns
-   //reorder columns to comply with schema: ruRowSchema
-    ruWithEmploymentReCalculated.select(reorderedColumns.head,reorderedColumns.tail: _*)
-  }
-
-  def recalculateLouEmploymentAndRegion(ruDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def recalculateLouEmploymentAndRegion(ruDF:DataFrame, regionsByPostcodeDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLous: DataFrame = getExistingLousDF(appconf,confs)
 
-    val lousWithEmploymentReCalculated = existingLous.drop("employment","region").join(ruDF.select(col("rurn"), col("region"), col("employment")),Seq("rurn"),"inner")
+    val lousWithEmploymentReCalculated = existingLous.drop("employment").join(ruDF.select(col("rurn"), col("employment")),Seq("rurn"),"inner")
 
-    val columnsOrdered = existingLous.columns
+    val lousWithRegionRecalcuated = calculateRegion(lousWithEmploymentReCalculated,regionsByPostcodeDF)
 
-    lousWithEmploymentReCalculated.select(columnsOrdered.head,columnsOrdered.tail: _*)
+    lousWithRegionRecalcuated
 
   }
 
 
-  def getAllRus(allEntsDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllRus(allEntsDF:DataFrame, regionsByPostcodeDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingRUs: DataFrame = recalculateRuEmploymentAndRegion(allEntsDF,appconf,confs)
+    val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
 
-    val entsWithoutRus: DataFrame = allEntsDF.join(existingRUs.select("ern"),Seq("ern"),"left_anti")
+    //val existingRusWithRecalculatedEmployment =
+    val columns = ruRowSchema.fieldNames
+    val ruWithRegion: DataFrame = calculateRegion(existingRUs,regionsByPostcodeDF).select(columns.head, columns.tail: _*)
 
-    val newAndMissingRusDF: DataFrame = createNewRus(entsWithoutRus,appconf)
+    val entsWithoutRus: DataFrame = allEntsDF.join(ruWithRegion.select("ern"),Seq("ern"),"left_anti")
 
-    existingRUs.union(newAndMissingRusDF)
+    val newAndMissingRusDF: DataFrame = createNewRus(entsWithoutRus,appconf).select(columns.head, columns.tail: _*)
+
+    val res = ruWithRegion.union(newAndMissingRusDF)
+
+    res
   }
 
-  def getAllLous(allRus:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllLous(allRus:DataFrame, regionsByPostcodeDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
-    val existingLous: DataFrame = recalculateLouEmploymentAndRegion(allRus,appconf,confs)
+    val columns = louRowSchema.fieldNames
 
-    val rusWithoutLous: DataFrame = allRus.join(existingLous.select("rurn"),Seq("rurn"),"left_anti")
+    val existingLous: DataFrame = getExistingLousDF(appconf,confs)
+
+    val existingLousWithRegion: DataFrame = calculateRegion(existingLous,regionsByPostcodeDF).select(columns.head, columns.tail: _*)
+
+    val rusWithoutLous: DataFrame = allRus.join(existingLousWithRegion.select("rurn"),Seq("rurn"),"left_anti")
 
     val newAndMissingLousDF: DataFrame =  createNewLous(rusWithoutLous,appconf)
 
-    existingLous.union(newAndMissingLousDF)
+    existingLousWithRegion.union(newAndMissingLousDF)
   }
 
 
 
   def getAllLeus(appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
-
-    val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
-    val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
-    existingLEUs.union(newLeusDF)
-  }
+                                          val existingLEUs: DataFrame = getExistingLeusDF(appconf,confs)
+                                          val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
+                                          existingLEUs.union(newLeusDF)
+                                       }
 
 }
 object RefreshPeriodWithCalculationsClosure extends RefreshPeriodWithCalculationsClosure

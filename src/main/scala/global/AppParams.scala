@@ -36,6 +36,7 @@ case class AppParams(
                       TIME_PERIOD:String,
                       PATH_TO_PAYE:String,
                       PATH_TO_VAT:String,
+                      PATH_TO_GEO:String,
                       ENV:String,
                       ACTION:String
                    ){
@@ -72,6 +73,7 @@ object AppParams{
                                                   args(22),
                                                   args(23),
                                                   args(24),
+                                                  args(25),
                                                   args(25)
                                                  )
   
