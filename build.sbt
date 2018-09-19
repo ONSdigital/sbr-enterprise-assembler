@@ -106,7 +106,7 @@ lazy val addNewPeriodWithCalculationsParams = Array(
                                   "local",
                                   "add-calculated-period"
                                 )
-
+//"LINKS", "ons", "l", "src/main/resources/data/newperiod/links/hfile", "LEU", "ons", "d", "src/main/resources/data/newperiod/legal-unit/hfile", "ENT", "ons", "d", "src/main/resources/data/newperiod/enterprise/hfile", "LOU", "ons", "d", "src/main/resources/data/newperiod/local-unit/hfile", "REU", "ons", "d", "src/main/resources/data/newperiod/reporting-unit/hfile", "src/main/resources/data/newperiod/sample.parquet", "localhost", "2181", "201804", "src/main/resources/data/newperiod/newPeriodPaye.csv", "src/main/resources/data/newperiod/newPeriodVat.csv", "src/main/resources/data/geo/ONSPD_FEB_2018_UK.csv.csv", "local", "add-calculated-period"
 
 
 lazy val deletePeriodParams = Array(
