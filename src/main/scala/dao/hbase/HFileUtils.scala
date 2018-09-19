@@ -269,9 +269,8 @@ trait HFileUtils extends Serializable{
   private def generateLinkKey(id:String, prefix:String) = s"$prefix~$id"
 
   def getWorkingPropsByLegalStatus(legalStatus:String) = legalStatus match{
-    case "LLP" => "2"
-    case "Partnership" => "2"
-    case "Sole Proprietor" => "1"
+    case "2" => "1"
+    case "3" => "2"
     case _ => Configs.DEFAULT_WORKING_PROPS
   }
 
