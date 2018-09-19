@@ -285,7 +285,9 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
     spark.sql(sql)
   }
-
+/**
+  * expects df with fields 'legal_status', 'postcode', 'paye_empees', 'working_props'
+  * */
   def calculateDynamicValues(df:DataFrame, regionsByPostcodeDF:DataFrame)(implicit spark: SparkSession) = {
     val withWorkingProps = calculateWorkingProps(df)
     val withEmployment = calculateEmployment(withWorkingProps)

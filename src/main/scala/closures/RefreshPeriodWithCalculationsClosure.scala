@@ -84,10 +84,10 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
-    val lusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
+    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
 
-    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(lusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
-    val newLegalUnitsDF: DataFrame = getNewLeusDF(lusWithWorkingPropsAndRegionDF,appconf)
+    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
+    val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF,appconf)
     newLegalUnitsDF.cache()//TODO: check if this is actually needed
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
@@ -111,11 +111,11 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                   row.getValueOrNull( "address3"),
                   row.getValueOrNull( "address4"),
                   row.getValueOrNull( "address5"),
-                  row.getValueOrEmptyStr("PostCode"),
+                  row.getValueOrEmptyStr("postcode"),
                   row.getValueOrEmptyStr("IndustryCode"),
                   row.getValueOrNull( "paye_jobs"),
                   row.getValueOrNull( "Turnover"),
-                  row.getValueOrEmptyStr("LegalStatus"),
+                  row.getValueOrEmptyStr("legal_status"),
                   row.getValueOrNull( "TradingStatus"),
                   row.getValueOrEmptyStr("birth_date"),
                   row.getValueOrNull("death_date"),

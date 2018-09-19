@@ -13,7 +13,7 @@ case class ReportingUnit(
                           prn:String,
                           name:String,
                           tradingStyle:Option[String],
-                          legal_status:String,
+                          legalStatus:String,
                           address1:String,
                           address2:Option[String],
                           address3:Option[String],
