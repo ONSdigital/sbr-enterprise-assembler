@@ -10,7 +10,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql._
@@ -247,8 +247,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
 
   def calculateRegion(dfWithPostcode:DataFrame, regionsByPostcodeDF:DataFrame)(implicit spark: SparkSession) = {
-
-    dfWithPostcode.drop("region").join(regionsByPostcodeDF, Seq("postcode"),"left_outer").na.fill(Configs.DEFAULT_REGION, Seq("region"))
+    dfWithPostcode.withColumn("region",lit(""))
+    //dfWithPostcode.drop("region").join(regionsByPostcodeDF, Seq("postcode"),"left_outer").na.fill(Configs.DEFAULT_REGION, Seq("region"))
 
   }
 
