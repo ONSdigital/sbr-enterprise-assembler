@@ -7,6 +7,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, _}
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import spark.RddLogging
 import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
@@ -22,7 +23,10 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * */
   override def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
 
-    val regionsByPostcodeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_GEO).select("pcds","rgn").toDF("postcode", "region").cache()
+    //val regionsByPostcodeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_GEO).select("pcds","rgn").toDF("postcode", "region").cache()
+    val regionsByPostcode: RDD[Row] = spark.sparkContext.parallelize(Seq(("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"))).map(t => Row(t._1, t._2))
+    val regionMappingSchema = new StructType().add(StructField("ern", StringType, false))
+    val regionsByPostcodeDF = spark.createDataFrame(regionsByPostcode,regionMappingSchema)
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
