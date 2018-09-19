@@ -25,7 +25,7 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
   def loadNewPeriodWithCalculationsData(appconf:AppParams) = withSpark(appconf){ implicit ss:SparkSession =>
     withHbaseConnection{implicit con:Connection =>
 
-         ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
+         //ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
          RefreshPeriodWithCalculationsClosure.createUnitsHfiles(appconf)
          HBaseDao.truncateTables(con,appconf)
          HBaseDao.loadLinksHFile(con,appconf)
