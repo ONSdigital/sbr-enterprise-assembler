@@ -73,11 +73,12 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
 
     val existingEntCalculatedDF = {
-                                    val calculatedExistingRdd = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
-                                    val existingEntsWithAllDynamicValuesRecalculatedDF = calculateDynamicValues(calculatedExistingRdd, regionsByPostcodeDF)
+                                    val calculatedExistingEnt = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
+                                    val existingEntsWithRegionRecalculatedDF = calculateRegion(calculatedExistingEnt, regionsByPostcodeDF)
+                                    val existingEntsWithEmploymentRecalculatedDF = calculateEmployment(existingEntsWithRegionRecalculatedDF)
                                     val withReorderedColumns = {
                                          val columns = completeEntSchema.fieldNames
-                                         existingEntsWithAllDynamicValuesRecalculatedDF.select( columns.head, columns.tail: _*)
+                                      existingEntsWithEmploymentRecalculatedDF.select( columns.head, columns.tail: _*)
                                     }
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
