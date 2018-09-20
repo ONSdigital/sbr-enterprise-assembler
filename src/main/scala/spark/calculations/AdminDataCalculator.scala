@@ -31,14 +31,16 @@ trait AdminDataCalculator extends Serializable with RddLogging{
 
     //val withWorkingPropsDF = calculateWorkingProps(aggregatedDF)
 
-    val withEmploymentDF = calculateEmployments(aggregatedDF)
+    //val withEmploymentDF = calculateEmployments(aggregatedDF)
 
-    withEmploymentDF
+    //withEmploymentDF
+
+    aggregatedDF
 
   }
 
   //def calculateWorkingProps(df:DataFrame) = df.withColumn("working_props",lit("0"))
-  def calculateEmployments(df:DataFrame) = df.withColumn("employment",lit("0"))
+  //def calculateEmployments(df:DataFrame) = df.withColumn("employment",lit("0"))
 
 
   def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {

@@ -2,7 +2,7 @@ package dao.hbase
 
 import global.{AppParams, Configs}
 import model.hfile.HFileCell
-import org.apache.spark.sql.Row
+import org.apache.spark.sql.{DataFrame, Row}
 
 import scala.util.{Random, Try}
 import spark.extensions.sql.SqlRowExtensions
@@ -268,10 +268,11 @@ trait HFileUtils extends Serializable{
 
   private def generateLinkKey(id:String, prefix:String) = s"$prefix~$id"
 
-
-  def lookupRegionByPostcode(postcode:String) = ""
-
-  def getWorkingPropsByLegalStatus(legalStatus:String) = "0"
+  def getWorkingPropsByLegalStatus(legalStatus:String) = legalStatus match{
+    case "2" => "1"
+    case "3" => "2"
+    case _ => Configs.DEFAULT_WORKING_PROPS
+  }
 
   def generateErn(row:Row, appParams:AppParams) = generateUniqueKey
   def generateRurn(row:Row, appParams:AppParams) = generateUniqueKey

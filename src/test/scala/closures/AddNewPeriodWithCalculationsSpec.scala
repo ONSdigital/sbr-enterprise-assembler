@@ -53,8 +53,10 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       "LOU", "ons", "d",louHfilePath,
       "REU", "ons", "d",ruHfilePath,
       parquetPath,
-      "201804",payeFilePath,
+      "201804",
+      payeFilePath,
       vatFilePath,
+      geoFilePath,
       "local",
       "add-calculated-period"
     )))
@@ -120,7 +122,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       }
   }
 
-  "assembler" should {
+ "assembler" should {
       "create hfiles populated with expected legal units data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -135,7 +137,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     }
 
 
-   "assembler" should {
+    "assembler" should {
       "create hfiles populated with expected links data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -150,7 +152,6 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         spark.close()
       }
     }
-
 
   def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)

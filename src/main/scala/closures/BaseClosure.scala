@@ -10,6 +10,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql._
@@ -115,10 +116,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
           null, //trading_style
           row.getValueOrEmptyStr("address1"),
           null, null, null, null, //address2,3,4,5
-          row.getAs[String]("PostCode"),
+          row.getAs[String]("postcode"),
           row.getValueOrEmptyStr("region"),
           row.getValueOrEmptyStr("IndustryCode"),
-          row.getAs[String]("LegalStatus"),
+          row.getAs[String]("legal_status"),
           row.getValueOrNull("paye_empees"),
           row.getValueOrNull("paye_jobs"),
           row.getValueOrNull("cntd_turnover"),
@@ -244,5 +245,49 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     res
   }
 
+
+  def calculateRegion(dfWithPostcode:DataFrame, regionsByPostcodeDF:DataFrame)(implicit spark: SparkSession) = {
+    dfWithPostcode.withColumn("region",lit(""))
+    //dfWithPostcode.drop("region").join(regionsByPostcodeDF, Seq("postcode"),"left_outer").na.fill(Configs.DEFAULT_REGION, Seq("region"))
+
+  }
+
+
+  def calculateWorkingProps(dfWithLegalStatus:DataFrame)(implicit spark: SparkSession) = {
+    import org.apache.spark.sql.functions.udf
+    import dfWithLegalStatus.sqlContext.implicits.StringToColumn
+
+    def calculation = udf((legalStatus: String) => getWorkingPropsByLegalStatus(legalStatus))
+
+    dfWithLegalStatus.withColumn("working_props",calculation($"legal_status"))
+
+  }
+/**
+  * requires working_props and paye_empees recalculated
+  * */
+  def calculateEmployment(df:DataFrame)(implicit spark: SparkSession) = {
+
+    df.createOrReplaceTempView("CALCULATEEMPLOYMENT")
+
+    val sql =
+      """ SELECT *,
+                 CAST(
+                      (CAST((CASE WHEN paye_empees is NULL THEN 0 ELSE paye_empees END) AS long) + CAST(working_props AS long))
+                     AS string) AS employment
+          FROM CALCULATEEMPLOYMENT
+    """.stripMargin
+
+
+
+    spark.sql(sql)
+  }
+/**
+  * expects df with fields 'legal_status', 'postcode', 'paye_empees', 'working_props'
+  * */
+  def calculateDynamicValues(df:DataFrame, regionsByPostcodeDF:DataFrame)(implicit spark: SparkSession) = {
+    val withWorkingProps = calculateWorkingProps(df)
+    val withEmployment = calculateEmployment(withWorkingProps)
+    calculateRegion(withEmployment,regionsByPostcodeDF)
+  }
 
 }

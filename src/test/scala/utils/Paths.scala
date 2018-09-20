@@ -19,6 +19,7 @@ trait Paths {this: { val testDir: String } =>
   val parquetPath = s"src/test/resources/data/$testDir/sample.parquet"
   val payeFilePath = s"src/test/resources/data/$testDir/newPeriodPaye.csv"
   val vatFilePath = s"src/test/resources/data/$testDir/newPeriodVat.csv"
+  val geoFilePath = s"src/test/resources/data/geo/ONSPD_FEB_2018_UK.csv"
   val existingRecordsDir = s"src/test/resources/data/$testDir/existing"
   val existingEntRecordHFiles = s"$existingRecordsDir/enterprise"
   val existingLinksRecordHFiles = s"$existingRecordsDir/links"

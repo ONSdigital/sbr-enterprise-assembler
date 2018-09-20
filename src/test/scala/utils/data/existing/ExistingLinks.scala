@@ -25,7 +25,7 @@ trait ExistingLinks {this:TestIds =>
     HFileRow("LEU~100000601835",List(KVCell("c_01012444","CH"), KVCell("c_9876L","PAYE"), KVCell("c_555666777003","VAT"), KVCell("p_ENT","5000000011"))),
     HFileRow("LEU~100002826247",List(KVCell("c_00032261","CH"), KVCell("c_1151L","PAYE"), KVCell("c_123123123","VAT"), KVCell("p_ENT",entWithMissingLouId))),
 
-  HFileRow("VAT~111000111",List(KVCell("p_LEU","100000508723"))),
+    HFileRow("VAT~111000111",List(KVCell("p_LEU","100000508723"))),
     HFileRow("VAT~111222333",List(KVCell("p_LEU","100000246017"))),
     HFileRow("VAT~555666777003",List(KVCell("p_LEU","100000601835"))),
 

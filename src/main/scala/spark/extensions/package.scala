@@ -149,6 +149,7 @@ package object sql {
     .add(StructField("postcode", StringType,false))
     .add(StructField("sic07", StringType,false))
     .add(StructField("legal_status", StringType,false))
+    .add(StructField("working_props", StringType,false))
 
 
   val entRowWithEmplDataSchema = new StructType()
