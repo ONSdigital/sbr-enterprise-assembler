@@ -61,7 +61,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
                                         getValueOrStr("postcode"),
                                         getValueOrStr("sic07"),
                                         getValueOrStr("legal_status"),
-                                        getValueOrStr("working_props")
+                                        getValueOrStr("working_props",default = Configs.DEFAULT_WORKING_PROPS)
                                       ), entRowSchema)
     } catch {
         case e: java.lang.RuntimeException => {
