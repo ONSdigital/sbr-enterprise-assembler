@@ -270,18 +270,14 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     df.createOrReplaceTempView("CALCULATEEMPLOYMENT")
 
     val sql =
-      """
-        SELECT *,
-        CAST((CASE
-          WHEN paye_empees is not NULL AND working_props is not NULL
-          THEN CAST(paye_empees AS long) + CAST(working_props AS long)
-          ELSE 0
-          END
-        ) AS string) as employment
+      """ SELECT *,
+                 CAST(
+                      (CAST((CASE WHEN paye_empees is NULL THEN 0 ELSE paye_empees END) AS long) + CAST(working_props AS long))
+                     AS string) AS employment
+          FROM CALCULATEEMPLOYMENT
+    """.stripMargin
 
-        FROM CALCULATEEMPLOYMENT
 
-      """.stripMargin
 
     spark.sql(sql)
   }
