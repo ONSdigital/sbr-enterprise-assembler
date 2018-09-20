@@ -78,8 +78,9 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
 
+    printDF("existingEntDF",existingEntDF)
 
-    val existingEntCalculatedDF = {
+    val existingEntCalculatedDF: DataFrame = {
                                     val calculatedExistingEnt = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
                                     val existingEntsWithRegionRecalculatedDF = calculateRegion(calculatedExistingEnt, regionsByPostcodeDF)
                                     val existingEntsWithEmploymentRecalculatedDF = calculateEmployment(existingEntsWithRegionRecalculatedDF)
@@ -87,6 +88,8 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                                          val columns = completeEntSchema.fieldNames
                                       existingEntsWithEmploymentRecalculatedDF.select( columns.head, columns.tail: _*)
                                     }
+
+    existingEntCalculatedDF.cache()
     printDF("withReorderedColumns",withReorderedColumns)
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
@@ -94,7 +97,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
     val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
-
+    newLeusWithWorkingPropsAndRegionDF.cache()
     printDF("newLeusWithWorkingPropsAndRegionDF",newLeusWithWorkingPropsAndRegionDF)
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
@@ -103,6 +106,8 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
+    newLeusWithWorkingPropsAndRegionDF.unpersist()
+    existingEntCalculatedDF.unpersist()
     calculatedDF.unpersist()
     allEntsDF
   }
