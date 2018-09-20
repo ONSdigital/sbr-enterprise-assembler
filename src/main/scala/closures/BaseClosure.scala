@@ -247,8 +247,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
 
   def calculateRegion(dfWithPostcode:DataFrame, regionsByPostcodeDF:DataFrame)(implicit spark: SparkSession) = {
-    //dfWithPostcode.withColumn("region",lit(""))
-    dfWithPostcode.drop("region").join(regionsByPostcodeDF, Seq("postcode"),"left_outer").na.fill(Configs.DEFAULT_REGION, Seq("region"))
+    dfWithPostcode.withColumn("region",lit(""))
+    //dfWithPostcode.drop("region").join(regionsByPostcodeDF, Seq("postcode"),"left_outer").na.fill(Configs.DEFAULT_REGION, Seq("region"))
 
   }
 
