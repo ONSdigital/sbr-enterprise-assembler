@@ -88,11 +88,12 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                                          val columns = completeEntSchema.fieldNames
                                       existingEntsWithEmploymentRecalculatedDF.select( columns.head, columns.tail: _*)
                                     }
-
-    existingEntCalculatedDF.cache()
-    printDF("withReorderedColumns",withReorderedColumns)
+                                    printDF("withReorderedColumns",withReorderedColumns)
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
+    existingEntCalculatedDF.cache()
+
+
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
@@ -136,7 +137,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                   row.getValueOrEmptyStr("birth_date"),
                   row.getValueOrNull("death_date"),
                   row.getValueOrNull("death_code"),
-                  row.getValueOrNull("UPRN")
+                  row.getValueOrNull ("UPRN")
                 ),leuRowSchema))
 
     spark.createDataFrame(newLegalUnitsDS,leuRowSchema)
