@@ -31,11 +31,9 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
     val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache()
-    printDF("allEntsDF", allEntsDF)
+
 
     val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
-
-    printDF("allRusDF",allRusDF)
 
     val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
 
@@ -78,7 +76,6 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
 
-    printDF("existingEntDF",existingEntDF)
 
     val existingEntCalculatedDF: DataFrame = {
                                     val calculatedExistingEnt = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
@@ -86,11 +83,11 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                                     val existingEntsWithEmploymentRecalculatedDF = calculateEmployment(existingEntsWithRegionRecalculatedDF)
                                     val withReorderedColumns = {
                                          val columns = completeEntSchema.fieldNames
-                                      existingEntsWithEmploymentRecalculatedDF.select( columns.head, columns.tail: _*)
+                                         existingEntsWithEmploymentRecalculatedDF.select( columns.head, columns.tail: _*)
                                     }
-                                    printDF("withReorderedColumns",withReorderedColumns)
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
+
     existingEntCalculatedDF.cache()
 
 
@@ -99,7 +96,6 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
     val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
     newLeusWithWorkingPropsAndRegionDF.cache()
-    printDF("newLeusWithWorkingPropsAndRegionDF",newLeusWithWorkingPropsAndRegionDF)
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF,appconf)
