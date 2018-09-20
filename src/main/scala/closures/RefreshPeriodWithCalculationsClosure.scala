@@ -31,8 +31,11 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
     val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache()
+    printDF("allEntsDF", allEntsDF)
 
     val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
+
+    printDF("allRusDF",allRusDF)
 
     val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
 
@@ -84,12 +87,15 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                                          val columns = completeEntSchema.fieldNames
                                       existingEntsWithEmploymentRecalculatedDF.select( columns.head, columns.tail: _*)
                                     }
+    printDF("withReorderedColumns",withReorderedColumns)
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
     val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
+
+    printDF("newLeusWithWorkingPropsAndRegionDF",newLeusWithWorkingPropsAndRegionDF)
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF,appconf)

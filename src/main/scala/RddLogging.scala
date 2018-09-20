@@ -30,7 +30,6 @@ trait RddLogging {
   def printDF(name:String, df:DataFrame) = {
     println("printing DF, START>>")
     println(s"$name Schema:\n")
-    df.coalesce(df.rdd.getNumPartitions)
     df.show()
     df.printSchema()
     /*    df.cache()
