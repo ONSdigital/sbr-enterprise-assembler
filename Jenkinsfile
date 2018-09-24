@@ -1,107 +1,232 @@
-#!groovy
-@Library('jenkins-pipeline-shared') _
+#!/usr/bin/env groovy
+
+// Global scope required for multi-stage persistence
+def artServer = Artifactory.server 'art-p-01'
+def buildInfo = Artifactory.newBuildInfo()
+def distDir = 'build/dist/'
+def agentSbtVersion = 'sbt_0-13-13'
 
 pipeline {
-    environment {
-        RELEASE_TYPE = "PATCH"
-
-        BRANCH_DEV = "develop"
-        BRANCH_TEST = "release"
-        BRANCH_PROD = "master"
-
-        DEPLOY_DEV = "dev"
-        DEPLOY_TEST = "test"
-        DEPLOY_PROD = "prod"
-
-        CF_CREDS = "sbr-api-dev-secret-key"
-
-        GIT_TYPE = "Github"
-        GIT_CREDS = "github-sbr-user"
-        GITLAB_CREDS = "sbr-gitlab-id"
-
-        ORGANIZATION = "ons"
-        TEAM = "sbr"
-        MODULE_NAME = "sbr-enterprise-assembler"
-
-        // hbase config
-        CH_TABLE = "ch"
-        VAT_TABLE = "vat"
-        PAYE_TABLE = "paye"
-        NAMESPACE = "sbr_dev_db"
+    libraries {
+        lib('jenkins-pipeline-shared')
+    }
+     environment {
+        SVC_NAME = "sbr-enterprise-assembler"
+        ORG = "SBR"
     }
     options {
         skipDefaultCheckout()
         buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
-        timeout(time: 30, unit: 'MINUTES')
-        timestamps()
+        timeout(time: 1, unit: 'HOURS')
+        ansiColor('xterm')
     }
-    agent any
+    agent { label 'download.jenkins.slave' }
     stages {
         stage('Checkout') {
-            agent any
+            agent { label 'download.jenkins.slave' }
             steps {
-                deleteDir()
-                checkout scm
-                stash name: 'app'
-                sh "$SBT version"
+                checkout scm        
                 script {
-                    version = '1.0.' + env.BUILD_NUMBER
-                    currentBuild.displayName = version
-                    env.NODE_STAGE = "Checkout"
+                    buildInfo.name = "${SVC_NAME}"
+                    buildInfo.number = "${BUILD_NUMBER}"
+                    buildInfo.env.collect()
+                }
+                colourText("info", "BuildInfo: ${buildInfo.name}-${buildInfo.number}")
+                stash name: 'Checkout'
+            }
+        }
+
+        stage('Build'){
+            agent { label "build.${agentSbtVersion}" }
+            steps {
+                unstash name: 'Checkout'
+                sh "sbt compile"
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
                 }
             }
         }
 
-        stage ('Package and Push Artifact') {
-            agent any
-           /* when {
-                anyOf {
-                    branch DEPLOY_DEV
-                    branch DEPLOY_TEST
+        stage('Validate') {
+            failFast true
+            parallel {
+                stage('Test: Unit'){
+                    agent { label "build.${agentSbtVersion}" }
+                    steps {
+                        unstash name: 'Checkout'
+                        sh 'sbt coverage test coverageReport coverageAggregate'
+                    }
+                    post {
+                        always {
+                            junit '**/target/test-reports/*.xml'
+                            cobertura autoUpdateHealth: false, 
+                                autoUpdateStability: false, 
+                                coberturaReportFile: 'target/**/coverage-report/cobertura.xml', 
+                                conditionalCoverageTargets: '70, 0, 0', 
+                                failUnhealthy: false, 
+                                failUnstable: false, 
+                                lineCoverageTargets: '80, 0, 0', 
+                                maxNumberOfBuilds: 0, 
+                                methodCoverageTargets: '80, 0, 0', 
+                                onlyStable: false, 
+                                zoomCoverageChart: false
+                        }
+                        success {
+                            postSuccess()
+                        }
+                        failure {
+                            postFail()
+                        }
+                    }
                 }
-            }*/
-            steps {
-                script {
-                    env.NODE_STAGE = "Package and Push Artifact"
+                stage('Style') {
+                    agent { label "build.${agentSbtVersion}" }
+                    steps {
+                        unstash name: 'Checkout'
+                        colourText("info","Running style tests")
+                        sh 'sbt scalastyleGenerateConfig scalastyle'
+                    }
+                    post {
+                        always {
+                            checkstyle canComputeNew: false, defaultEncoding: '', healthy: '', pattern: 'target/scalastyle-result.xml', unHealthy: ''   
+                        }
+                    }
                 }
-                sh """
-		    mkdir $WORKSPACE/tmp
-                    $SBT -Djava.io.tmpdir=$WORKSPACE/tmp clean compile assembly
-                """
-                copyToHBaseNode()
-                colourText("success", 'Package.')
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
             }
         }
 
+        stage('Test: Acceptance') {
+            agent { label "build.${agentSbtVersion}" }
+            steps {
+                unstash name: 'Checkout'
+                sh "sbt it:test"
+            }
+            post {
+                always {
+                    junit '**/target/test-reports/*.xml'
+                }
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
+            }
+        }
 
-    }
-}
+        stage ('Publish') {
+            agent { label "build.${agentSbtVersion}" }
+            when { 
+                branch "master" 
+                // evaluate the when condition before entering this stage's agent, if any
+                beforeAgent true 
+            }
+            steps {
+                colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
+                unstash name: 'Checkout'
+                sh 'sbt assembly'
+                script {
+                    def uploadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "target/universal/*.zip",
+                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/"
+                            }
+                        ]
+                    }"""
+                    artServer.upload spec: uploadSpec, buildInfo: buildInfo
+                }
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
+            }
+        }
 
-def push (String newTag, String currentTag) {
-    echo "Pushing tag ${newTag} to Gitlab"
-    GitRelease( GIT_CREDS, newTag, currentTag, "${env.BUILD_ID}", "${env.BRANCH_NAME}", GIT_TYPE)
-}
-
-def deploy (String dataSource) {
-    CF_SPACE = "${env.DEPLOY_NAME}".capitalize()
-    CF_ORG = "${TEAM}".toUpperCase()
-    echo "Deploying Api app to ${env.DEPLOY_NAME}"
-    withCredentials([string(credentialsId: CF_CREDS, variable: 'APPLICATION_SECRET')]) {
-        deployToCloudFoundryHBase("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_ORG}", "${CF_SPACE}", "${env.DEPLOY_NAME}-${dataSource}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml", "${dataSource}", NAMESPACE)
-    }
-}
-
-def copyToHBaseNode() {
-    echo "Deploying to $DEPLOY_DEV"
-    sshagent(credentials: ["sbr-$DEPLOY_DEV-ci-ssh-key"]) {
-        withCredentials([string(credentialsId: "sbr-hbase-node", variable: 'HBASE_NODE')]) {
-            sh '''
-                ssh sbr-$DEPLOY_DEV-ci@$HBASE_NODE mkdir -p $MODULE_NAME/lib
-                scp ${WORKSPACE}/target/scala-2.11/sbr-enterprise-assembler-assembly*.jar sbr-$DEPLOY_DEV-ci@$HBASE_NODE:$MODULE_NAME/lib/
-                echo "Successfully copied jar file to $MODULE_NAME/lib directory on $HBASE_NODE"
-                ssh sbr-$DEPLOY_DEV-ci@$HBASE_NODE hdfs dfs -put -f $MODULE_NAME/lib/sbr-enterprise-assembler-assembly*.jar hdfs://prod1/user/sbr-$DEPLOY_DEV-ci/lib/
-                echo "Successfully copied jar file to HDFS"
-	        '''
+        stage('Deploy: Dev'){
+            agent { label 'deploy.cf' }
+            when { 
+                branch "master"
+                // evaluate the when condition before entering this stage's agent, if any
+                beforeAgent true 
+            }
+            environment{
+                CREDS = 's_jenkins_sbr_dev'
+                SPACE = 'Dev'
+            }
+            steps {
+                script {
+                    def downloadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.zip",
+                                "target": "${distDir}",
+                                "flat": "true"
+                            }
+                        ]
+                    }"""
+                    artServer.download spec: downloadSpec, buildInfo: buildInfo
+                    sh "mv ${distDir}*.zip ${distDir}${env.SVC_NAME}.zip"
+                }
+                // TODO: Deploy to HBase
+            }
+            post {
+                success {
+                    postSuccess()
+                }
+                failure {
+                    postFail()
+                }
+            }
         }
     }
+
+    post {
+        success {
+            colourText("success", "All stages complete. Build was successful.")
+            slackSend(
+                color: "good",
+                message: "${env.JOB_NAME} success: ${env.RUN_DISPLAY_URL}"
+            )
+        }
+        unstable {
+            colourText("warn", "Something went wrong, build finished with result ${currentResult}. This may be caused by failed tests, code violation or in some cases unexpected interrupt.")
+            slackSend(
+                color: "warning",
+                message: "${env.JOB_NAME} unstable: ${env.RUN_DISPLAY_URL}"
+            )
+        }
+        failure {
+            colourText("warn","Process failed at: ${env.NODE_STAGE}")
+            slackSend(
+                color: "danger",
+                message: "${env.JOB_NAME} failed at ${env.STAGE_NAME}: ${env.RUN_DISPLAY_URL}"
+            )
+        }
+    }
+}
+
+def postSuccess() {
+    colourText('info', "Stage: ${env.STAGE_NAME} successfull!")
+}
+
+def postFail() {
+    colourText('warn', "Stage: ${env.STAGE_NAME} failed!")
 }
