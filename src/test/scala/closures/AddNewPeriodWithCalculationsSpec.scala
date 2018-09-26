@@ -1,5 +1,7 @@
 package closures
 
+import java.io.{BufferedWriter, FileWriter}
+
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
 import dao.hbase.HBaseConnectionManager
 import dao.parquet.ParquetDao
@@ -7,7 +9,7 @@ import global.AppParams
 import global.Configs.conf
 import model.domain._
 import org.apache.hadoop.hbase.client.Connection
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest._
 import spark.extensions.rdd.HBaseDataReader._
 import utils.Paths
@@ -15,7 +17,7 @@ import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
-
+import java.io._
 
 
 class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
@@ -71,6 +73,26 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
       }
      spark.stop
   }
+
+/*  "blaCreate test-data csvh" should {"blah" in{
+    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+     val geoPath = "/Users/VLAD/Downloads/ONSPD_FEB_2018_UK/Data/New Order/ONSPD_FEB_2018_UK.csv"
+     val pcPath = "src/test/resources/data/geo/postcodes.csv"
+     val geoDF = spark.read.option("header", "true").csv(geoPath).select("pcds","rgn").toDF("postcode", "region")
+     val pcDF = spark.read.option("header", "false").csv(pcPath).toDF("postcode")
+     val rows = pcDF.join(geoDF, Seq("postcode"),"left_outer").collect()
+     val recs = rows.map(row => {
+       row.getAs[String]("postcode") + ","+row.getAs[String]("region")
+     })
+     val wholeSet = "postcode,region"+:recs
+    val dataStr = wholeSet.mkString("\n")
+    val file = new java.io.File("src/test/resources/data/geo/test-dataset.csv")
+    val bw = new BufferedWriter(new FileWriter(file))
+    bw.write(dataStr)
+    bw.close()
+    true shouldBe true
+
+  }}*/
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
@@ -140,6 +162,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         spark.close()
       }
     }
+
 
   def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
