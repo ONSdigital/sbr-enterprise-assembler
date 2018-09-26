@@ -49,7 +49,7 @@ case class AppParams(
 
 object AppParams{
 
-  val DEFAULT_GEO_PATH = "src/main/resources/data/geo/TEST-GEO.csv"
+  val DEFAULT_GEO_PATH = "src/main/resources/data/geo/test-dataset.csv"
 
   def apply(args:Array[String]) = new AppParams(
                                                   args(0),
