@@ -15,9 +15,7 @@ import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
-/**
-  *
-  */
+
 
 
 class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
