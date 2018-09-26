@@ -102,7 +102,7 @@ lazy val addNewPeriodWithCalculationsParams = Array(
                                   "201804",
                                   "src/main/resources/data/newperiod/newPeriodPaye.csv",
                                   "src/main/resources/data/newperiod/newPeriodVat.csv",
-                                  "src/main/resources/data/geo/TEST-GEO.csv",
+                                  "",
                                   "local",
                                   "add-calculated-period"
                                 )
