@@ -32,14 +32,16 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
       "LOU", "ons", "d",louHfilePath,
       "REU", "ons", "d",ruHfilePath,
       parquetPath,
-      "201804",payeFilePath,
+      "201804",
+      payeFilePath,
       vatFilePath,
+      geoFilePath,
       "local",
       "add-calculated-period"
     )))
 
 
-  override def beforeAll() = {
+  /*override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -64,7 +66,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
   }
 
 
-/*  "assembler" should {
+  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()

@@ -55,11 +55,15 @@ class AddNewPeriodDataIntegrityTest extends Paths with WordSpecLike with Matcher
   val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
+      "LEU", "ons", "d", leuHfilePath,
       "ENT", "ons", "d",entHfilePath,
       "LOU", "ons", "d",louHfilePath,
+      "REU", "ons", "d",ruHfilePath,
       parquetPath,
-      "201804",payeFilePath,
+      "201804",
+      payeFilePath,
       vatFilePath,
+      geoFilePath,
       "local",
       "add-calculated-period"
     )))

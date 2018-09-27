@@ -28,7 +28,9 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
                         .add(StructField("count", IntegerType,true))
                         .add(StructField("avg", IntegerType,true))
 
-  val appConfs = AppParams(
+
+
+  /*val appConfs = AppParams(
     (Array[String](
       "LINKS", "ons", "l", linkHfilePath,
       "LEU", "ons", "d", leuHfilePath,
@@ -36,8 +38,10 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
       "LOU", "ons", "d",louHfilePath,
       "REU", "ons", "d",ruHfilePath,
       parquetPath,
-      "201804",payeFilePath,
+      "201804",
+      payeFilePath,
       vatFilePath,
+      geoFilePath,
       "local",
       "add-calculated-period"
     )))
@@ -113,7 +117,7 @@ class AdminCalculatorSpec extends Paths with WordSpecLike with Matchers with Bef
     val flatPayeDataSql = AdminDataCalculator.generateCalculateAvgSQL(luTableName,payeDataTableName)
     spark.sql(flatPayeDataSql)
 
-  }
+  }*/
 
 
 }
