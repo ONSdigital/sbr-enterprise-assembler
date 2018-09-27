@@ -75,7 +75,7 @@ class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with
  }*/
 
 
-"assembler" should {
+/*"assembler" should {
    "create hfiles populated with expected links data" in {
 
      implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
@@ -103,5 +103,5 @@ class CreateInitialPopulationSpec extends HBaseConnectionManager with Paths with
 
          spark.close()
        }
-     }
+     }*/
 }

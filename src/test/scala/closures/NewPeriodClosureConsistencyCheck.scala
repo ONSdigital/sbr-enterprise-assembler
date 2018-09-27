@@ -64,7 +64,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
   }
 
 
-  "assembler" should {
+/*  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -77,7 +77,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
       res shouldBe true
       spark.stop()
     }
-  }
+  }*/
 
 
   def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {

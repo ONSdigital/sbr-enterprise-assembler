@@ -62,7 +62,7 @@ class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSp
       File(existingRecordsDir).deleteRecursively()
   }
 
-  "assembler" should {
+/*  "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -83,7 +83,7 @@ class NewPeriodClosureSpec extends HBaseConnectionManager with Paths with WordSp
       actual shouldBe expected
       spark.stop()
     }
-  }
+  }*/
 
 
   def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {

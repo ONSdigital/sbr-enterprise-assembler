@@ -74,7 +74,7 @@ class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths w
 
 
 
-"assembler" should {
+/*"assembler" should {
    "create hfiles populated with expected local units data" in {
 
         implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -97,7 +97,7 @@ class AddNewPeriodWithMissingLouSpec extends HBaseConnectionManager with Paths w
         spark.stop()
 
         }
-}
+}*/
 
 
 override def saveToHFile(rows:Seq[HFileRow], colFamily:String, appconf:AppParams, path:String)(implicit spark:SparkSession) = {
