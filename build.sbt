@@ -102,7 +102,7 @@ lazy val addNewPeriodWithCalculationsParams = Array(
                                   "201804",
                                   "src/main/resources/data/newperiod/newPeriodPaye.csv",
                                   "src/main/resources/data/newperiod/newPeriodVat.csv",
-                                  "src/main/resources/data/geo/ONSPD_FEB_2018_UK.csv",
+                                  "",
                                   "local",
                                   "add-calculated-period"
                                 )
@@ -170,3 +170,4 @@ LINKS ons l src/main/resources/data/newperiod/links/hfile ENT ons d src/main/res
 /*current app params for create:
 * LINKS ons l src/main/resources/data/create/links/hfile ENT ons d src/main/resources/data/create/enterprise/hfile LOU ons d src/main/resources/data/create/local-unit/hfile src/main/resources/data/create/sample.parquet localhost 2181 201802 src/main/resources/data/create/smallPaye.csv main/resources/data/create/smallVat.csv local create
 * */
+

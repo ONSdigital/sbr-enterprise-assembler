@@ -1,5 +1,7 @@
 package global
 
+import global.AppParams.DEFAULT_GEO_PATH
+
 /**
   * args sample:  LINKS ons l src/main/resources/data/links/hfile ENT ons d src/main/resources/data/enterprise/hfile src/main/resources/data/sample.parquet localhost 2181 201802 src/main/resources/data/smallPaye.csv src/main/resources/data/smallVat.csv local
   * args types:   linksTableName linksNameSpace linksTablefamily linksHfilePath enterpriseTableName enterpriseNameSpace enterpriseTableFamily enterpriseHFilePath parquetFilePath quorumHost quorumPort timePeriod payeCsvPath
@@ -47,6 +49,8 @@ case class AppParams(
 
 object AppParams{
 
+  val DEFAULT_GEO_PATH = "src/main/resources/data/geo/test-dataset.csv"
+
   def apply(args:Array[String]) = new AppParams(
                                                   args(0),
                                                   args(1),
@@ -72,9 +76,10 @@ object AppParams{
                                                   args(21),
                                                   args(22),
                                                   args(23),
-                                                  args(24),
+                                                  if(args(24).trim=="") DEFAULT_GEO_PATH else args(24),
                                                   args(25),
                                                   args(26)
                                                  )
   
 }
+
