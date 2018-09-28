@@ -63,7 +63,7 @@ pipeline {
                     }
                     post {
                         always {
-                            junit '**/target/test-reports/*.xml'
+                            junit allowEmptyResults: true, testResults: 'target/test-reports/*.xml'
                             cobertura autoUpdateHealth: false, 
                                 autoUpdateStability: false, 
                                 coberturaReportFile: 'target/**/coverage-report/cobertura.xml', 
