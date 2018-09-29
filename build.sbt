@@ -14,8 +14,10 @@ lazy val Versions = new {
 }
 
 resolvers += "ClouderaRepo" at "https://repository.cloudera.com/artifactory/cloudera-repos"
+resolvers += "Local Maven Repository" at "file:///Users/VLAD/.m2/repository"
 
 libraryDependencies ++= Seq(
+  //"uk.gov.ons" % "sml" % "1.0-SNAPSHOT",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
   "org.apache.hbase" % "hbase-hadoop-compat" % "1.4.2",
   "com.typesafe" % "config" % "1.3.2",
