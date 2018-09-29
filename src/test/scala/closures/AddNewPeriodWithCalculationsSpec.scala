@@ -83,7 +83,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 }
 
 
-/*  override def afterAll() = {
+  override def afterAll() = {
     File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(leuHfilePath).deleteRecursively()
@@ -91,7 +91,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     File(louHfilePath).deleteRecursively()
     File(ruHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
-  }*/
+  }
 
 /*  "blaCree test-data csvh" should {"blah" in{
        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()

@@ -9,10 +9,10 @@ import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import spark.RddLogging
-import spark.calculations.{AdminDataCalculatorNew}
+import spark.calculations.{AdminDataCalculator, SmlAdminDataCalculator}
 import spark.extensions.sql._
 
-trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculatorNew with BaseClosure with RddLogging with Serializable{
+trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with RddLogging with Serializable{
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"

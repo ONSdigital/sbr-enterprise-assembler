@@ -13,7 +13,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import spark.calculations.AdminDataCalculatorOld
+import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader._
 import utils.Paths
 import utils.data.existing.ExistingData

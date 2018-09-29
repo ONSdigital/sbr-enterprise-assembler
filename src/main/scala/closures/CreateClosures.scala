@@ -5,13 +5,13 @@ import global.AppParams
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import spark.RddLogging
-import spark.calculations.AdminDataCalculatorNew
+import spark.calculations.SmlAdminDataCalculator
 import spark.extensions.sql._
 
 /**
   *
   */
-trait CreateClosures extends AdminDataCalculatorNew with BaseClosure with HFileUtils with RddLogging with Serializable{
+trait CreateClosures extends SmlAdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
   override def createUnitsHfiles(appconf:AppParams)(implicit spark:SparkSession, con:Connection){
