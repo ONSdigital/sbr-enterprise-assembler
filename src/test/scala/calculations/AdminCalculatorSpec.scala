@@ -8,7 +8,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spark.RddLogging
-import spark.calculations.AdminDataCalculator
+import spark.calculations.AdminDataCalculatorOld
 import utils.Paths
 import utils.data.existing.ExistingData
 import utils.data.expected.{ExpectedCalculations, ExpectedDataForAddNewPeriodScenario}

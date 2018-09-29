@@ -10,13 +10,13 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import spark.RddLogging
-import spark.calculations.AdminDataCalculator
+import spark.calculations.{AdminDataCalculator, AdminDataCalculatorOld}
 import spark.extensions.rdd.HBaseDataReader
 
 /**
   *
   */
-trait CalculateClosure extends AdminDataCalculator with BaseClosure with  RddLogging with Serializable{
+trait CalculateClosure extends AdminDataCalculatorOld with BaseClosure with  RddLogging with Serializable{
 
   val confs = Configs.conf
 
