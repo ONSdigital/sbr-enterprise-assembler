@@ -1,11 +1,6 @@
-package spark.calculations
-
-
+package uk.gov.ons.registers.methods
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import uk.gov.ons.registers.methods.{PayeCalculator, VatCalculator}
-
-
 
 trait SmlAdminDataCalculator extends PayeCalculator with VatCalculator{
 

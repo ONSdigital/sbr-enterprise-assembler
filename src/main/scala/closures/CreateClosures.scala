@@ -5,8 +5,8 @@ import global.AppParams
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import spark.RddLogging
-import spark.calculations.SmlAdminDataCalculator
 import spark.extensions.sql._
+import uk.gov.ons.registers.methods.SmlAdminDataCalculator
 
 /**
   *

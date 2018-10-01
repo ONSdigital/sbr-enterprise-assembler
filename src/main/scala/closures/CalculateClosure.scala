@@ -10,7 +10,7 @@ import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import spark.RddLogging
-import spark.calculations.{SmlAdminDataCalculator, AdminDataCalculator}
+import spark.calculations.AdminDataCalculator
 import spark.extensions.rdd.HBaseDataReader
 
 /**

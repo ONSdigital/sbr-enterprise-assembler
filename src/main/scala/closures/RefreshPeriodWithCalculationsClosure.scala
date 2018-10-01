@@ -9,8 +9,9 @@ import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import spark.RddLogging
-import spark.calculations.{AdminDataCalculator, SmlAdminDataCalculator}
+import spark.calculations.AdminDataCalculator
 import spark.extensions.sql._
+import uk.gov.ons.registers.methods.SmlAdminDataCalculator
 
 trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with BaseClosure with RddLogging with Serializable{
 
