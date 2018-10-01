@@ -1,4 +1,4 @@
-package uk.gov.ons.registers.model
+package temp.calculations.model
 
 object CommonFrameDataFields {
   val prn = "prn"

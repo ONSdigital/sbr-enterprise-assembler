@@ -1,9 +1,9 @@
-package uk.gov.ons.registers.methods
+package temp.calculations.methods
 
 import global.AppParams
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql._
-import uk.gov.ons.registers.model.CommonFrameDataFields._
+import temp.calculations.model.CommonFrameDataFields._
 
 trait VatCalculator{
 

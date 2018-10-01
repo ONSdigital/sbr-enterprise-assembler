@@ -5,7 +5,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import spark.RddLogging
 import org.apache.spark.sql.functions.lit
-import uk.gov.ons.registers.methods
+import temp.calculations.methods
 
 
 trait AdminDataCalculator extends Serializable with RddLogging{
