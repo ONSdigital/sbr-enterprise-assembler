@@ -12,7 +12,7 @@ import spark.RddLogging
 import spark.calculations.{AdminDataCalculator, SmlAdminDataCalculator}
 import spark.extensions.sql._
 
-trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with RddLogging with Serializable{
+trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with BaseClosure with RddLogging with Serializable{
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
@@ -71,7 +71,10 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
-    val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
+    val vatDF = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
+    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+
+    val calculatedDF = calculate(allLinksLusDF,payeDF,vatDF).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)

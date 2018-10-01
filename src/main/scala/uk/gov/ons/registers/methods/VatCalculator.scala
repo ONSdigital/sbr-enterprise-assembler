@@ -5,9 +5,9 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql._
 import uk.gov.ons.registers.model.CommonFrameDataFields._
 
-class VAT(implicit activeSession: SparkSession ){
+trait VatCalculator{
 
-  def calculate(BIDF: DataFrame, payeDF: DataFrame, VatDF: DataFrame) = {
+  def calculateVat(BIDF: DataFrame, payeDF: DataFrame, VatDF: DataFrame)(implicit activeSession: SparkSession ) = {
 
     val calculatedWithVatAndPaye = joinWithVatAndPayeData(BIDF, VatDF, payeDF)
     val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye)
@@ -175,9 +175,4 @@ class VAT(implicit activeSession: SparkSession ){
   }
 
 
-}
-
-object VAT {
-  def Vat(implicit sparkSession: SparkSession): VAT =
-    new VAT
 }

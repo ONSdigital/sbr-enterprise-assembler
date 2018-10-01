@@ -5,12 +5,12 @@ import org.apache.spark.sql.functions.sum
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 
-class PAYE(implicit activeSession: SparkSession) {
+trait PayeCalculator {
 
   val jobs = "paye_jobs"
   val employees = "paye_empees"
 
-  def calculate(BIDF: DataFrame, payeDF: DataFrame): DataFrame = {
+  def calculatePaye(BIDF: DataFrame, payeDF: DataFrame)(implicit activeSession: SparkSession): DataFrame = {
     val calculatedPayeEmployeesDF = getGroupedByPayeEmployees(BIDF, payeDF)
     val calculatedPayeJobsDF = getGroupedByPayeJobs(BIDF, payeDF, "dec_jobs")
     val calculatedPayeDF = calculatedPayeEmployeesDF.join(calculatedPayeJobsDF, "ern")
@@ -145,8 +145,4 @@ class PAYE(implicit activeSession: SparkSession) {
   //          linkedPayes.printSchema()*/
   //    }
 
-}
-object PAYE {
-  def Paye(implicit sparkSession: SparkSession): PAYE =
-    new PAYE
 }

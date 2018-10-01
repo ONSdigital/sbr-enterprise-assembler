@@ -22,7 +22,7 @@ trait CreateClosures extends SmlAdminDataCalculator with BaseClosure with HFileU
     val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
     val stringifiedParquet = spark.read.parquet(appArgs.PATH_TO_PARQUET).castAllToString
-    val newLEUsCalculatedDF = calculate(stringifiedParquet,appconf).castAllToString
+    val newLEUsCalculatedDF = calculate(stringifiedParquet,payeDF,vatDF).castAllToString
     newLEUsCalculatedDF.cache()
 
     val allLUsDF = getAllLUs(newLEUsCalculatedDF,appconf)
