@@ -30,7 +30,8 @@ libraryDependencies ++= Seq(
                                                         .exclude("aopalliance","aopalliance")
                                                         .exclude("commons-beanutils","commons-beanutils"),
   "org.apache.spark" %% "spark-sql" % Versions.spark,
-  ("org.apache.crunch" % "crunch-hbase" % "0.15.0")   .exclude("com.sun.jersey","jersey-server")
+  ("org.apache.crunch" % "crunch-hbase" % "0.15.0")   .exclude("com.sun.jersey","jersey-server"),
+  "org.apache.spark" %% "spark-hive" % "2.2.0"
 )
 
 
