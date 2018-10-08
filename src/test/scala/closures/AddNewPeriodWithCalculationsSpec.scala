@@ -93,7 +93,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
    File(existingRecordsDir).deleteRecursively()
  }*/
 
-/*  "blaCree test-data csvh" should {"blah" in{
+/*  "create test-data csv" should {" just do it" in{
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val geoPath = "/Users/VLAD/Downloads/ONSPD_FEB_2018_UK/Data/New Order/ONSPD_FEB_2018_UK.csv"
       val pcPath = "src/test/resources/data/geo/postcodes.csv"
