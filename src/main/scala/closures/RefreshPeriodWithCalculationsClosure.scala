@@ -24,14 +24,14 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     * */
   override def createUnitsHfiles(appconf: AppParams)(implicit spark: SparkSession, con:Connection): Unit = {
 
-/*    val regionsByPostcodeDF: DataFrame = if (appconf.ENV == "local"){
+    val regionsByPostcodeDF: DataFrame = if (appconf.ENV == "local"){
       spark.read.option("header", "true").csv(appconf.PATH_TO_GEO).select("pcds","rgn").toDF("postcode", "region").cache()
     }else{
       HiveDao.getRegions(appconf)
-    }*/
-    val regionsByPostcode: RDD[Row] = spark.sparkContext.parallelize(Seq(("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"))).map(t => Row(t._1, t._2))
+    }
+/*    val regionsByPostcode: RDD[Row] = spark.sparkContext.parallelize(Seq(("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"))).map(t => Row(t._1, t._2))
     val regionMappingSchema = new StructType().add(StructField("ern", StringType, false))
-    val regionsByPostcodeDF = spark.createDataFrame(regionsByPostcode,regionMappingSchema)
+    val regionsByPostcodeDF = spark.createDataFrame(regionsByPostcode,regionMappingSchema)*/
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
