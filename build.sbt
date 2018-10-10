@@ -15,6 +15,7 @@ lazy val Versions = new {
 
 resolvers += "ClouderaRepo" at "https://repository.cloudera.com/artifactory/cloudera-repos"
 resolvers += "Local Maven Repository" at "file:///Users/VLAD/.m2/repository"
+resolvers += Resolver.bintrayRepo("ons", "ONS-Registers")//Resolver.url("my-test-repo", url("https://example.org/repo-releases/"))
 
 libraryDependencies ++= Seq(
   "uk.gov.ons" % "registers-sml" % "1.0",
