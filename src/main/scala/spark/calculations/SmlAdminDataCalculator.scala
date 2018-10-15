@@ -8,7 +8,7 @@ import uk.gov.ons.registers.methods.{PayeCalculator, VatCalculator}
 
 trait SmlAdminDataCalculator extends PayeCalculator with VatCalculator with Serializable{
 
-  def calculate(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
+  def calculate(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame, tphDF:DataFrame)(implicit spark: SparkSession ) = {
 
     val payeCalculated:DataFrame = calculatePAYE(unitsDF,payeDF)
 

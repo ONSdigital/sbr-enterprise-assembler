@@ -39,7 +39,8 @@ case class AppParams(
                       TIME_PERIOD:String,
 
                       HIVE_DB_NAME:String,
-                      HIVE_TABLE_NAME:String,
+                      REGION_HIVE_TABLE_NAME:String,
+                      TPH_HIVE_TABLE_NAME:String,
 
                       PATH_TO_PAYE:String,
                       PATH_TO_VAT:String,
@@ -84,7 +85,8 @@ object AppParams{
                                                   args(24),
                                                   args(25),
                                                   args(26),
-                                                  args(27)
+                                                  args(27),
+                                                  args(28)
                                                  )
   
 }

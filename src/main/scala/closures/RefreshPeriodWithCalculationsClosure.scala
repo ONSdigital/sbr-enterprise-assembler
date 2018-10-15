@@ -31,13 +31,21 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
     }else{
       HiveDao.getRegions(appconf)
     }
+
+    val tphDF: DataFrame = if (appconf.ENV == "local"){
+      spark.read.option("header", "true").csv(appconf.PATH_TO_GEO).select("sic07","tph").toDF(/*"postcode", "region"*/).cache()
+    }else{
+      HiveDao.getTph(appconf)
+    }
+
+
 /*    val regionsByPostcode: RDD[Row] = spark.sparkContext.parallelize(Seq(("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"))).map(t => Row(t._1, t._2))
     val regionMappingSchema = new StructType().add(StructField("ern", StringType, false))
     val regionsByPostcodeDF = spark.createDataFrame(regionsByPostcode,regionMappingSchema)*/
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
-    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache()
+    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF, tphDF, appconf).cache()
 
 
     val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
@@ -76,12 +84,12 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
   }
 
 
-  def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame, tphDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 
     val vatDF = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
     val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
 
-    val calculatedDF = calculate(allLinksLusDF,payeDF,vatDF).castAllToString
+    val calculatedDF = calculate(allLinksLusDF,payeDF,vatDF,tphDF).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
