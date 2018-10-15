@@ -29,6 +29,7 @@ case class AppParams(
                       HBASE_LOCALUNITS_COLUMN_FAMILY:String,
                       PATH_TO_LOCALUNITS_HFILE:String,
 
+
                       HBASE_REPORTINGUNITS_TABLE_NAME:String,
                       HBASE_REPORTINGUNITS_TABLE_NAMESPACE:String,
                       HBASE_REPORTINGUNITS_COLUMN_FAMILY:String,
@@ -36,14 +37,18 @@ case class AppParams(
 
                       PATH_TO_PARQUET:String,
                       TIME_PERIOD:String,
+
+                      HIVE_DB_NAME:String,
+                      HIVE_TABLE_NAME:String,
+
                       PATH_TO_PAYE:String,
                       PATH_TO_VAT:String,
-                      PATH_TO_GEO:String,
                       ENV:String,
                       ACTION:String
                    ){
   val PREVIOUS_TIME_PERIOD = (TIME_PERIOD.toInt - 1).toString //temp
   val PATH_TO_LEU_TO_ENT_CSV = "src/main/resources/data/LeU_to_ENT_subset.csv"
+  val PATH_TO_GEO = DEFAULT_GEO_PATH
 }
 
 
@@ -76,9 +81,10 @@ object AppParams{
                                                   args(21),
                                                   args(22),
                                                   args(23),
-                                                  if(args(24).trim=="") DEFAULT_GEO_PATH else args(24),
+                                                  args(24),
                                                   args(25),
-                                                  args(26)
+                                                  args(26),
+                                                  args(27)
                                                  )
   
 }
