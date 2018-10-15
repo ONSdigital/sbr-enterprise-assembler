@@ -24,14 +24,11 @@ libraryDependencies ++= Seq(
                                                           .exclude("org.mortbay.jetty","jsp-api-2.1"),
   "org.apache.hbase" % "hbase-common" % Versions.hbase,
   "org.apache.hbase" %  "hbase-client" % Versions.hbase,
-/*  ("org.apache.hbase" % "hbase-spark" % "2.0.0-alpha4")
-    .exclude("com.fasterxml.jackson.module","jackson-module-scala_2.10"),*/
   ("org.apache.spark" %% "spark-core" % Versions.spark)
                                                         .exclude("aopalliance","aopalliance")
                                                         .exclude("commons-beanutils","commons-beanutils"),
   "org.apache.spark" %% "spark-sql" % Versions.spark,
   ("org.apache.crunch" % "crunch-hbase" % "0.15.0")   .exclude("com.sun.jersey","jersey-server")
-
 )
 
 
@@ -100,13 +97,14 @@ lazy val addNewPeriodWithCalculationsParams = Array(
                                   "localhost",
                                   "2181",
                                   "201804",
+                                  "HIVE DB NAME",
+                                  "HIVE TABLE NAME",
                                   "src/main/resources/data/newperiod/newPeriodPaye.csv",
                                   "src/main/resources/data/newperiod/newPeriodVat.csv",
-                                  "",
                                   "local",
                                   "add-calculated-period"
                                 )
-//"LINKS", "ons", "l", "src/main/resources/data/newperiod/links/hfile", "LEU", "ons", "d", "src/main/resources/data/newperiod/legal-unit/hfile", "ENT", "ons", "d", "src/main/resources/data/newperiod/enterprise/hfile", "LOU", "ons", "d", "src/main/resources/data/newperiod/local-unit/hfile", "REU", "ons", "d", "src/main/resources/data/newperiod/reporting-unit/hfile", "src/main/resources/data/newperiod/sample.parquet", "localhost", "2181", "201804", "src/main/resources/data/newperiod/newPeriodPaye.csv", "src/main/resources/data/newperiod/newPeriodVat.csv", "src/main/resources/data/geo/ONSPD_FEB_2018_UK.csv.csv", "local", "add-calculated-period"
+//LINKS ons l src/main/resources/data/newperiod/links/hfile LEU ons d src/main/resources/data/newperiod/legal-unit/hfile ENT ons d src/main/resources/data/newperiod/enterprise/hfile LOU ons d src/main/resources/data/newperiod/local-unit/hfile REU ons d src/main/resources/data/newperiod/reporting-unit/hfile src/main/resources/data/newperiod/sample.parquet localhost 2181 201804 "HIVE DB NAME" "HIVE TABLE NAME" src/main/resources/data/newperiod/newPeriodPaye.csv src/main/resources/data/newperiod/newPeriodVat.csv  local add-calculated-period
 
 
 lazy val deletePeriodParams = Array(
