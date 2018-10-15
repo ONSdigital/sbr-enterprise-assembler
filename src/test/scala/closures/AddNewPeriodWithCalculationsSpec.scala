@@ -53,7 +53,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
   }
 
- val appConfs = AppParams(
+ /*val appConfs = AppParams(
    (Array[String](
      "LINKS", "ons", "l", linkHfilePath,
      "LEU", "ons", "d", leuHfilePath,
@@ -70,7 +70,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      "add-calculated-period"
    )))
 
-/*override def beforeAll() = {
+override def beforeAll() = {
   implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
   conf.set("hbase.zookeeper.quorum", "localhost")
   conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -84,7 +84,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 }
 
 
- overridef afterAll() = {
+ override def afterAll() = {
    File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(leuHfilePath).deleteRecursively()
@@ -92,8 +92,8 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
    File(louHfilePath).deleteRecursively()
    File(ruHfilePath).deleteRecursively()
    File(existingRecordsDir).deleteRecursively()
- }*/
-
+ }
+*/
 /*  "create test-data csv" should {" just do it" in{
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val geoPath = "/Users/VLAD/Downloads/ONSPD_FEB_2018_UK/Data/New Order/ONSPD_FEB_2018_UK.csv"
@@ -112,7 +112,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
 }}*/
 
-/* "assembler" should {
+ /*"assembler" should {
  "create hfiles populated with expected enterprise data" in {
 
    implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
@@ -180,7 +180,6 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      spark.close()
    }
  }
-*/
 
 def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
   saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
@@ -189,8 +188,8 @@ def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Con
   saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
   saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
 }
-*/
 
+*/
 
 }
 
