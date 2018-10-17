@@ -10,9 +10,13 @@ trait SmlAdminDataCalculator extends PayeCalculator with VatCalculator with Seri
 
   def calculate(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ) = {
 
+    unitsDF.cache()
+
     val payeCalculated:DataFrame = calculatePAYE(unitsDF,payeDF)
 
     calculateVAT(unitsDF,payeCalculated,vatDF)
+
+    unitsDF.unpersist()
   }
 
 }
