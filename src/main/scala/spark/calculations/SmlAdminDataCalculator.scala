@@ -14,9 +14,10 @@ trait SmlAdminDataCalculator extends temp.calculations.methods.PayeCalculator wi
 
     val payeCalculated:DataFrame = calculatePAYE(unitsDF,payeDF)
 
-    calculateVAT(unitsDF,payeCalculated,vatDF)
+    val res = calculateVAT(unitsDF,payeCalculated,vatDF)
 
     unitsDF.unpersist()
+    res
   }
 
 }
