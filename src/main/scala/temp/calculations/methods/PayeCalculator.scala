@@ -21,7 +21,7 @@ trait PayeCalculator {
   }
 
   def getGroupedByPayeEmployees(BIDF: DataFrame, payeDF: DataFrame, luTableName: String = "LEGAL_UNITS", payeDataTableName: String = "PAYE_DATA")(implicit spark: SparkSession): DataFrame ={
-    val flatUnitDf = BIDF.filter(row => row.getSeq[String]("PayeRefs").isDefined).withColumn(payeRefs, explode_outer(BIDF.apply(PayeRefs)))
+    val flatUnitDf = BIDF.filter(_.getStringSeq("PayeRefs").isDefined).withColumn(payeRefs, explode_outer(BIDF.apply(PayeRefs)))
     val idDF1 = (flatUnitDf.join(payeDF, payeRefs))
     val idDF = idDF1.selectExpr(ern, id, s"cast($mar_jobs as int) $mar_jobs", s"cast($june_jobs as int) $june_jobs", s"cast($sept_jobs as int) $sept_jobs", s"cast($dec_jobs as int) $dec_jobs")
       .groupBy(id).agg(sum(mar_jobs) as mar_jobs, sum(june_jobs) as june_jobs, sum(sept_jobs) as sept_jobs, sum(dec_jobs) as dec_jobs)
