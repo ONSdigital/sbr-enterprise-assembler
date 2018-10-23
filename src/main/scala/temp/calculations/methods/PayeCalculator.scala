@@ -95,10 +95,12 @@ trait PayeCalculator {
   def missingPayeRefsThrow(BIDF: DataFrame, PayeDF: DataFrame): Unit = {
     BIDF.cache()
     PayeDF.cache()
-    val BList = BIDF.select(payeRefs).collect.toList.filter(_==null)
-    val PList = PayeDF.select(payeRefs).collect.toList
-    val diff = (BList.diff(BList.intersect(PList))).mkString(" ")
-    assert(BList.forall(PList.contains), s"Expected exception to be thrown as the PayeRef(s) $diff don't exist in the Paye input")
+    val BList = BIDF.filter(_.isNull(payeRefs))
+    val PList = PayeDF.select(payeRefs)
+    val diff = BList.join(PList, Seq(payeRefs), "left_anti")
+    assert(diff.count()>0, s"Expected exception to be thrown as the PayeRef(s) $diff don't exist in the Paye input")
+    BIDF.unpersist()
+    PayeDF.unpersist()
   }
 
 }
