@@ -3,11 +3,12 @@ package temp.calculations.methods
 import global.AppParams
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql._
-import temp.calculations.model.CommonFrameDataFields._
 
 trait VatCalculator{
 
-  def calculateVat(BIDF: DataFrame, payeDF: DataFrame, VatDF: DataFrame)(implicit activeSession: SparkSession ) = {
+  import CommonFrameDataFields._
+
+  def calculateVAT(BIDF: DataFrame, payeDF: DataFrame, VatDF: DataFrame)(implicit activeSession: SparkSession ) = {
 
     val calculatedWithVatAndPaye = joinWithVatAndPayeData(BIDF, VatDF, payeDF)
     val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye)
@@ -21,6 +22,7 @@ trait VatCalculator{
     df.createOrReplaceTempView(t)
 
     val sql = s"""
+
        SELECT *,
        CAST((CASE
            WHEN no_ents_in_group = 1 AND record_type = 1
@@ -31,7 +33,7 @@ trait VatCalculator{
        CAST((
          CASE
            WHEN no_ents_in_group > 1
-           THEN grp_turnover * ($employees / group_empl_total)
+           THEN Round(grp_turnover * ($employees / group_empl_total), 0)
            ELSE NULL
          END
        )  AS long)as $apportioned,
@@ -43,6 +45,7 @@ trait VatCalculator{
            ELSE NULL
          END
        ) AS long)as $standard
+
        FROM $t
            """.stripMargin
 
@@ -75,12 +78,7 @@ trait VatCalculator{
     val aggregated = step3.drop(col(apportioned)).join(app_aggregated,Seq("vat_group","ern"),"leftouter")
     val withAggregatedApp = "WITHAPPAGGR"
     aggregated.createOrReplaceTempView(withAggregatedApp)
-    /**
-      * /**
-      * * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
-      *   paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
-      * * */
-      * */
+
     val sql2 = s"SELECT vat_group, ern,$employees, $jobs, $contained, $standard, $apportioned, $group_turnover FROM $withAggregatedApp GROUP BY vat_group, ern, $employees, $jobs, $contained, $standard, $group_turnover, $apportioned "
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
@@ -91,6 +89,7 @@ trait VatCalculator{
          SELECT ern,$employees, $jobs, $contained, SUM($apportioned) as $apportioned, $standard, CAST(SUM($group_turnover) as long) as $group_turnover
          FROM $t3
          GROUP BY ern,$employees, $jobs, $contained,$standard
+
        """.stripMargin
 
     val addedEntTurnoverTable = "COMPLETE_TURNOVERS"
@@ -152,7 +151,7 @@ trait VatCalculator{
                                                               )"""
 
   def joinWithVatAndPayeData(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
-    val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
+    val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("vatrefs"))).withColumn("vat_group",col("vatref").substr(0,6))
 
     val luTable = "LEGAL_UNITS"
     val vatTable = "VAT_DATA"
@@ -176,3 +175,4 @@ trait VatCalculator{
 
 
 }
+

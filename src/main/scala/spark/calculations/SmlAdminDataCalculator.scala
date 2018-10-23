@@ -2,11 +2,11 @@ package spark.calculations
 
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import uk.gov.ons.registers.methods.VatCalculator
+import temp.calculations.methods._
 
 
 
-trait SmlAdminDataCalculator extends temp.calculations.methods.PayeCalculator with VatCalculator with Serializable{
+trait SmlAdminDataCalculator extends PayeCalculator with VatCalculator with Serializable{
 
   def calculate(unitsDF:DataFrame, payeDF:DataFrame, vatDF:DataFrame)(implicit spark: SparkSession ):DataFrame = {
 
@@ -14,9 +14,10 @@ trait SmlAdminDataCalculator extends temp.calculations.methods.PayeCalculator wi
 
     val payeCalculated:DataFrame = calculatePAYE(unitsDF,payeDF)
 
-    calculateVAT(unitsDF,payeCalculated,vatDF)
+    val vatCalculated = calculateVAT(unitsDF,payeCalculated,vatDF)
 
     unitsDF.unpersist()
+    vatCalculated
   }
 
 }

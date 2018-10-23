@@ -68,8 +68,8 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
     val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(appconf, Configs.conf)
 
     val joinedLUs = incomingBiDataDF.join(
-      existingLinksLeusDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
-      Seq("id"), "left_outer")
+      existingLinksLeusDF.select("ubrn", "ern"),
+      Seq("ubrn"), "left_outer")
 
     getAllLUs(joinedLUs, appconf)
 
@@ -104,7 +104,7 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
-    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
+    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF,regionsByPostcodeDF)
     newLeusWithWorkingPropsAndRegionDF.cache()
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
@@ -123,11 +123,11 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
   def getNewLeusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
     val newLegalUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
 
-                  row.getAs[String]("id"),
+                  row.getAs[String]("ubrn"),
                   row.getAs[String]("ern"),
                   generatePrn(row,appconf),
-                  row.getValueOrNull("CompanyNo"),
-                  row.getValueOrEmptyStr("BusinessName"),
+                  row.getValueOrNull("crn"),
+                  row.getValueOrEmptyStr("name"),
                   row.getValueOrNull("trading_style"),//will not be present
                   row.getValueOrEmptyStr("address1"),
                   row.getValueOrNull( "address2"),
@@ -135,15 +135,15 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
                   row.getValueOrNull( "address4"),
                   row.getValueOrNull( "address5"),
                   row.getValueOrEmptyStr("postcode"),
-                  row.getValueOrEmptyStr("IndustryCode"),
+                  row.getValueOrEmptyStr("industry_code"),
                   row.getValueOrNull( "paye_jobs"),
-                  row.getValueOrNull( "Turnover"),
+                  row.getValueOrNull( "turnover"),
                   row.getValueOrEmptyStr("legal_status"),
-                  row.getValueOrNull( "TradingStatus"),
+                  row.getValueOrNull( "trading_status"),
                   row.getValueOrEmptyStr("birth_date"),
                   row.getValueOrNull("death_date"),
                   row.getValueOrNull("death_code"),
-                  row.getValueOrNull ("UPRN")
+                  row.getValueOrNull ("uprn")
                 ),leuRowSchema))
 
     spark.createDataFrame(newLegalUnitsDS,leuRowSchema)
