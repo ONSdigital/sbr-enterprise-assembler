@@ -109,7 +109,7 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF,appconf)
-    newLegalUnitsDF.cache()//TODO: check if this is actually needed
+    //newLegalUnitsDF.cache()//TODO: check if this is actually needed
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
