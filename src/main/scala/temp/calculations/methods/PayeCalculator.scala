@@ -99,7 +99,7 @@ trait PayeCalculator {
     val PList = PayeDF.select(payeRefs)
     val diff = BList.join(PList, Seq(payeRefs), "left_anti")
      val count = diff.count()
-    assert(count>0, s"Expected exception to be thrown as the PayeRef(s) as $count payes refs don't exist in the Paye input")
+    assert(count==0, s"Expected exception to be thrown as the PayeRef(s) as $count payes refs don't exist in the Paye input")
     BIDF.unpersist()
     PayeDF.unpersist()
   }
