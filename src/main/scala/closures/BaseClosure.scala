@@ -32,7 +32,6 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val rows = parquetDF.castAllToString().rdd.map { row => {
 
       Row(
-        null,
         row.getAs[String]("id"),
         row.getAs[String]("BusinessName"),
         row.getAs[String]("IndustryCode"),
@@ -45,17 +44,24 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getAs[Seq[String]]("PayeRefs"),
         row.getAs[Seq[String]]("VatRefs")
       )}}
-    spark.createDataFrame(rows, biWithErnSchema)
+    spark.createDataFrame(rows, biWithoutErnSchema)
 
   }
 
   def getAllLUs(joinedLUs: DataFrame,appconf:AppParams)(implicit spark: SparkSession) = {
 
-    val rows = joinedLUs.rdd.map { row => {
-      val ern = if (row.isNull("ern")) generateErn(row, appconf) else row.getAs[String]("ern")
+    val existingLUs = joinedLUs.filter(!_.isNull("ern"))
+    existingLUs.createOrReplaceTempView("EXISTINGLUS")
+    val getMaxErnSql = if(appconf.ACTION == "create") "1100000000" else "(select MAX(ern) from EXISTINGLUS)"
+    val newLUs = joinedLUs.filter(_.isNull("ern")).drop("ern")
+    newLUs.createOrReplaceTempView("NEWLUS")
+    val newWithErnsDF = spark.sqlContext.sql(s"select *, CAST(($getMaxErnSql + row_number() over(order by ubrn)) as decimal) as ern from NEWLUS")
 
+    val allLus = existingLUs.union(newWithErnsDF)
+
+    val rows = allLus.rdd.map { row =>
       Row(
-        ern,
+        row.getAs[String]("ern"),
         row.getAs[String]("ubrn"),
         row.getAs[String]("name"),
         row.getAs[String]("industry_code"),
@@ -67,7 +73,7 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getAs[String]("crn"),
         row.getAs[Seq[String]]("payerefs"),
         row.getAs[Seq[String]]("vatrefs")
-      )}}
+      )}
     spark.createDataFrame(rows, biWithErnSchema)
   }
 

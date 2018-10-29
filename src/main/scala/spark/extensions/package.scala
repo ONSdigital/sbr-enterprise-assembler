@@ -38,6 +38,22 @@ package object sql {
     .add(StructField("payerefs", ArrayType(StringType,true),true))
     .add(StructField("vatrefs", ArrayType(StringType,true),true))
 
+
+  val biWithoutErnSchema = new StructType()
+    .add(StructField("ubrn", StringType,false))
+    .add(StructField("name", StringType,true))
+    .add(StructField("industry_code", StringType,true))
+    .add(StructField("legal_status", StringType,true))
+    .add(StructField("postcode", StringType,true))
+    .add(StructField("trading_status", StringType,true))
+    .add(StructField("turnover", StringType,true))
+    .add(StructField("uprn", StringType,true))
+    .add(StructField("crn", StringType,true))
+    .add(StructField("payerefs", ArrayType(StringType,true),true))
+    .add(StructField("vatrefs", ArrayType(StringType,true),true))
+
+
+
   val ruRowSchema = new StructType()
     .add(StructField("rurn", StringType,false))
     .add(StructField("ern", StringType,false))
