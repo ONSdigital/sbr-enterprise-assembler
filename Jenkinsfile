@@ -67,7 +67,7 @@ pipeline {
                 sh """
 		    mkdir $WORKSPACE/tmp
                    # $SBT -Djava.io.tmpdir=$WORKSPACE/tmp clean compile assembly
-		   'set test in assembly := {}' clean compile assembly
+		   $SBT 'set test in assembly := {}' clean compile assembly
                 """
                 copyToHBaseNode()
                 colourText("success", 'Package.')
