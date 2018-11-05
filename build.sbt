@@ -18,7 +18,7 @@ resolvers += "Local Maven Repository" at "file:///Users/VLAD/.m2/repository"
 resolvers += Resolver.bintrayRepo("ons", "ONS-Registers")
 
 libraryDependencies ++= Seq(
-  "uk.gov.ons" % "registers-sml" % "1.5",
+  "uk.gov.ons" % "registers-sml" % "1.6",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
   "org.apache.hbase" % "hbase-hadoop-compat" % "1.4.2",
   "com.typesafe" % "config" % "1.3.2",
