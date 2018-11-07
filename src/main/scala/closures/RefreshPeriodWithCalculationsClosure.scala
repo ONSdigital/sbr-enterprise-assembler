@@ -7,8 +7,7 @@ import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.functions.{col, _}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.functions.col
 import spark.RddLogging
 import spark.calculations.SmlAdminDataCalculator
 import spark.extensions.sql._
@@ -31,9 +30,6 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
     }else{
       HiveDao.getRegions(appconf)
     }
-/*    val regionsByPostcode: RDD[Row] = spark.sparkContext.parallelize(Seq(("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"))).map(t => Row(t._1, t._2))
-    val regionMappingSchema = new StructType().add(StructField("ern", StringType, false))
-    val regionsByPostcodeDF = spark.createDataFrame(regionsByPostcode,regionMappingSchema)*/
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
