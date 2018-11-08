@@ -29,16 +29,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     * */
   def getIncomingBiData(appconf: AppParams)(implicit spark: SparkSession) = {
     val parquetDF = spark.read.parquet(appconf.PATH_TO_PARQUET)
-    parquetDF.castAllToString
-  }
-
-  def getAllLUs(joinedLUs: DataFrame,appconf:AppParams)(implicit spark: SparkSession) = {
-
-    val rows = joinedLUs.rdd.map { row => {
-      val ern = if (row.isNull("ern")) generateErn(row, appconf) else row.getAs[String]("ern")
+    val rows = parquetDF.castAllToString().rdd.map { row => {
 
       Row(
-        ern,
+        null,
         row.getAs[String]("id"),
         row.getAs[String]("BusinessName"),
         row.getAs[String]("IndustryCode"),
@@ -50,6 +44,29 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
         row.getAs[String]("CompanyNo"),
         row.getAs[Seq[String]]("PayeRefs"),
         row.getAs[Seq[String]]("VatRefs")
+      )}}
+    spark.createDataFrame(rows, biWithErnSchema)
+
+  }
+
+  def getAllLUs(joinedLUs: DataFrame,appconf:AppParams)(implicit spark: SparkSession) = {
+
+    val rows = joinedLUs.rdd.map { row => {
+      val ern = if (row.isNull("ern")) generateErn(row, appconf) else row.getAs[String]("ern")
+
+      Row(
+        ern,
+        row.getAs[String]("ubrn"),
+        row.getAs[String]("name"),
+        row.getAs[String]("industry_code"),
+        row.getAs[String]("legal_status"),
+        row.getValueOrEmptyStr("postcode"),
+        row.getAs[String]("trading_status"),
+        row.getAs[String]("turnover"),
+        row.getAs[String]("uprn"),
+        row.getAs[String]("crn"),
+        row.getAs[Seq[String]]("payerefs"),
+        row.getAs[Seq[String]]("vatrefs")
       )}}
     spark.createDataFrame(rows, biWithErnSchema)
   }
@@ -112,13 +129,13 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
           row.getAs[String]("ern"),
           generatePrn(row,appconf),
           row.getValueOrNull("entref"),
-          row.getAs[String]("BusinessName"),
+          row.getAs[String]("name"),
           null, //trading_style
           row.getValueOrEmptyStr("address1"),
           null, null, null, null, //address2,3,4,5
           row.getAs[String]("postcode"),
           row.getValueOrEmptyStr("region"),
-          row.getValueOrEmptyStr("IndustryCode"),
+          row.getValueOrEmptyStr("industry_code"),
           row.getAs[String]("legal_status"),
           row.getValueOrNull("paye_empees"),
           row.getValueOrNull("paye_jobs"),
@@ -248,8 +265,10 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
   def calculateRegion(dfWithPostcode:DataFrame, regionsByPostcodeDF:DataFrame)(implicit spark: SparkSession) = {
     //dfWithPostcode.withColumn("region",lit(""))
-    dfWithPostcode.drop("region").join(regionsByPostcodeDF, Seq("postcode"),"left_outer").na.fill(Configs.DEFAULT_REGION, Seq("region"))
-
+    val step1DF = dfWithPostcode.drop("region")
+    val step3DF = step1DF.join(regionsByPostcodeDF, Seq("postcode"),"left_outer")
+    val step4DF = step3DF.na.fill(Configs.DEFAULT_REGION, Seq("region"))
+    step4DF
   }
 
 
