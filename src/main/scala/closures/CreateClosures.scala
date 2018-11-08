@@ -5,13 +5,13 @@ import global.AppParams
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql._
 import spark.RddLogging
-import spark.calculations.AdminDataCalculator
+import spark.calculations.SmlAdminDataCalculator
 import spark.extensions.sql._
 
 /**
   *
   */
-trait CreateClosures extends AdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
+trait CreateClosures extends SmlAdminDataCalculator with BaseClosure with HFileUtils with RddLogging with Serializable{
 
 
   override def createUnitsHfiles(appconf:AppParams)(implicit spark:SparkSession, con:Connection){
@@ -22,7 +22,7 @@ trait CreateClosures extends AdminDataCalculator with BaseClosure with HFileUtil
     val vatDF  = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
 
     val stringifiedParquet = spark.read.parquet(appArgs.PATH_TO_PARQUET).castAllToString
-    val newLEUsCalculatedDF = calculate(stringifiedParquet,appconf).castAllToString
+    val newLEUsCalculatedDF = calculate(stringifiedParquet,payeDF,vatDF).castAllToString
     newLEUsCalculatedDF.cache()
 
     val allLUsDF = getAllLUs(newLEUsCalculatedDF,appconf)

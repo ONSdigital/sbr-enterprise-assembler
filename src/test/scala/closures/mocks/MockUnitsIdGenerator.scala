@@ -13,19 +13,19 @@ trait MockUnitsIdGenerator {this:BaseClosure =>
   val prnMapping: Map[String, String]
 
 
-  override def generateErn(row: Row, appParams: AppParams) = ernMapping(row.getString("BusinessName").get)
+  override def generateErn(row: Row, appParams: AppParams) = ernMapping(row.getString("name").get)
 
   override def generateLurn(row: Row, appParams: AppParams) = {
-    val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
+    val key = row.getString("name").get
     lurnMapping(key)
   }
   override def generateRurn(row: Row, appParams: AppParams) = {
-    val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
+    val key = row.getString("name").get
     rurnMapping(key)
   }
 
   override def generatePrn(row: Row, appParams: AppParams) = {
-    val key  = Seq(row.getString("BusinessName"),row.getString("name")).collect{case Some(name) => name}.head
+    val key = row.getString("name").get
     prnMapping(key)
   }
 

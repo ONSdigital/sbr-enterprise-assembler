@@ -7,13 +7,14 @@ import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.functions.{col, _}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.functions.col
 import spark.RddLogging
-import spark.calculations.AdminDataCalculator
+import spark.calculations.SmlAdminDataCalculator
 import spark.extensions.sql._
 
-trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with BaseClosure with RddLogging with Serializable{
+
+
+trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with BaseClosure with RddLogging with Serializable{
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
@@ -29,9 +30,6 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     }else{
       HiveDao.getRegions(appconf)
     }
-/*    val regionsByPostcode: RDD[Row] = spark.sparkContext.parallelize(Seq(("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"),("1","2"),("3","4"))).map(t => Row(t._1, t._2))
-    val regionMappingSchema = new StructType().add(StructField("ern", StringType, false))
-    val regionsByPostcodeDF = spark.createDataFrame(regionsByPostcode,regionMappingSchema)*/
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
@@ -66,8 +64,8 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(appconf, Configs.conf)
 
     val joinedLUs = incomingBiDataDF.join(
-      existingLinksLeusDF.withColumnRenamed("ubrn", "id").select("id", "ern"),
-      Seq("id"), "left_outer")
+      existingLinksLeusDF.select("ubrn", "ern"),
+      Seq("ubrn"), "left_outer")
 
     getAllLUs(joinedLUs, appconf)
 
@@ -76,7 +74,10 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
 
   def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
-    val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
+    val vatDF = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
+    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
+
+    val calculatedDF = calculate(allLinksLusDF,payeDF,vatDF).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
@@ -99,7 +100,7 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
-    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF.withColumnRenamed("LegalStatus","legal_status").withColumnRenamed("PostCode","postcode"),regionsByPostcodeDF)
+    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF,regionsByPostcodeDF)
     newLeusWithWorkingPropsAndRegionDF.cache()
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
@@ -118,11 +119,11 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
   def getNewLeusDF(newLEUsCalculatedDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
     val newLegalUnitsDS:RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
 
-                  row.getAs[String]("id"),
+                  row.getAs[String]("ubrn"),
                   row.getAs[String]("ern"),
                   generatePrn(row,appconf),
-                  row.getValueOrNull("CompanyNo"),
-                  row.getValueOrEmptyStr("BusinessName"),
+                  row.getValueOrNull("crn"),
+                  row.getValueOrEmptyStr("name"),
                   row.getValueOrNull("trading_style"),//will not be present
                   row.getValueOrEmptyStr("address1"),
                   row.getValueOrNull( "address2"),
@@ -130,15 +131,15 @@ trait RefreshPeriodWithCalculationsClosure extends AdminDataCalculator with Base
                   row.getValueOrNull( "address4"),
                   row.getValueOrNull( "address5"),
                   row.getValueOrEmptyStr("postcode"),
-                  row.getValueOrEmptyStr("IndustryCode"),
+                  row.getValueOrEmptyStr("industry_code"),
                   row.getValueOrNull( "paye_jobs"),
-                  row.getValueOrNull( "Turnover"),
+                  row.getValueOrNull( "turnover"),
                   row.getValueOrEmptyStr("legal_status"),
-                  row.getValueOrNull( "TradingStatus"),
+                  row.getValueOrNull( "trading_status"),
                   row.getValueOrEmptyStr("birth_date"),
                   row.getValueOrNull("death_date"),
                   row.getValueOrNull("death_code"),
-                  row.getValueOrNull ("UPRN")
+                  row.getValueOrNull ("uprn")
                 ),leuRowSchema))
 
     spark.createDataFrame(newLegalUnitsDS,leuRowSchema)

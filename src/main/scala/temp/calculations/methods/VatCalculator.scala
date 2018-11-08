@@ -1,49 +1,21 @@
-package spark.calculations
+package temp.calculations.methods
 
 import global.AppParams
-import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import spark.RddLogging
-import org.apache.spark.sql.functions.lit
-import temp.calculations.methods
+import org.apache.spark.sql._
 
+trait VatCalculator{
 
-trait AdminDataCalculator extends Serializable with RddLogging{
-//paye_empees, $jobs, app_turnover, $ent, cntd_turnover, std_turnover, grp_turnover
-  val jobs = "paye_jobs"
-  val employees = "paye_empees"
-  val apportioned = "app_turnover"
-  val contained = "cntd_turnover"
-  val ent = "ent_turnover"
-  val standard = "std_turnover"
-  val group_turnover = "grp_turnover"
+  import CommonFrameDataFields._
 
-  def calculate(unitsDF:DataFrame,appConfs:AppParams)(implicit spark: SparkSession ) = {
+  def calculateVAT(BIDF: DataFrame, payeDF: DataFrame, VatDF: DataFrame)(implicit activeSession: SparkSession ) = {
 
-    val vatDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_VAT)
-    val payeDF = spark.read.option("header", "true").csv(appConfs.PATH_TO_PAYE)
-
-    val calculatedPayeDF = getGroupedByPayeRefs(unitsDF,payeDF,"dec_jobs")
-
-    val calculatedWithVatAndPaye = joinWithVatAndPayeData(unitsDF,vatDF,calculatedPayeDF)
-
+    val calculatedWithVatAndPaye = joinWithVatAndPayeData(BIDF, VatDF, payeDF)
     val calculatedTurnovers = calculateTurnovers(calculatedWithVatAndPaye)
 
-    val aggregatedDF = aggregateDF(calculatedTurnovers)
-
-    //val withWorkingPropsDF = calculateWorkingProps(aggregatedDF)
-
-    //val withEmploymentDF = calculateEmployments(aggregatedDF)
-
-    //withEmploymentDF
-
-    aggregatedDF
+    aggregateDF(calculatedTurnovers)
 
   }
-
-  //def calculateWorkingProps(df:DataFrame) = df.withColumn("working_props",lit("0"))
-  //def calculateEmployments(df:DataFrame) = df.withColumn("employment",lit("0"))
-
 
   def aggregateDF(df:DataFrame)(implicit spark: SparkSession ) = {
     val t = "CALCULATED"
@@ -61,7 +33,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
        CAST((
          CASE
            WHEN no_ents_in_group > 1
-           THEN grp_turnover * ($employees / group_empl_total)
+           THEN Round(grp_turnover * ($employees / group_empl_total), 0)
            ELSE NULL
          END
        )  AS long)as $apportioned,
@@ -106,12 +78,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
     val aggregated = step3.drop(col(apportioned)).join(app_aggregated,Seq("vat_group","ern"),"leftouter")
     val withAggregatedApp = "WITHAPPAGGR"
     aggregated.createOrReplaceTempView(withAggregatedApp)
-    /**
-      * /**
-      * * ern, entref, name, trading_style, address1, address2, address3, address4, address5, postcode, sic07, legal_status
-      *   paye_empees, paye_jobs, app_turnover, ent_turnover, cntd_turnover, std_turnover, grp_turnover
-      * * */
-      * */
+
     val sql2 = s"SELECT vat_group, ern,$employees, $jobs, $contained, $standard, $apportioned, $group_turnover FROM $withAggregatedApp GROUP BY vat_group, ern, $employees, $jobs, $contained, $standard, $group_turnover, $apportioned "
     val turnovers = spark.sql(sql2)
     val t3 = "TURNOVER"
@@ -184,7 +151,7 @@ trait AdminDataCalculator extends Serializable with RddLogging{
                                                               )"""
 
   def joinWithVatAndPayeData(unitsDF:DataFrame, vatDF:DataFrame, payeCalculatedDF:DataFrame)(implicit spark: SparkSession ) = {
-    val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("VatRefs"))).withColumn("vat_group",col("vatref").substr(0,6))
+    val flatUnitDf = unitsDF.withColumn("vatref", explode_outer(unitsDF.apply("vatrefs"))).withColumn("vat_group",col("vatref").substr(0,6))
 
     val luTable = "LEGAL_UNITS"
     val vatTable = "VAT_DATA"
@@ -207,103 +174,5 @@ trait AdminDataCalculator extends Serializable with RddLogging{
   }
 
 
- /**
-   * calculates paye data (non-null data quarters count, total employee count, average) for 1 paye ref
-   * */
-
-  def calculatePaye(unitsDF:DataFrame, payeDF:DataFrame)(implicit spark: SparkSession ) = {
-    //printDF("unitsDF",unitsDF)
-    val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
-
-    val luTableName = "LEGAL_UNITS"
-    val payeTableName = "PAYE_DATA"
-
-    flatUnitDf.createOrReplaceTempView(luTableName)
-    payeDF.createOrReplaceTempView(payeTableName)
-
-    spark.sql(generateCalculateAvgSQL(luTableName,payeTableName))
-
-/*  linkedPayes.show()
-    linkedPayes.printSchema()*/
-  }
-
-  def getGroupedByPayeRefs(unitsDF:DataFrame, payeDF:DataFrame, quarter:String, luTableName:String = "LEGAL_UNITS", payeDataTableName:String = "PAYE_DATA")(implicit spark: SparkSession ) = {
-    //unitsDF.show()
-    val flatUnitDf = unitsDF.withColumn("payeref", explode_outer(unitsDF.apply("PayeRefs")))
-
-    flatUnitDf.createOrReplaceTempView(luTableName)
-    payeDF.createOrReplaceTempView(payeDataTableName)
-
-    val flatPayeDataSql = generateCalculateAvgSQL(luTableName,payeDataTableName)
-    val sql = s"""
-              SELECT SUM(AVG_CALCULATED.quarter_avg) AS $employees, CAST(SUM(AVG_CALCULATED.$quarter) AS int) AS $jobs, AVG_CALCULATED.ern
-              FROM ($flatPayeDataSql) as AVG_CALCULATED
-              GROUP BY AVG_CALCULATED.ern
-            """.stripMargin
-    spark.sql(sql)
-  }
-
-  def generateCalculateAvgSQL(luTablename:String = "LEGAL_UNITS", payeDataTableName:String = "PAYE_DATA") =
-    s"""
-      SELECT $luTablename.*, $payeDataTableName.mar_jobs, $payeDataTableName.june_jobs, $payeDataTableName.sept_jobs, $payeDataTableName.dec_jobs,
-                CAST(
-               (
-                (CASE
-                   WHEN $payeDataTableName.mar_jobs IS NULL
-                   THEN 0
-                   ELSE $payeDataTableName.mar_jobs
-                 END +
-                 CASE
-                   WHEN $payeDataTableName.june_jobs IS NULL
-                   THEN 0
-                   ELSE $payeDataTableName.june_jobs
-                 END +
-                 CASE
-                    WHEN $payeDataTableName.sept_jobs IS NULL
-                    THEN 0
-                    ELSE $payeDataTableName.sept_jobs
-                 END +
-                 CASE
-                     WHEN $payeDataTableName.dec_jobs IS NULL
-                     THEN 0
-                     ELSE $payeDataTableName.dec_jobs
-                 END)
-
-                ) / (
-                (CASE
-                    WHEN $payeDataTableName.mar_jobs IS NULL
-                    THEN 0
-                    ELSE 1
-                 END +
-                 CASE
-                    WHEN $payeDataTableName.june_jobs IS NULL
-                    THEN 0
-                    ELSE 1
-                 END +
-                 CASE
-                    WHEN $payeDataTableName.sept_jobs IS NULL
-                    THEN 0
-                    ELSE 1
-                 END +
-                 CASE
-                   WHEN $payeDataTableName.dec_jobs IS NULL
-                   THEN 0
-                   ELSE 1
-                 END)
-                ) AS int) as quarter_avg
-
-                FROM $luTablename
-                LEFT JOIN $payeDataTableName ON $luTablename.payeref=$payeDataTableName.payeref
-        """.stripMargin
-
-  def readSql(df:DataFrame,sql:(String) => String)(implicit spark:SparkSession) = {
-    val tablename = "DFTEMP"
-    df.createOrReplaceTempView(tablename)
-    val query = sql(tablename)
-    val res = spark.sql(query)
-    res
-  }
-
 }
 
-object AdminDataCalculator extends AdminDataCalculator

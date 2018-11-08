@@ -54,7 +54,7 @@ trait HFileUtils extends Serializable{
   }
 
   def leuToLinks(row: Row, appParams: AppParams) = {
-    val ubrn = row.getStringOption("id").get
+    val ubrn = row.getStringOption("ubrn").get
     val ern = row.getStringOption("ern").get
     val entKey = generateLinkKey(ern,enterprise)
     val luKey = generateLinkKey(ubrn,legalUnit)
@@ -225,17 +225,17 @@ trait HFileUtils extends Serializable{
       ).collect { case Some(v) => v }
   }
 
-  private def rowToCHLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringOption("CompanyNo").map(companyNo => Seq(
+  private def rowToCHLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringOption("crn").map(companyNo => Seq(
     createLinksRecord(luKey,s"$childPrefix$companyNo",companiesHouse,appParams),
     createLinksRecord(generateLinkKey(companyNo,companiesHouse),s"$parentPrefix$legalUnit",ubrn,appParams)
   )).getOrElse(Seq[(String, HFileCell)]())
 
-  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("VatRefs").map(_.flatMap(vat => Seq(
+  private def rowToVatRefsLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("vatrefs").map(_.flatMap(vat => Seq(
     createLinksRecord(luKey,s"$childPrefix$vat",vatValue,appParams),
     createLinksRecord(generateLinkKey(vat,vatValue),s"$parentPrefix$legalUnit",ubrn,appParams)
   ))).getOrElse (Seq[(String, HFileCell)]())
 
-  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("PayeRefs").map(_.flatMap(paye => Seq(
+  private def rowToPayeRefLinks(row:Row, luKey:String, ubrn:String,appParams:AppParams):Seq[(String, HFileCell)] = row.getStringSeq("payerefs").map(_.flatMap(paye => Seq(
     createLinksRecord(luKey,s"$childPrefix$paye",payeValue,appParams),
     createLinksRecord(generateLinkKey(paye,payeValue),s"$parentPrefix$legalUnit",ubrn.toString,appParams)
   ))).getOrElse(Seq[(String, HFileCell)]())
