@@ -70,7 +70,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      "add-calculated-period"
    )))
 
-  /*override def beforeAll() = {
+  override def beforeAll() = {
    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
    conf.set("hbase.zookeeper.quorum", "localhost")
    conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -82,6 +82,16 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     }
    spark.stop
 }
+
+/*  override def afterAll() = {
+    File(parquetPath).deleteRecursively()
+    File(linkHfilePath).deleteRecursively()
+    File(leuHfilePath).deleteRecursively()
+    File(entHfilePath).deleteRecursively()
+    File(louHfilePath).deleteRecursively()
+    File(ruHfilePath).deleteRecursively()
+    File(existingRecordsDir).deleteRecursively()
+  }*/
 
 /*  "blaCree test-data csvh" should {"blah" in{
        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
@@ -178,7 +188,7 @@ def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Con
   saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
   saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
 }
-*/
+
 
 
 }
