@@ -34,7 +34,7 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
     val regionsByPostcodeShortDF: DataFrame = if (appconf.ENV == "local"){
       spark.read.option("header", "true").csv(appconf.PATH_TO_GEO_SHORT).select("pcds","rgn").toDF("postcodeout", "region").cache()
     }else{
-      HiveDao.getRegions(appconf)
+      HiveDao.getRegionsShort(appconf)
     }
 
     regionsByPostcodeDF.collect()
