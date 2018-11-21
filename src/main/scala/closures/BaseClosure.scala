@@ -277,7 +277,8 @@ trait BaseClosure extends HFileUtils with Serializable with RddLogging{
     val step7DF = step6DF.drop("postcodeout")
     val step8DF = step7DF.union(partial)
     val step9DF = step8DF.na.fill(Configs.DEFAULT_REGION, Seq("region"))
-    step9DF
+    val step10DF = step9DF.repartition(6)
+    step10DF
   }
 
 
