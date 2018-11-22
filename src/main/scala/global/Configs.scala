@@ -16,6 +16,7 @@ object Configs{
   val DEFAULT_PRN = "0"
   val DEFAULT_WORKING_PROPS = "0"
   val DEFAULT_REGION = ""
+  val DEFAULT_POSTCODE = "XZ9 9XX"
 
   val  defaultTimePeriod = "timeperiod-not-specified"
 

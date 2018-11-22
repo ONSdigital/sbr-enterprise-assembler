@@ -70,15 +70,8 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      "add-calculated-period"
    )))
 
-  "dummy tests" should{
 
-    "create report files to make Jenkins happy" in{
-      true shouldBe true
-    }
-
-  }
-
-/*override def beforeAll() = {
+override def beforeAll() = {
   implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
   conf.set("hbase.zookeeper.quorum", "localhost")
   conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -92,7 +85,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 }
 
 
- override def afterAll() = {
+/* override def afterAll() = {
    File(parquetPath).deleteRecursively()
    File(linkHfilePath).deleteRecursively()
    File(leuHfilePath).deleteRecursively()
@@ -119,7 +112,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
 }}*/
 
- /*"assembler" should {
+ "assembler" should {
  "create hfiles populated with expected enterprise data" in {
 
    implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
@@ -194,7 +187,7 @@ def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Con
   saveToHFile(existingRusForNewPeriodScenario,appconf.HBASE_REPORTINGUNITS_COLUMN_FAMILY, appconf, existingRusRecordHFiles)
   saveToHFile(existingLeusForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingLeusRecordHFiles)
   saveToHFile(existingEntsForNewPeriodScenario,appconf.HBASE_ENTERPRISE_COLUMN_FAMILY, appconf, existingEntRecordHFiles)
-}*/
+}
 
 
 }

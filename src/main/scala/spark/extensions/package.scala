@@ -30,6 +30,11 @@ package object sql {
     .add(StructField("name", StringType,true))
     .add(StructField("industry_code", StringType,true))
     .add(StructField("legal_status", StringType,true))
+    .add(StructField("address1", StringType,true))
+    .add(StructField("address2", StringType,true))
+    .add(StructField("address3", StringType,true))
+    .add(StructField("address4", StringType,true))
+    .add(StructField("address5", StringType,true))
     .add(StructField("postcode", StringType,true))
     .add(StructField("trading_status", StringType,true))
     .add(StructField("turnover", StringType,true))
@@ -246,7 +251,9 @@ val calculationsSchema = new StructType()
       getOption[String](name)
     }
 
-    def getValueOrEmptyStr(fieldName:String) = getStringOption(fieldName).getOrElse("")
+    def getValueOrEmptyStr(fieldName:String) = getStringValueOrDefault(fieldName,"")
+
+    def getStringValueOrDefault(fieldName:String,default:String) = getStringOption(fieldName).getOrElse(default)
 
     def getValueOrNull(fieldName:String) = getStringOption(fieldName).getOrElse(null)
 
