@@ -32,15 +32,19 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
     }
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
+    allLinksLeusDF.cache()
 
-    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache()
+    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf)
+    allEntsDF.cache
 
+    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf)
+    allRusDF.cache
 
-    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
+    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf)
+    allLousDF.cache
 
-    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf).cache()
-
-    val allLeusDF = getAllLeus(appconf,Configs.conf).cache()
+    val allLeusDF = getAllLeus(appconf,Configs.conf)
+    allLeusDF.cache
 
     saveEnts(allEntsDF,appconf)
     saveRus(allRusDF,appconf)
