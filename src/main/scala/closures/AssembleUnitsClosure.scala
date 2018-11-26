@@ -14,7 +14,7 @@ import spark.extensions.sql._
 
 
 
-trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with BaseClosure with RddLogging with Serializable{
+trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with RddLogging with Serializable{
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
@@ -205,5 +205,5 @@ trait RefreshPeriodWithCalculationsClosure extends SmlAdminDataCalculator with B
                                        }
 
 }
-object RefreshPeriodWithCalculationsClosure extends RefreshPeriodWithCalculationsClosure
+object AssembleUnitsClosure$ extends AssembleUnitsClosure
 

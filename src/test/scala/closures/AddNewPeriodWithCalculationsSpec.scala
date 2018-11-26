@@ -24,7 +24,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
   lazy val testDir = "newperiod"
 
-  object MockRefreshPeriodWithCalculationsClosure extends RefreshPeriodWithCalculationsClosure with MockClosures{
+  object MockAssembleUnitsClosure extends AssembleUnitsClosure with MockClosures{
 
     override val hbaseDao = MockCreateNewPeriodHBaseDao
 
@@ -79,7 +79,7 @@ override def beforeAll() = {
     createRecords(appConfs)
     ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
     //val existingDF = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect
-    MockRefreshPeriodWithCalculationsClosure.createUnitsHfiles(appConfs)(spark, connection)
+    MockAssembleUnitsClosure.createUnitsHfiles(appConfs)(spark, connection)
    }
   spark.stop
 }

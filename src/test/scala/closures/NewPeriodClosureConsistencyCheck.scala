@@ -20,7 +20,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
 
   lazy val testDir = "newperiod"
 
-  object MockClosure extends RefreshPeriodWithCalculationsClosure with MockDataReader{
+  object MockClosure extends AssembleUnitsClosure with MockDataReader{
     override val hbaseDao = MockCreateNewPeriodHBaseDao
   }
 
