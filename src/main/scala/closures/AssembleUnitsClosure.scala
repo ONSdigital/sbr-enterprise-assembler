@@ -28,23 +28,18 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
     val regionsByPostcodeDF: DataFrame = if (appconf.ENV == "local"){
       spark.read.option("header", "true").csv(appconf.PATH_TO_GEO).select("pcds","rgn").toDF("postcode", "region").cache()
     }else{
-      HiveDao.getRegions(appconf)
+      HiveDao.getRegions(appconf).cache()
     }
 
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
-    allLinksLeusDF.cache()
 
-    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf)
-    allEntsDF.cache
+    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache
 
-    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf)
-    allRusDF.cache
+    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache
 
-    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf)
-    allLousDF.cache
+    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf).cache
 
-    val allLeusDF = getAllLeus(appconf,Configs.conf)
-    allLeusDF.cache
+    val allLeusDF = getAllLeus(appconf,Configs.conf).cache
 
     saveEnts(allEntsDF,appconf)
     saveRus(allRusDF,appconf)
@@ -78,10 +73,8 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
 
   def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
 
-    val vatDF = spark.read.option("header", "true").csv(appconf.PATH_TO_VAT)
-    val payeDF = spark.read.option("header", "true").csv(appconf.PATH_TO_PAYE)
 
-    val calculatedDF = calculate(allLinksLusDF,payeDF,vatDF).castAllToString
+    val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(appconf,Configs.conf)
@@ -97,15 +90,10 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
                                     }
                                     spark.createDataFrame(withReorderedColumns.rdd, completeEntSchema)
                                   }
-
-    existingEntCalculatedDF.cache()
-
-
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
     val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF,regionsByPostcodeDF)
-    newLeusWithWorkingPropsAndRegionDF.cache()
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF,appconf)
@@ -113,8 +101,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
     val allEntsDF =  existingEntCalculatedDF.union(newEntsCalculatedDF)
-    newLeusWithWorkingPropsAndRegionDF.unpersist()
-    existingEntCalculatedDF.unpersist()
+
     calculatedDF.unpersist()
     allEntsDF
   }

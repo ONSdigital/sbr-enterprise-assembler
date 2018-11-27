@@ -16,7 +16,7 @@ import utils.data.existing.ExistingData
 
 import scala.reflect.io.File
 
-class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with DataConsistencyCheck with HFileTestUtils{
+class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with DataConsistencyCheck with HFileTestUtils{
 
   lazy val testDir = "newperiod"
 
@@ -33,23 +33,24 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
       "REU", "ons", "d",ruHfilePath,
       parquetPath,
       "201804",
+      "HIVE DB NAME",
+      "HIVE TABLE NAME",
       payeFilePath,
       vatFilePath,
-      geoFilePath,
       "local",
       "add-calculated-period"
     )))
 
 
-  "dummy tests" should{
+/*  "dummy tests" should{
 
     "create report files to make Jenkins happy" in{
       true shouldBe true
     }
 
-  }
+  }*/
 
-  /*override def beforeAll() = {
+  override def beforeAll() = {
     implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -61,16 +62,16 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
         MockClosure.createUnitsHfiles(appConfs)(spark, connection)
     }
     spark.stop
-
   }
+
   override def afterAll() = {
-    File(parquetPath).deleteRecursively()
+    //File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(leuHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(ruHfilePath).deleteRecursively()
-    File(existingRecordsDir).deleteRecursively()
+    //File(existingRecordsDir).deleteRecursively()
   }
 
 
@@ -87,7 +88,7 @@ class NewPeriodClosureConsistencyCheck  extends HBaseConnectionManager with Path
       res shouldBe true
       spark.stop()
     }
-  }*/
+  }
 
 
   def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
