@@ -44,7 +44,7 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
 
 /*  "dummy tests" should{
 
-    "create report files to make Jenkins happy" in{
+    "create report files to make Jenkins happy when the rest of tests commented out" in{
       true shouldBe true
     }
 
