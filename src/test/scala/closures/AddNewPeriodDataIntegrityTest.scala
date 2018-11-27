@@ -108,8 +108,6 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
       File(existingRecordsDir).deleteRecursively()
   }
 
-
-
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
