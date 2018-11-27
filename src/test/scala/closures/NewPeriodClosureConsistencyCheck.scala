@@ -65,13 +65,13 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
   }
 
   override def afterAll() = {
-    //File(parquetPath).deleteRecursively()
+    File(parquetPath).deleteRecursively()
     File(linkHfilePath).deleteRecursively()
     File(leuHfilePath).deleteRecursively()
     File(entHfilePath).deleteRecursively()
     File(louHfilePath).deleteRecursively()
     File(ruHfilePath).deleteRecursively()
-    //File(existingRecordsDir).deleteRecursively()
+    File(existingRecordsDir).deleteRecursively()
   }
 
 

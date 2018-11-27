@@ -99,11 +99,13 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
     spark.stop
   }
     override def afterAll() = {
-    File(parquetPath).deleteRecursively()
-    File(linkHfilePath).deleteRecursively()
-    File(entHfilePath).deleteRecursively()
-    File(louHfilePath).deleteRecursively()
-    File(existingRecordsDir).deleteRecursively()
+      File(parquetPath).deleteRecursively()
+      File(linkHfilePath).deleteRecursively()
+      File(leuHfilePath).deleteRecursively()
+      File(entHfilePath).deleteRecursively()
+      File(louHfilePath).deleteRecursively()
+      File(ruHfilePath).deleteRecursively()
+      File(existingRecordsDir).deleteRecursively()
   }
 
 
