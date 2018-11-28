@@ -27,12 +27,12 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
 
          //ParquetDao.jsonToParquet(PATH_TO_JSON)(ss, appconf)
          RefreshPeriodWithCalculationsClosure.createUnitsHfiles(appconf)
-         HBaseDao.truncateTables(con,appconf)
+/*         HBaseDao.truncateTables(con,appconf)
          HBaseDao.loadLinksHFile(con,appconf)
          HBaseDao.loadEnterprisesHFile(con,appconf)
          HBaseDao.loadLousHFile(con,appconf)
          HBaseDao.loadLeusHFile(con,appconf)
-         HBaseDao.loadRusHFile(con,appconf)
+         HBaseDao.loadRusHFile(con,appconf)*/
 
       }
   }
