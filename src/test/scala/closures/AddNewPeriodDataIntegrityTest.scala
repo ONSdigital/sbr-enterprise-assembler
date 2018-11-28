@@ -154,7 +154,6 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
     LinkRecord.getLinks(actualHFileRows)
   }
 
-
   def createRecords(appconf:AppParams)(implicit spark: SparkSession,connection:Connection) = {
     saveLinksToHFile(existingLinksForAddNewPeriodScenarion,appconf.HBASE_LINKS_COLUMN_FAMILY, appconf, existingLinksRecordHFiles)
     saveToHFile(existingLousForNewPeriodScenario,appconf.HBASE_LOCALUNITS_COLUMN_FAMILY, appconf, existingLousRecordHFiles)
