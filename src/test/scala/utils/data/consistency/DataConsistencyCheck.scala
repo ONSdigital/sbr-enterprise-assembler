@@ -41,19 +41,28 @@ trait DataConsistencyCheck extends HBaseConnectionManager{
 
   def checkLeus(leus:Seq[LegalUnit], links:Seq[HFileRow]) = {
 
-
-    def registeredWithParentEnt(leu:LegalUnit) = links.exists(row => {
-      val ids = row.key.split("~")
-      (ids.head=="ENT" && ids.last==leu.ern) && (row.cells.exists(_.column==s"c_${leu.ubrn}"))
+    //.filter(row => row.key.startsWith("ENT~"))
+    def registeredWithParentEnt(leu:LegalUnit) = {
+      val res = links.exists(link => {
+      val ids = link.key.split("~")
+      (ids.head=="ENT" && ids.last==leu.ern) && (link.cells.exists(_.column==s"c_${leu.ubrn}"))
     })
+    res
+    }
 
-    def hasParentEntRef(leu:LegalUnit) = links.exists(row => {
-      val ids = row.key.split("~")
-      (ids.head=="LEU" && ids.last==leu.ubrn) && (row.cells.exists(cell => cell.column=="p_ENT" && cell.value==leu.ern))
+    def hasParentEntRef(leu:LegalUnit) = {
+      val res =
+      links.exists(link => {
+      val ids = link.key.split("~")
+      (ids.head=="LEU" && ids.last==leu.ubrn) && (link.cells.exists(cell => cell.column=="p_ENT" && cell.value==leu.ern))
     })
+      res
+    }
 
     val notConsistentLeus = leus.filterNot(leu => {
-      registeredWithParentEnt(leu) && hasParentEntRef(leu)
+      val wParentEnt = registeredWithParentEnt(leu)
+      val hasCorrectEntRef = hasParentEntRef(leu)
+      wParentEnt && hasCorrectEntRef
     })
 
     notConsistentLeus.isEmpty

@@ -3,9 +3,8 @@ package dao.parquet
 import global.AppParams
 import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
-import spark.calculations.DataFrameHelper
 
-trait ParquetDao extends DataFrameHelper with Serializable{
+trait ParquetDao extends Serializable{
 
   val logger = LoggerFactory.getLogger(getClass)
 
