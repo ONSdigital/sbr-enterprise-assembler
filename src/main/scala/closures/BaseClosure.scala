@@ -15,6 +15,8 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.RddLogging
 import spark.extensions.sql._
 
+import scala.reflect.internal.util.TableDef.Column
+
 trait BaseClosure extends HFileUtils with Serializable with RddLogging{
 
   val hbaseDao: HBaseDao = HBaseDao
