@@ -31,15 +31,25 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
       HiveDao.getRegions(appconf).cache()
     }
 
+
+    val regionsByPostcodeShortDF: DataFrame = if (appconf.ENV == "local"){
+      spark.read.option("header", "true").csv(appconf.PATH_TO_GEO_SHORT).select("pcds","rgn").toDF("postcodeout", "region").cache()
+    }else{
+      HiveDao.getRegionsShort(appconf)
+    }
+
+    regionsByPostcodeDF.collect()
+
     val allLinksLeusDF = getAllLinksLUsDF(appconf).cache()
 
-    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,appconf).cache
+    val allEntsDF =  getAllEntsCalculated(allLinksLeusDF,regionsByPostcodeDF,regionsByPostcodeShortDF,appconf).cache()
 
-    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,appconf,Configs.conf).cache
 
-    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,appconf,Configs.conf).cache
+    val allRusDF = getAllRus(allEntsDF,regionsByPostcodeDF,regionsByPostcodeShortDF,appconf,Configs.conf).cache()
 
-    val allLeusDF = getAllLeus(appconf,Configs.conf).cache
+    val allLousDF = getAllLous(allRusDF,regionsByPostcodeDF,regionsByPostcodeShortDF,appconf,Configs.conf).cache()
+
+    val allLeusDF = getAllLeus(appconf,Configs.conf).cache()
 
     saveEnts(allEntsDF,appconf)
     saveRus(allRusDF,appconf)
@@ -71,7 +81,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
   }
 
 
-  def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame,appconf: AppParams)(implicit spark: SparkSession) = {
+  def getAllEntsCalculated(allLinksLusDF:DataFrame,regionsByPostcodeDF:DataFrame, regionsByPostcodeShortDF:DataFrame, appconf: AppParams)(implicit spark: SparkSession) = {
 
 
     val calculatedDF = calculate(allLinksLusDF,appconf).castAllToString
@@ -82,7 +92,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
 
     val existingEntCalculatedDF: DataFrame = {
                                     val calculatedExistingEnt = existingEntDF.join(calculatedDF,Seq("ern"), "left_outer")
-                                    val existingEntsWithRegionRecalculatedDF = calculateRegion(calculatedExistingEnt, regionsByPostcodeDF)
+                                    val existingEntsWithRegionRecalculatedDF = calculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF)
                                     val existingEntsWithEmploymentRecalculatedDF = calculateEmployment(existingEntsWithRegionRecalculatedDF)
                                     val withReorderedColumns = {
                                          val columns = completeEntSchema.fieldNames
@@ -93,7 +103,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")),Seq("ern"),"left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"),"left_outer")
 
-    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF,regionsByPostcodeDF)
+    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF,regionsByPostcodeDF,regionsByPostcodeShortDF)
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF,appconf).rdd,completeEntSchema)
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF,appconf)
@@ -138,26 +148,26 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
   }
 
 
-  def recalculateLouEmploymentAndRegion(ruDF:DataFrame, regionsByPostcodeDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def recalculateLouEmploymentAndRegion(ruDF:DataFrame, regionsByPostcodeDF:DataFrame, regionsByPostcodeShortDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingLous: DataFrame = getExistingLousDF(appconf,confs)
 
     val lousWithEmploymentReCalculated = existingLous.drop("employment").join(ruDF.select(col("rurn"), col("employment")),Seq("rurn"),"inner")
 
-    val lousWithRegionRecalcuated = calculateRegion(lousWithEmploymentReCalculated,regionsByPostcodeDF)
+    val lousWithRegionRecalcuated = calculateRegion(lousWithEmploymentReCalculated,regionsByPostcodeDF,regionsByPostcodeShortDF)
 
     lousWithRegionRecalcuated
 
   }
 
 
-  def getAllRus(allEntsDF:DataFrame, regionsByPostcodeDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllRus(allEntsDF:DataFrame, regionsByPostcodeDF:DataFrame, regionsByPostcodeShortDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val existingRUs: DataFrame = getExistingRusDF(appconf,confs)
 
     //val existingRusWithRecalculatedEmployment =
     val columns = ruRowSchema.fieldNames
-    val ruWithRegion: DataFrame = calculateRegion(existingRUs,regionsByPostcodeDF).select(columns.head, columns.tail: _*)
+    val ruWithRegion: DataFrame = calculateRegion(existingRUs,regionsByPostcodeDF,regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
 
     val entsWithoutRus: DataFrame = allEntsDF.join(ruWithRegion.select("ern"),Seq("ern"),"left_anti")
 
@@ -168,13 +178,13 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
     res
   }
 
-  def getAllLous(allRus:DataFrame, regionsByPostcodeDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
+  def getAllLous(allRus:DataFrame, regionsByPostcodeDF:DataFrame, regionsByPostcodeShortDF:DataFrame, appconf: AppParams, confs:Configuration)(implicit spark: SparkSession) = {
 
     val columns = louRowSchema.fieldNames
 
     val existingLous: DataFrame = getExistingLousDF(appconf,confs)
 
-    val existingLousWithRegion: DataFrame = calculateRegion(existingLous,regionsByPostcodeDF).select(columns.head, columns.tail: _*)
+    val existingLousWithRegion: DataFrame = calculateRegion(existingLous,regionsByPostcodeDF,regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
 
     val rusWithoutLous: DataFrame = allRus.join(existingLousWithRegion.select("rurn"),Seq("rurn"),"left_anti")
 

@@ -44,13 +44,13 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
   }
 
-  "dummy tests" should{
+/*  "dummy tests" should{
 
     "create test report files to make Jenkins happy" in{
       true shouldBe true
     }
 
-  }
+  }*/
 
  val appConfs = AppParams(
    (Array[String](
@@ -63,6 +63,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
      "201804",
      "HIVE DB NAME",
      "HIVE TABLE NAME",
+     "HIVE SHORT TABLE NAME",
      payeFilePath,
      vatFilePath,
      "local",
@@ -93,7 +94,7 @@ override def beforeAll() = {
    File(ruHfilePath).deleteRecursively()
    File(existingRecordsDir).deleteRecursively()
  }
-  "create test-data csv" should {" just do it" in{
+/*  "create test-data csv" should {" just do it" in{
       implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
       val geoPath = "/Users/vladshiligin/dev/ons/sbr-enterprise-assembler/src/test/resources/data/geo/test-dataset.csv"
       val pcPath = "src/test/resources/data/geo/postcodes.csv"
@@ -109,7 +110,7 @@ override def beforeAll() = {
       bw.close()
       true shouldBe true
 
-}}
+}}*/
 
  "assembler" should {
  "create hfiles populated with expected enterprise data" in {

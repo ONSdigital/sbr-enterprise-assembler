@@ -71,6 +71,7 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
       "201804",
       "HIVE DB NAME",
       "HIVE TABLE NAME",
+      "HIVE_SHORT_TABLE_NAME",
       payeFilePath,
       vatFilePath,
       "local",
