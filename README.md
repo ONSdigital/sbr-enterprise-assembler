@@ -46,29 +46,31 @@ Created new and updates existing entities.
 ##HBase table schemas
 
                                 ENTERPRISE
-    
-       column name      |     Optionality    |     Description
-    --------------------+--------------------+---------------------------------------------
-        ern             |    Mandatory       |  Unique 10 digit enterprise reference generated for SBR
-        prn             |    Mandatory       |  PRN value calculated at time of unit creation and fixed for the life of the unit
-        entref          |    Optional        |  Unique 10 digit enterprise reference from IDBR
-        name            |    Mandatory       |  Name for the enterprise
-        trading_style   |    Optional        |  Trading as name/ Alternative name
-        address1        |    Optional        |       
-        address2        |    Optional        |       
-        address3        |    Optional        |       
-        address4        |    Optional        |       
-        address5        |    Optional        |       
-        postcode        |    Mandatory       |       
-        region          |    Mandatory       |       
-        sic07           |    Mandatory       |       
-        legal_status    |    Mandatory       |       
-        paye_empees     |    Optional        |  average of PAYE jobs across year
-        paye_jobs       |    Optional        |  Sum of PAYE jobs for latest period
-        cntd_turnover   |    Optional        |  Sum of Rep VAT turnover for contained rep VAT Groups
-        app_turnover    |    Optional        |  Apportioned Rep VAT turnover based on employees
-        std_turnover    |    Optional        |  Sum of turnover for standard vats
-        grp_turnover    |    Optional        |  Sum of Rep VAT group turnover                  
-        ent_turnover    |    Optional        |  Sum of all (standard + contained + apportioned) turnover values for that enterprise
-        working_props   |    Mandatory       |  Calculated from Legal Status (Sole Proprietors = 1; Partnerships & LLP = 2; all others = 0).
-        employment      |    Mandatory       |  Sum of Employees (admin) and Working Proprietors
+    +--------------------+--------------------+-----------------------------------------------------------------------------------------------+
+    |   column name      |     Optionality    |     Description                                                                               |
+    |--------------------+--------------------+-----------------------------------------------------------------------------------------------+
+    +    ern             |    Mandatory       |  Unique 10 digit enterprise reference generated for SBR                                       |
+    |    prn             |    Mandatory       |  PRN value calculated at time of unit creation and fixed for the life of the unit             |
+    |    entref          |    Optional        |  Unique 10 digit enterprise reference from IDBR                                               |
+    |    name            |    Mandatory       |  Name for the enterprise                                                                      |
+    |    trading_style   |    Optional        |  Trading as name/ Alternative name                                                            |
+    |    address1        |    Optional        |                                                                                               |
+    |    address2        |    Optional        |                                                                                               |
+    |    address3        |    Optional        |                                                                                               |                                                                                      
+    |    address4        |    Optional        |                                                                                               |
+    |    address5        |    Optional        |                                                                                               |
+    |    postcode        |    Mandatory       |                                                                                               |
+    |    region          |    Mandatory       |                                                                                               |
+    |    sic07           |    Mandatory       |                                                                                               |
+    |    legal_status    |    Mandatory       |                                                                                               |
+    |    paye_empees     |    Optional        |  average of PAYE jobs across year                                                             |
+    |    paye_jobs       |    Optional        |  Sum of PAYE jobs for latest period                                                           |
+    |    cntd_turnover   |    Optional        |  Sum of Rep VAT turnover for contained rep VAT Groups                                         |
+    |    app_turnover    |    Optional        |  Apportioned Rep VAT turnover based on employees                                              |
+    |    std_turnover    |    Optional        |  Sum of turnover for standard vats                                                            |
+    |    grp_turnover    |    Optional        |  Sum of Rep VAT group turnover                                                                |                  
+    |    ent_turnover    |    Optional        |  Sum of all (standard + contained + apportioned) turnover values for that enterprise          |
+    |    working_props   |    Mandatory       |  Calculated from Legal Status (Sole Proprietors = 1; Partnerships & LLP = 2; all others = 0). |
+    |    employment      |    Mandatory       |  Sum of Employees (admin) and Working Proprietors                                             |
+    |                    |                    |                                                                                               |
+    |--------------------+--------------------+-----------------------------------------------------------------------------------------------|
