@@ -79,7 +79,7 @@ Created new and updates existing entities.
     +--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
     |   column name      |     Optionality    |     Description                                                                                                             |
     |--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
-    +    lurn            |    Mandatory       |  Unique 9 digit ref                                                                                                         |
+    |    lurn            |    Mandatory       |  Unique 9 digit ref                                                                                                         |
     |    luref           |    Optional        |  Unique 9 digit ref                                                                                                         |
     |    ern             |    Mandatory       |  Unique 10 digit enterprise reference generated for SBR                                                                     |
     |    prn             |    Mandatory       |  PRN value calculated at time of unit creation and fixed for the life of the unit                                           |
