@@ -43,7 +43,7 @@ Created new and updates existing entities.
                       
                       
 
-## HBase table schemas
+## Units HBase table schemas
 
                                 ENTERPRISE
     +--------------------+--------------------+----------------------------------------------------------------------------------------------------------------------------+
@@ -61,7 +61,7 @@ Created new and updates existing entities.
     |    address5        |    Optional        |                                                                                                                            |
     |    postcode        |    Mandatory       |                                                                                                                            |
     |    region          |    Mandatory       |  Geographic region allocated through a geography lookup from Postcode (defined as GOR in source file). 9 character string  |                                                                                           |
-    |    sic07           |    Mandatory       |                                                                                                                            |
+    |    sic07           |    Mandatory       |  Standard Industrial Classification (SIC)                                                                                  |
     |    legal_status    |    Mandatory       |                                                                                                                            |
     |    paye_empees     |    Optional        |  average of PAYE jobs across year                                                                                          |
     |    paye_jobs       |    Optional        |  Sum of PAYE jobs for latest period                                                                                        |
@@ -93,9 +93,60 @@ Created new and updates existing entities.
     |    address3        |    Optional        |                                                                                                                             |
     |    address4        |    Optional        |                                                                                                                             |
     |    address5        |    Optional        |                                                                                                                             |
-    |    postcode        |    Mandatory       |  average of PAYE jobs across year                                                                                           |
+    |    postcode        |    Mandatory       |                                                                                                                             |
     |    region          |    Mandatory       |  Geographic region allocated through a geography lookup from Postcode (defined as GOR in source file).9 character string    |
-    |    sic07           |    Mandatory       |  Sum of Rep VAT turnover for contained rep VAT Groups                                                                       |
-    |    employees       |    Mandatory       |  Apportioned Rep VAT turnover based on employees                                                                            |                
+    |    sic07           |    Mandatory       |  Standard Industrial Classification (SIC)                                                                                   |
+    |    employees       |    Mandatory       |                                                                                                                             |                
     |    employment      |    Mandatory       |                                                                                                                             |
     |--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    
+                                        REPORTING UNIT
+    +--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    |   column name      |     Optionality    |     Description                                                                                                             |
+    |--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    |    rurn            |    Mandatory       |                                                                                                                             |
+    |    ruref           |    Optional        |                                                                                                                             |
+    |    ern             |    Mandatory       |                                                                                                                             |
+    |    prn             |    Mandatory       |                                                                                                                             |
+    |    name            |    Mandatory       |                                                                                                                             |
+    |    entref          |    Optional        |                                                                                                                             |                                                                                      
+    |    trading_style   |    Optional        |                                                                                                                             |
+    |    legal_status    |    Optional        |                                                                                                                             |
+    |    address1        |    Mandatory       |                                                                                                                             |
+    |    address2        |    Optional        |                                                                                                                             |
+    |    address3        |    Optional        |                                                                                                                             |
+    |    address4        |    Optional        |                                                                                                                             |
+    |    address5        |    Optional        |                                                                                                                             |
+    |    postcode        |    Mandatory       |                                                                                                                             |
+    |    region          |    Mandatory       |  Geographic region allocated through a geography lookup from Postcode (defined as GOR in source file).9 character string    |
+    |    sic07           |    Mandatory       |  Standard Industrial Classification (SIC)                                                                                   |
+    |    employees       |    Mandatory       |                                                                                                                             |                
+    |    employment      |    Mandatory       |                                                                                                                             |
+    |    turnover        |    Mandatory       |                                                                                                                             |
+    |--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    
+        
+                                        LEGAL UNIT
+    +--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    |   column name      |     Optionality    |     Description                                                                                                             |
+    |--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    |    ubrn            |    Mandatory       |  Unique 16 digit legal unit reference                                                                                       |
+    |    crn             |    Optional        |  Unique Companies House reference number                                                                                    |
+    |    uprn            |    Optional        |  11 digit key allocated based on address matching to AI                                                                     |
+    |    name            |    Mandatory       |  Name for the Legal unit                                                                                                    |                                                                                      
+    |    trading_style   |    Optional        |                                                                                                                             |
+    |    address1        |    Mandatory       |                                                                                                                             |
+    |    address2        |    Optional        |                                                                                                                             |
+    |    address3        |    Optional        |                                                                                                                             |
+    |    address4        |    Optional        |                                                                                                                             |
+    |    address5        |    Optional        |                                                                                                                             |
+    |    postcode        |    Mandatory       |                                                                                                                             |
+    |    sic07           |    Mandatory       |  Standard Industrial Classification (SIC)                                                                                   |
+    |    legal_status    |    Mandatory       |                                                                                                                             |                
+    |    trading_status  |    Optional        |  Text string consisting of A (Active), C (Closed), D (Dormant) or I (Insolvent)                                             |                
+    |    birth_date      |    Mandatory       |  Formatted as dd/mm/yyyy                                                                                                    |
+    |    death_date      |    Optional        |  Formatted as dd/mm/yyyy                                                                                                    |
+    |    death_code      |    Optional        |                                                                                                                             |
+    |--------------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------+
+    
+    
