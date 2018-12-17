@@ -19,9 +19,12 @@ import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 import scala.reflect.io.File
 
 
+
 class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils{
 
   lazy val testDir = "newperiod"
+
+  val cores:Int = Runtime.getRuntime().availableProcessors()
 
   object MockAssembleUnitsClosure extends AssembleUnitsClosure with MockClosures{
 
@@ -72,7 +75,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
 
 override def beforeAll() = {
-  implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
+  implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
   conf.set("hbase.zookeeper.quorum", "localhost")
   conf.set("hbase.zookeeper.property.clientPort", "2181")
   withHbaseConnection { implicit connection:Connection =>
@@ -115,7 +118,7 @@ override def beforeAll() = {
  "assembler" should {
  "create hfiles populated with expected enterprise data" in {
 
-   implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
+   implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
    val actualRows = readEntitiesFromHFile[HFileRow](entHfilePath).collect.toList
    val actual = actualRows.map(Enterprise(_)).sortBy(_.ern)
    val expected  = newPeriodEnts.sortBy(_.ern)
@@ -127,7 +130,7 @@ override def beforeAll() = {
 "assembler" should {
  "create hfiles populated with expected local units data" in {
 
-   implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
+   implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
    //val existing = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
    val actual: List[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList.sortBy(_.lurn)
    val expected: List[LocalUnit] = newPeriodLocalUnits.sortBy(_.lurn)
@@ -140,7 +143,7 @@ override def beforeAll() = {
 "assembler" should {
    "create hfiles populated with expected reporting units data" in {
 
-     implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
+     implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
      val existing = readEntitiesFromHFile[ReportingUnit](existingRusRecordHFiles).collect.toList
      //val actualHFileRows: List[HFileRow] = readEntitiesFromHFile[HFileRow](ruHfilePath).collect.toList
      val actual: List[ReportingUnit] = readEntitiesFromHFile[ReportingUnit](ruHfilePath).collect.toList.sortBy(_.rurn)
@@ -153,7 +156,7 @@ override def beforeAll() = {
 "assembler" should {
    "create hfiles populated with expected legal units data" in {
 
-     implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
+     implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
     // val existingRecs = readEntitiesFromHFile[HFileRow](existingLeusRecordHFiles).collect.toList
      val existing = readEntitiesFromHFile[LegalUnit](existingLeusRecordHFiles).collect.toList.sortBy(_.ubrn)
      val actual: List[LegalUnit] = readEntitiesFromHFile[LegalUnit](leuHfilePath).collect.toList.sortBy(_.ubrn)

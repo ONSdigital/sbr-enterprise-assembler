@@ -85,9 +85,8 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
     }
 
   }*/
-
   override def beforeAll() = {
-    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
     withHbaseConnection { implicit connection:Connection =>
@@ -112,7 +111,7 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      implicit val spark: SparkSession = SparkSession.builder().master("local[6]").appName("enterprise assembler").getOrCreate()
       val ents: Seq[Enterprise] = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList
       val links: Seq[LinkRecord] = readLinks
       val lous: Seq[LocalUnit] = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList
@@ -148,7 +147,7 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
     newLurnFromLinks shouldBe newLurnFromLou
   }
 
-  def isNewId(id:String) = id.startsWith("N")
+  def isNewId(id:String) = id.startsWith("N") || id.contains("-TEST-")
 
   def readLinks(implicit spark:SparkSession) = {
     val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList
