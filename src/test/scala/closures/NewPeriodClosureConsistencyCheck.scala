@@ -60,8 +60,6 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
     withHbaseConnection { implicit connection:Connection =>
         createRecords(appConfs)
         ParquetDao.jsonToParquet(jsonFilePath)(spark, appConfs)
-          //val existingDF = readEntitiesFromHFile[HFileRow](existingRusRecordHFiles).collect
-
         MockClosure.createUnitsHfiles(appConfs)(spark, connection)
     }
     spark.stop
