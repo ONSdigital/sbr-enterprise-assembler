@@ -20,6 +20,8 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
 
   lazy val testDir = "newperiod"
 
+  val cores:Int = Runtime.getRuntime().availableProcessors()
+
   object MockClosure extends AssembleUnitsClosure with MockDataReader{
     override val hbaseDao = MockCreateNewPeriodHBaseDao
   }
@@ -52,7 +54,7 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
   }*/
 
   override def beforeAll() = {
-    implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+    implicit val spark: SparkSession = SparkSession.builder().master(s"local[*]").appName("enterprise assembler").getOrCreate()
     conf.set("hbase.zookeeper.quorum", "localhost")
     conf.set("hbase.zookeeper.property.clientPort", "2181")
     withHbaseConnection { implicit connection:Connection =>
@@ -79,7 +81,7 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {
 
-      implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
+      implicit val spark: SparkSession = SparkSession.builder().master(s"local[*]").appName("enterprise assembler").getOrCreate()
       val  ents = readEntitiesFromHFile[Enterprise](entHfilePath).collect.toList
       val  lous = readEntitiesFromHFile[LocalUnit](louHfilePath).collect.toList
       val  leus = readEntitiesFromHFile[LegalUnit](leuHfilePath).collect.toList
