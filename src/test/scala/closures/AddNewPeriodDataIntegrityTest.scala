@@ -148,7 +148,7 @@ class AddNewPeriodDataIntegrityTest extends HBaseConnectionManager with Paths wi
     newLurnFromLinks shouldBe newLurnFromLou
   }
 
-  def isNewId(id:String) = id.startsWith("N")
+  def isNewId(id:String) = id.startsWith("N") || id.contains("-TEST-")
 
   def readLinks(implicit spark:SparkSession) = {
     val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList
