@@ -1,11 +1,9 @@
 package utils.data.expected
 
-
-import model.domain.{HFileRow, KVCell, LocalUnit}
+import model.domain.{HFileRow, KVCell}
 import utils.data.TestIds
 
 trait ExpectedDataForNewPeriodWithMissingLouLinks extends TestIds{
-
 
   val newPeriodLinks = List(
   HFileRow("00012345~CH",List(KVCell("p_LEU","100000508724"))),

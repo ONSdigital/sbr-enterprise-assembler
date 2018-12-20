@@ -6,7 +6,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.Partitioner
 
 private object HFilePartitioner {
-  def apply(conf: Configuration, splits: Array[Array[Byte]], numFilesPerRegionPerFamily: Int) = {
+  def apply(conf: Configuration, splits: Array[Array[Byte]], numFilesPerRegionPerFamily: Int): HFilePartitioner = {
     if (numFilesPerRegionPerFamily == 1)
       new SingleHFilePartitioner(splits)
     else {
@@ -17,8 +17,8 @@ private object HFilePartitioner {
 }
 
 protected abstract class HFilePartitioner extends Partitioner {
-  def extractKey(n: Any) = n match {
-    case (k: String) => Bytes.toBytes(k)
+  def extractKey(n: Any): Array[Byte] = n match {
+    case k: String => Bytes.toBytes(k)
     case (k: String, _) => Bytes.toBytes(k)
   }
 }

@@ -2,7 +2,6 @@ package model.domain
 
 import org.apache.spark.sql.Row
 import spark.extensions.sql._
-import scala.util.Try
 
 /**
   * |-- ern: string (nullable = true)
@@ -22,7 +21,7 @@ case class Calculations(
                        )
 
 object Calculations {
-  def apply(row:Row) = {
+  def apply(row:Row): Calculations = {
     val appd = row.getAs[Long]("app_turnover")
     new Calculations(
       row.getAs[String]("ern"),

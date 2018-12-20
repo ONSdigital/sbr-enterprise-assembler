@@ -3,7 +3,6 @@ package utils.data.existing
 import model.domain.{HFileRow, KVCell}
 import utils.data.TestIds
 
-
 trait ExistingLinks {this:TestIds =>
 
 //     HFileRow("00032261~CH",List(KVCell("p_LEU","100002826247"))),
@@ -50,7 +49,6 @@ trait ExistingLinks {this:TestIds =>
   HFileRow(s"ENT~$entWithMissingLouId",List(KVCell("c_100002826247","LEU"), KVCell(s"c_$missingLouLurn","LOU"),KVCell(s"c_REU",missingLouRurn))),
   HFileRow(s"LOU~$missingLouLurn",List(KVCell("p_ENT",entWithMissingLouId),KVCell(s"p_$missingLouRurn","REU"))),
   HFileRow(s"REU~$missingLouRurn",List(KVCell("p_ENT",entWithMissingLouId),KVCell(s"c_$missingLouRurn","LOU"))),
-
 
   HFileRow("ENT~3000000011",List(KVCell("c_100000246017","LEU"), KVCell("c_100000827984","LEU"), KVCell("c_300000088","LOU"), KVCell("c_300000099","LOU"), KVCell("c_REU","2000000002"))),
   HFileRow("LOU~300000088",List(KVCell("p_ENT","3000000011"),KVCell("p_REU","2000000002"))),

@@ -1,12 +1,9 @@
 package spark.extensions.rdd
 
 import global.Configs.conf
-import model.domain.{HFileRow, KVCell}
 import org.apache.crunch.io.hbase.HFileInputFormat
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.{Cell, CellUtil, KeyValue, KeyValueUtil}
+import org.apache.hadoop.hbase.{Cell, CellUtil, KeyValue}
 import org.apache.hadoop.io.NullWritable
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession

@@ -1,6 +1,5 @@
 package dao.hbase
 
-import global.{AppParams, Configs}
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -15,31 +14,32 @@ import org.apache.hadoop.hbase.util.Base64
 import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SparkSession}
-import org.slf4j.LoggerFactory
+import org.apache.spark.sql.SparkSession
+import org.slf4j.{Logger, LoggerFactory}
+import util.ConfigOptions
 
 /**
   *
   */
-trait HBaseDao extends Serializable{
-  import global.Configs._
+trait HBaseDao extends Serializable {
 
-  val logger = LoggerFactory.getLogger(getClass)
+  val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  def readTable(appParams:AppParams, config:Configuration, tableName:String)(implicit spark:SparkSession) = {
+  def readTable(config: Configuration, tableName: String)
+               (implicit spark: SparkSession): RDD[HFileRow] = {
     config.set(TableInputFormat.INPUT_TABLE, tableName)
     val res = readKvsFromHBase(config)
     config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
-  def loadHFiles(implicit connection:Connection,appParams:AppParams) = {
+  def loadHFiles(implicit connection: Connection): Unit = {
     loadLinksHFile
     loadEnterprisesHFile
     loadLousHFile
   }
 
-  def truncateTables(implicit connection:Connection,appParams:AppParams) = {
+  def truncateTables()(implicit connection: Connection): Unit = {
     truncateLinksTable
     truncateEntsTable
     truncateLousTable
@@ -47,120 +47,117 @@ trait HBaseDao extends Serializable{
     truncateRusTable
   }
 
-  def truncateTable(tableName:String)(implicit connection:Connection,appParams:AppParams) =  wrapTransaction(tableName){ (table, admin) =>
+  def truncateTable(tableName: String)(implicit connection: Connection): Unit = wrapTransaction(tableName) { (table, admin) =>
     admin.disableTable(table.getName)
-    admin.truncateTable(table.getName,true)
+    admin.truncateTable(table.getName, true)
   }
 
-  def truncateLinksTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(linksTableName(appParams))
-  def truncateEntsTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(entsTableName(appParams))
-  def truncateLousTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(lousTableName(appParams))
-  def truncateLeusTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(leusTableName(appParams))
-  def truncateRusTable(implicit connection:Connection,appParams:AppParams) =  truncateTable(rusTableName(appParams))
+  def truncateLinksTable(implicit connection: Connection): Unit = truncateTable(linksTableName)
 
-  def readDeleteData(appParams:AppParams,regex:String)(implicit spark:SparkSession): Unit = {
-    val localConfCopy = conf
-    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy,appParams,regex)
+  def truncateEntsTable(implicit connection: Connection): Unit = truncateTable(entsTableName)
+
+  def truncateLousTable(implicit connection: Connection): Unit = truncateTable(lousTableName)
+
+  def truncateLeusTable(implicit connection: Connection): Unit = truncateTable(leusTableName)
+
+  def truncateRusTable(implicit connection: Connection): Unit = truncateTable(rusTableName)
+
+  def readDeleteData(regex: String)(implicit spark: SparkSession): Unit = {
+
+    val data: RDD[HFileRow] = readLinksWithKeyFilter(regex)
     val rows: Array[HFileRow] = data.take(5)
     rows.map(_.toString).foreach(row => print(
-      "="*10+
-        row+'\n'+
-        "="*10
+      "=" * 10 +
+        row + '\n' +
+        "=" * 10
     ))
   }
 
-  def readLinksWithKeyFilter(confs:Configuration, appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-    readTableWithKeyFilter(confs, appParams, linksTableName(appParams), regex)
+  def readLinksWithKeyFilter(regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    readTableWithKeyFilter(linksTableName, regex)
   }
 
-  def readLinksWithKeyPrefixFilter(confs:Configuration, appParams:AppParams, prefix:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-    readTableWithPrefixKeyFilter(confs, appParams, linksTableName(appParams), prefix)
+  def readLinksWithKeyPrefixFilter(prefix: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    readTableWithPrefixKeyFilter(linksTableName, prefix)
   }
 
-  def readLouWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
-    readTableWithKeyFilter(confs, appParams, lousTableName(appParams), regex)
+  def readLouWithKeyFilter( regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    readTableWithKeyFilter(lousTableName, regex)
   }
 
-  def readEnterprisesWithKeyFilter(confs:Configuration,appParams:AppParams, regex:String)(implicit spark:SparkSession): RDD[HFileRow] = {
+  def readEnterprisesWithKeyFilter( regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
 
-    readTableWithKeyFilter(confs, appParams, entsTableName(appParams), regex)
+    readTableWithKeyFilter(entsTableName, regex)
   }
 
+  def readTableWithPrefixKeyFilter(tableName: String, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
 
-  def readTableWithPrefixKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
-    val localConfCopy = confs
-    withKeyPrefixScanner(localConfCopy,regex,appParams,tableName){
+    withKeyPrefixScanner(regex, tableName) {
       readKvsFromHBase
-    }}
+    }
+  }
 
-
-  def readTableWithKeyFilter(confs:Configuration,appParams:AppParams, tableName:String, regex:String)(implicit spark:SparkSession) = {
-    val localConfCopy = confs
-    withScanner(localConfCopy,regex,appParams,tableName){
+  def readTableWithKeyFilter(tableName: String, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    withScanner(regex, tableName) {
       readKvsFromHBase
-    }}
-
-  def loadRefreshLinksHFile(implicit connection:Connection, appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE), admin,table,regionLocator)
+    }
   }
 
-
-
-  def loadLinksHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(linksTableName(appParams)){ (table, admin) =>
+  def loadRefreshLinksHFile(implicit connection: Connection): Unit = wrapTransaction(linksTableName) { (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LINKS_HFILE), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(ConfigOptions.PathToLinksHfile), admin, table, regionLocator)
   }
 
-  def loadEnterprisesHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(entsTableName(appParams)){ (table, admin) =>
+  def loadLinksHFile(implicit connection: Connection): Unit = wrapTransaction(linksTableName) { (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_ENTERPRISE_HFILE), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(ConfigOptions.PathToLinksHfile), admin, table, regionLocator)
   }
 
-
-  def loadLousHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(lousTableName(appParams)){ (table, admin) =>
+  def loadEnterprisesHFile(implicit connection: Connection): Unit = wrapTransaction(entsTableName) { (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LOCALUNITS_HFILE), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(ConfigOptions.PathToEnterpriseHFile), admin, table, regionLocator)
   }
 
-
-  def loadLeusHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(leusTableName(appParams)){ (table, admin) =>
+  def loadLousHFile(implicit connection: Connection): Unit = wrapTransaction(lousTableName) { (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_LEGALUNITS_HFILE), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(ConfigOptions.PathToLocalUnitsHFile), admin, table, regionLocator)
   }
 
-  def loadRusHFile(implicit connection:Connection,appParams:AppParams) = wrapTransaction(rusTableName(appParams)){ (table, admin) =>
+  def loadLeusHFile(implicit connection: Connection): Unit = wrapTransaction(leusTableName) { (table, admin) =>
     val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(appParams.PATH_TO_REPORTINGUNITS_HFILE), admin,table,regionLocator)
+    bulkLoader.doBulkLoad(new Path(ConfigOptions.PathToLegalUnitsHFile), admin, table, regionLocator)
   }
 
-  private def wrapTransaction(fullTableName:String)(action:(Table,Admin) => Unit)(implicit connection:Connection){
+  def loadRusHFile(implicit connection: Connection): Unit = wrapTransaction(rusTableName) { (table, admin) =>
+    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+    val regionLocator = connection.getRegionLocator(table.getName)
+    bulkLoader.doBulkLoad(new Path(ConfigOptions.PathToReportingUnitsHFile), admin, table, regionLocator)
+  }
+
+  private def wrapTransaction(fullTableName: String)(action: (Table, Admin) => Unit)(implicit connection: Connection) {
     val tn = TableName.valueOf(fullTableName)
     val table: Table = connection.getTable(tn)
     val admin = connection.getAdmin
     setJob(table)
-    action(table,admin)
-    table.close
+    action(table, admin)
+    table.close()
   }
 
-
-  private def wrapReadTransaction(tableName:String)(action: String => RDD[HFileRow])(implicit connection:Connection):RDD[HFileRow] = {
+  private def wrapReadTransaction(tableName: String)(action: String => RDD[HFileRow])(implicit connection: Connection): RDD[HFileRow] = {
     val table: Table = connection.getTable(TableName.valueOf(tableName))
     val admin = connection.getAdmin
     setJob(table)
     val res = action(tableName)
-    table.close
+    table.close()
     res
   }
 
-
-  private def setJob(table:Table)(implicit connection:Connection){
+  private def setJob(table: Table)(implicit connection: Connection): Unit = {
     val job = Job.getInstance(connection.getConfiguration)
     job.setMapOutputKeyClass(classOf[ImmutableBytesWritable])
     job.setMapOutputValueClass(classOf[KeyValue])
@@ -168,25 +165,25 @@ trait HBaseDao extends Serializable{
     //HFileOutputFormat2.configureIncrementalLoad(job, table, connection.getRegionLocator(table.getName))
   }
 
-  def withKeyPrefixScanner(config:Configuration,prefix:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
-    config.set(TableInputFormat.INPUT_TABLE, tableName)
-    setPrefixScanner(config,prefix,appParams)
-    val res = getResult(config)
-    unsetPrefixScanner(config)
-    config.unset(TableInputFormat.INPUT_TABLE)
+  def withKeyPrefixScanner(prefix: String, tableName: String)(getResult: Configuration => RDD[HFileRow]): RDD[HFileRow] = {
+    ConfigOptions.hbaseConfiguration.set(TableInputFormat.INPUT_TABLE, tableName)
+    setPrefixScanner(prefix)
+    val res = getResult(ConfigOptions.hbaseConfiguration)
+    unsetPrefixScanner()
+    ConfigOptions.hbaseConfiguration.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
-  def withScanner(config:Configuration,regex:String, appParams:AppParams, tableName:String)(getResult:(Configuration) => RDD[HFileRow]): RDD[HFileRow] = {
-    config.set(TableInputFormat.INPUT_TABLE, tableName)
-    setScanner(config,regex,appParams)
-    val res = getResult(config)
-    unsetScanner(config)
-    config.unset(TableInputFormat.INPUT_TABLE)
+  def withScanner(regex: String, tableName: String)(getResult: Configuration => RDD[HFileRow]): RDD[HFileRow] = {
+    ConfigOptions.hbaseConfiguration.set(TableInputFormat.INPUT_TABLE, tableName)
+    setScanner(regex)
+    val res = getResult(ConfigOptions.hbaseConfiguration)
+    unsetScanner()
+    ConfigOptions.hbaseConfiguration.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
-  def readKvsFromHBase(configuration:Configuration)(implicit spark:SparkSession): RDD[HFileRow] =  {
+  def readKvsFromHBase(configuration: Configuration)(implicit spark: SparkSession): RDD[HFileRow] = {
     spark.sparkContext.newAPIHadoopRDD(
       configuration,
       classOf[TableInputFormat],
@@ -195,55 +192,56 @@ trait HBaseDao extends Serializable{
       .map(row => HFileRow(row._2))
   }
 
-  def copyExistingRecordsToHFiles(appParams:AppParams,dirName:String = "existing")(implicit spark:SparkSession) = {
-    def buildPath(path:String) = {
+  def copyExistingRecordsToHFiles(dirName: String = "existing")(implicit spark: SparkSession): Unit = {
+    def buildPath(path: String) = {
       val dirs = path.split("/")
       val updatedDirs = (dirs.init :+ dirName) :+ dirs.last
       val res = updatedDirs.mkString("/")
       res
     }
-    val prevTimePeriod = {(appParams.TIME_PERIOD.toInt - 1).toString}
-    val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(conf,appParams,s"~$prevTimePeriod")
-    val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(conf,appParams,s"~$prevTimePeriod")
-    val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(conf,appParams,s".*~$prevTimePeriod~*.")
 
-    ents.flatMap(_.toHFileCellRow(appParams.HBASE_ENTERPRISE_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(buildPath(appParams.PATH_TO_ENTERPRISE_HFILE),classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+    val prevTimePeriod = (ConfigOptions.TimePeriod.toInt - 1).toString
 
-    links.flatMap(_.toHFileCellRow(appParams.HBASE_LINKS_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(buildPath(appParams.PATH_TO_LINKS_HFILE),classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+    val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(s"~$prevTimePeriod")
+    val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(s"~$prevTimePeriod")
+    val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(s".*~$prevTimePeriod~*.")
 
-    lous.flatMap(_.toHFileCellRow(appParams.HBASE_LOCALUNITS_COLUMN_FAMILY)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+    ents.flatMap(_.toHFileCellRow(ConfigOptions.HBaseEnterpriseColumnFamily)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(buildPath(appParams.PATH_TO_LOCALUNITS_HFILE),classOf[ImmutableBytesWritable],classOf[KeyValue],classOf[HFileOutputFormat2],Configs.conf)
+      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToEnterpriseHFile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2])
+
+    links.flatMap(_.toHFileCellRow(ConfigOptions.HBaseLinksColumnFamily)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToLinksHfile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2])
+
+    lous.flatMap(_.toHFileCellRow(ConfigOptions.HBaseLocalUnitsColumnFamily)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToLocalUnitsHFile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2])
 
   }
 
- private def unsetScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
+  private def unsetScanner(): Unit = ConfigOptions.hbaseConfiguration.unset(TableInputFormat.SCAN)
 
-  private def setScanner(config:Configuration,regex:String, appParams:AppParams) = {
+  private def setScanner(regex: String): Unit = {
 
     val comparator = new RegexStringComparator(regex)
     val filter = new RowFilter(CompareOp.EQUAL, comparator)
 
     def convertScanToString(scan: Scan): String = {
       val proto: ClientProtos.Scan = ProtobufUtil.toScan(scan)
-      return Base64.encodeBytes(proto.toByteArray())
+      Base64.encodeBytes(proto.toByteArray)
     }
 
     val scan = new Scan()
     scan.setFilter(filter)
     val scanStr = convertScanToString(scan)
 
-   config.set(TableInputFormat.SCAN,scanStr)
+    ConfigOptions.hbaseConfiguration.set(TableInputFormat.SCAN, scanStr)
   }
 
+  private def unsetPrefixScanner(): Unit = ConfigOptions.hbaseConfiguration.unset(TableInputFormat.SCAN)
 
- private def unsetPrefixScanner(config:Configuration) = config.unset(TableInputFormat.SCAN)
-
-  private def setPrefixScanner(config:Configuration,prefix:String, appParams:AppParams) = {
+  private def setPrefixScanner(prefix: String): Unit = {
 
     val prefixFilter = new PrefixFilter(prefix.getBytes)
     val scan: Scan = new Scan()
@@ -251,20 +249,20 @@ trait HBaseDao extends Serializable{
 
     def convertScanToString: String = {
       val proto: ClientProtos.Scan = ProtobufUtil.toScan(scan)
-      return Base64.encodeBytes(proto.toByteArray())
+      Base64.encodeBytes(proto.toByteArray())
     }
-
-
-   config.set(TableInputFormat.SCAN,convertScanToString)
+    ConfigOptions.hbaseConfiguration.set(TableInputFormat.SCAN, convertScanToString)
   }
 
+  def linksTableName = s"${ConfigOptions.HBaseLinksTableNamespace}:${ConfigOptions.HBaseLinksTableName}_${ConfigOptions.TimePeriod}"
 
+  def leusTableName = s"${ConfigOptions.HBaseLegalUnitsNamespace}:${ConfigOptions.HBaseLegalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def linksTableName(appconf:AppParams) =  s"${appconf.HBASE_LINKS_TABLE_NAMESPACE}:${appconf.HBASE_LINKS_TABLE_NAME}_${appconf.TIME_PERIOD}"
-  def leusTableName(appconf:AppParams) =  s"${appconf.HBASE_LEGALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LEGALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
-  def lousTableName(appconf:AppParams) =  s"${appconf.HBASE_LOCALUNITS_TABLE_NAMESPACE}:${appconf.HBASE_LOCALUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
-  def rusTableName(appconf:AppParams) =  s"${appconf.HBASE_REPORTINGUNITS_TABLE_NAMESPACE}:${appconf.HBASE_REPORTINGUNITS_TABLE_NAME}_${appconf.TIME_PERIOD}"
-  def entsTableName(appconf:AppParams) =  s"${appconf.HBASE_ENTERPRISE_TABLE_NAMESPACE}:${appconf.HBASE_ENTERPRISE_TABLE_NAME}_${appconf.TIME_PERIOD}"
+  def lousTableName = s"${ConfigOptions.HBaseLocalUnitsNamespace}:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
+
+  def rusTableName = s"${ConfigOptions.HBaseReportingUnitsNamespace}:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
+
+  def entsTableName = s"${ConfigOptions.HBaseEnterpriseTableNamespace}:${ConfigOptions.HBaseEnterpriseTableName}_${ConfigOptions.TimePeriod}"
 
 }
 

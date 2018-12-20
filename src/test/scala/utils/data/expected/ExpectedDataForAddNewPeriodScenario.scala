@@ -5,8 +5,7 @@ import utils.data.TestIds
 
 trait ExpectedDataForAddNewPeriodScenario extends TestIds{
 
-
-  val expectedNewPeriodLinks = List[LinkRecord](
+  val expectedNewPeriodLinks: List[LinkRecord] = List[LinkRecord](
 
   LinkRecord("111111111-TEST-ERN",List(ReportingUnitLink("11111111-TEST-RURN",List("11111111-TEST-LURN"),"111111111-TEST-ERN")),List(LegalUnitLink("999000508999",Some("33322444"),List("1999Z"),List("919100010000")))),
   LinkRecord(entWithMissingLouId,List(ReportingUnitLink("MISS-LOU-TEST-RURN",List("MISS-LOU-TEST-LURN"),"2000000011")),List(LegalUnitLink("100002826247",None,List("1151L"),List("123123123000")))),
@@ -14,7 +13,6 @@ trait ExpectedDataForAddNewPeriodScenario extends TestIds{
   LinkRecord("4000000011",List(ReportingUnitLink("5000000005",List("400000055", "400000066", "400000077"),"4000000011")),List(LegalUnitLink("100000459235",Some("04223160"),List("1166L", "1177L"),List("555666777000", "555666777001")), LegalUnitLink("100000508723",Some("01113199"),List("1188L", "1199L"),List("555666777002")), LegalUnitLink("100000508724",Some("00012345"),List("3333L", "5555L"),List("999888777000")))),
   LinkRecord("5000000011",List(ReportingUnitLink("6000000006",List("550000088"),"5000000011")),List(LegalUnitLink("100000601835",Some("01012444"),List("9876L"),List("555666777003"))))
   )
-  
 
   val newPeriodLinks = List(
     HFileRow("CH~00012345",List(KVCell("p_LEU","100000508724"))),

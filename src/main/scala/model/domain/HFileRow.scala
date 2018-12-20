@@ -12,24 +12,18 @@ import spark.extensions.rdd.HBaseDataReader
 
 import scala.util.Try
 
-/**
-  *
-  */
-
-
 case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 
-  def getLinkId = key.split("~").last
+  def getLinkId: String = key.split("~").last
 
-  def getValueOrNull(key: String, byKey: Boolean = true) = getCellValue(key,byKey).getOrElse(null)
+  def getValueOrNull(key: String, byKey: Boolean = true): String = getCellValue(key, byKey).orNull
 
-  def getValueOrStr(key: String, byKey: Boolean = true,default:String = "") = getCellValue(key,byKey).getOrElse(default)
+  def getValueOrStr(key: String, byKey: Boolean = true,default:String = ""): String = getCellValue(key,byKey).getOrElse(default)
 
-  def getCellValue(key: String, byKey: Boolean) = if (byKey) cells.collect { case KVCell(`key`, value) => Option(value)}.headOption.flatten//.getOrElse(null)
+  def getCellValue(key: String, byKey: Boolean): Option[String] = if (byKey) cells.collect { case KVCell(`key`, value) => Option(value)}.headOption.flatten//.getOrElse(null)
   else cells.collect { case KVCell(value, `key`) => Option(value)}.headOption.flatten//.getOrElse(null)
 
-  def getCellArrayValue(key: String) = {
-
+  def getCellArrayValue(key: String): Iterable[String] = {
     val result = cells.collect { case KVCell(value, `key`) => value }
     if (result.isEmpty) null
     else result
@@ -43,9 +37,9 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
   }
 
   //put type set as default
-  def toHFileCells(columnFamily: String, kvType: Int = KeyValue.Type.Put.ordinal()) = cells.map(cell => HFileCell(key, columnFamily, cell.column, cell.value, kvType))
+  def toHFileCells(columnFamily: String, kvType: Int = KeyValue.Type.Put.ordinal()): Iterable[HFileCell] = cells.map(cell => HFileCell(key, columnFamily, cell.column, cell.value, kvType))
 
-  def toEntRow = {
+  def toEntRow: GenericRowWithSchema = {
     import spark.extensions.sql._
     try {
         new GenericRowWithSchema(Array( getValueOrStr("ern"),
@@ -71,8 +65,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     }
   }
 
-
-  def toLeuRow = {
+  def toLeuRow: GenericRowWithSchema = {
     import spark.extensions.sql._
 
     try {
@@ -108,7 +101,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       }
     }}
 
-    def toRuRow = {
+    def toRuRow: GenericRowWithSchema = {
       import spark.extensions.sql._
 
         new GenericRowWithSchema(Array(
@@ -134,13 +127,13 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
         ),ruRowSchema)
     }
 
-    def toLeuLinksRow = {
+    def toLeuLinksRow: GenericRowWithSchema = {
       import spark.extensions.sql._
 
       new GenericRowWithSchema(Array(
         getLinkId,
         getValueOrStr("p_ENT"),
-        getCellValue("CH", false).map(_.substring(2)).getOrElse(null),
+        getCellValue("CH", byKey = false).map(_.substring(2)).orNull,
         Try {
           getCellArrayValue("PAYE").map(paye => if (paye.startsWith("c_")) {
             paye.substring(2)
@@ -154,7 +147,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       ), linksLeuRowSchema)
     }
 
-    def toUbrnErnRow = {
+    def toUbrnErnRow: GenericRowWithSchema = {
       import spark.extensions.sql._
 
       new GenericRowWithSchema(Array(
@@ -163,7 +156,7 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       ), existingLuBiRowSchema)
     }
 
-    def toLouRow = {
+    def toLouRow: GenericRowWithSchema = {
       import spark.extensions.sql._
 
       try {
@@ -222,7 +215,6 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
     def toDeletePeriodHFileEntries(colFamily: String): Iterable[(ImmutableBytesWritable, KeyValue)] =
       Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cells.head.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
 
-
     def toDeleteHFile(colFamily: String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
       val excludedColumns = Seq("p_ENT")
       if (key.contains("~LEU~")) {
@@ -234,7 +226,6 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
         Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, cell.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteFamily)))
       }
     }
-
 
     def toDeleteHFileRows(colFamily: String): Iterable[(String, hfile.HFileCell)] = {
       val excludedColumns = Seq("p_ENT")
@@ -248,13 +239,12 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
       }
     }
 
-
     def toDeleteColumnsExcept(colFamily: String, columns: Seq[String]): Iterable[KeyValue] = cells.filterNot(cell => columns.contains(cell.column)).map(kv =>
 
       new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)
     )
 
-    def toPrintString = {
+    def toPrintString: String = {
       val key = this.key
       val cellsToString = cells.map(cell => " \t" + cell.toPrintString).mkString("\n")
 
@@ -267,13 +257,13 @@ case class HFileRow(key:String, cells:Iterable[KVCell[String,String]]) {
 }
 object HFileRow {
 
-  def apply(entry: (String, Iterable[(String, String)])) = new HFileRow(entry._1, entry._2.map(c => KVCell(c)).toSeq)
+  def apply(entry: (String, Iterable[(String, String)])): HFileRow = new HFileRow(entry._1, entry._2.map(c => KVCell(c)).toSeq)
 
-  def apply(result: Result) = {
+  def apply(result: Result): HFileRow = {
     val rowKey = Bytes.toString(result.getRow)
     val cells: Array[(String, String)] = result.rawCells().map(c => HBaseDataReader.getKeyValue(c)._2)
     new HFileRow(rowKey, cells.map(cell => KVCell(cell._1.trim(), cell._2.trim())))
   }
 
-  implicit def buildFromHFileDataMap(entry: (String, Iterable[(String, String)])) = HFileRow(entry)
+  implicit def buildFromHFileDataMap(entry: (String, Iterable[(String, String)])): HFileRow = HFileRow(entry)
 }

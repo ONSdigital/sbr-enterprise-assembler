@@ -17,7 +17,16 @@ resolvers += "ClouderaRepo" at "https://repository.cloudera.com/artifactory/clou
 resolvers += "Local Maven Repository" at "file:///Users/georgerushton/.m2/repository"
 resolvers += Resolver.bintrayRepo("ons", "ONS-Registers")
 
+//conflictManager := ConflictManager.strict
+
 libraryDependencies ++= Seq(
+
+  "org.apache.zookeeper" % "zookeeper" % "3.4.8",
+  "org.apache.curator" % "curator-framework" % "2.4.1",
+  "org.apache.curator" % "curator-recipes" % "2.4.1",
+  "org.apache.curator" % "curator-test" % "4.0.1" % Test,
+  "commons-cli" % "commons-cli" % "1.4",
+
   "uk.gov.ons" % "registers-sml" % "1.12",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
   "org.apache.hbase" % "hbase-hadoop-compat" % "1.4.2",
@@ -34,6 +43,7 @@ libraryDependencies ++= Seq(
   ("org.apache.crunch" % "crunch-hbase" % "0.15.0")   .exclude("com.sun.jersey","jersey-server")
 )
 
+dependencyOverrides += "com.google.guava" % "guava" % "12.0.1"
 
 assemblyMergeStrategy in assembly := {
   case PathList("org", "apache", xs @ _*)    => MergeStrategy.first

@@ -33,8 +33,7 @@ case class Enterprise(
 
 object Enterprise{
 
-
-  def apply(row:HFileRow) = {
+  def apply(row:HFileRow): Enterprise = {
 
     val cells = row.cells
     val ern = cells.find(_.column == "ern")
@@ -88,10 +87,10 @@ object Enterprise{
                   )
   }
 
-  def apply(entry:(String, Iterable[(String, String)])) = buildFromHFileDataMap(entry)
+  def apply(entry:(String, Iterable[(String, String)])): Enterprise = buildFromHFileDataMap(entry)
 
 
-  implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])) = {
+  implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])): Enterprise = {
 
     def getValue(qualifier:String) = {
       Try{entry._2.find(_._1==qualifier).get._2}.toOption match{
@@ -131,6 +130,5 @@ object Enterprise{
       region
     )
   }
-
 
 }

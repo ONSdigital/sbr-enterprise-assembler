@@ -1,17 +1,15 @@
 package global
 
-
 import com.typesafe.config._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.Try
 
+private object Configs{
 
-object Configs{
-
-  val logger = LoggerFactory.getLogger(getClass)
+  val logger: Logger = LoggerFactory.getLogger(getClass)
 
   val DEFAULT_PRN = "0"
   val DEFAULT_WORKING_PROPS = "0"
@@ -37,6 +35,5 @@ object Configs{
   conf.setInt("hbase.client.scanner.timeout.period", 360000)
   conf.setInt("hbase.cells.scanned.per.heartbeat.check", 60000)
   
-  lazy val PATH_TO_JSON = config.getString("files.json")
-
+  lazy val PATH_TO_JSON: String = config.getString("files.json")
 }

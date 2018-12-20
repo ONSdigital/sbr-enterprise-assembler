@@ -1,6 +1,5 @@
 package utils.data.expected
 
-import model.domain
 import model.domain.Calculations
 
 /**
@@ -28,7 +27,4 @@ trait ExpectedCalculations {
     Calculations("9900000009",Some(3L),Some(5),Some(85L),None,None,None,Some(85L))
 
   )
-
-  
-  
 }

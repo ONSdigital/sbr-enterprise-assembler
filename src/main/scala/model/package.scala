@@ -1,7 +1,7 @@
 package model
 
-import org.apache.hadoop.hbase.{HConstants, KeyValue}
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.{HConstants, KeyValue}
 
 /**
   *
@@ -9,7 +9,7 @@ import org.apache.hadoop.hbase.util.Bytes
 package object hfile {
 
   case class HFileCell(key:String, colFamily:String, qualifier:String, value:String, timestamp:Long, kvType:Int){
-    def toKeyValue = {
+    def toKeyValue: KeyValue = {
 
       val deleteType = Seq(KeyValue.Type.DeleteFamily.ordinal(), KeyValue.Type.Delete.ordinal(), KeyValue.Type.DeleteColumn.ordinal(), KeyValue.Type.DeleteFamilyVersion.ordinal())
       if(deleteType.contains(kvType))  new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes,timestamp,KeyValue.Type.values().find(_.ordinal()==kvType).get)
@@ -18,11 +18,11 @@ package object hfile {
           new KeyValue(key.getBytes, colFamily.getBytes, qualifier.getBytes, value.getBytes)
         }catch {
           case npe: NullPointerException => {
-            println(s"KEY: $key, qualifier: $qualifier value: ${if (value==null) "null" else value.toString()}")
+            println(s"KEY: $key, qualifier: $qualifier value: ${if (value==null) "null" else value.toString}")
             throw npe
             }
           case e: Throwable => {
-            println(s"KEY: $key, qualifier: $qualifier value: ${if (value==null) "null" else value.toString()}")
+            println(s"KEY: $key, qualifier: $qualifier value: ${if (value==null) "null" else value.toString}")
             throw e
           }
         }

@@ -10,12 +10,12 @@ case class LocalUnit(lurn:String,	luref:Option[String],	ern:String,	prn:String, 
 
 object LocalUnit {
 
-  def getValue(entry:(String, Iterable[(String, String)]),qualifier:String) = Try{entry._2.find(_._1==qualifier).get._2}.toOption match{
-    case opt@Some(str) if (str.trim().nonEmpty) => opt
+  def getValue(entry:(String, Iterable[(String, String)]),qualifier:String): Option[String] = Try{entry._2.find(_._1==qualifier).get._2}.toOption match{
+    case opt@Some(str) if str.trim().nonEmpty => opt
     case _ => None
   }
 
-  implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])) = {
+  implicit def buildFromHFileDataMap(entry:(String, Iterable[(String, String)])): LocalUnit = {
 
 
     val ern = entry._2.find(_._1=="ern").get._2

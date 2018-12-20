@@ -1,8 +1,10 @@
 package acceptance
 
 import java.util
+
 import global.Configs
-import global.Configs.{HBASE_ENTERPRISE_TABLE_NAME, conf}
+import global.Configs.conf
+import model.domain.Enterprise
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Result, Table}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
@@ -10,9 +12,6 @@ import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.scalatest._
-import service.CreateInitialPopulationService
-import model.domain.Enterprise
 /**
   *
   */

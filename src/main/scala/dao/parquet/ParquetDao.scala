@@ -2,13 +2,12 @@ package dao.parquet
 
 import global.AppParams
 import org.apache.spark.sql.SparkSession
-import org.slf4j.LoggerFactory
 
-trait ParquetDao extends Serializable{
+trait ParquetDao extends Serializable {
 
-  val logger = LoggerFactory.getLogger(getClass)
-
-  def jsonToParquet(jsonFilePath:String)(implicit spark:SparkSession,appconf:AppParams) = spark.read.json(jsonFilePath).write.parquet(appconf.PATH_TO_PARQUET)
+  def jsonToParquet(jsonFilePath: String)(implicit spark: SparkSession): Unit =
+    spark.read.json(jsonFilePath).write.parquet(AppParams.PATH_TO_PARQUET)
 
 }
+
 object ParquetDao extends ParquetDao

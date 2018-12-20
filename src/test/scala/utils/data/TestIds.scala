@@ -1,8 +1,5 @@
 package utils.data
 
-/**
-  *
-  */
 trait TestIds {
 
   val newEntErn = "111111111-TEST-ERN"
@@ -16,6 +13,5 @@ trait TestIds {
   val missingLouRuref = "MISS-LOU-TEST-RUREF"
   val entWithMissingLouId = "2000000011"
   val entPrnWithMissingLouId = "0.11111"
-
 
 }
