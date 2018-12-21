@@ -16,11 +16,8 @@ import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.slf4j.{Logger, LoggerFactory}
-import util.ConfigOptions
+import util.options.ConfigOptions
 
-/**
-  *
-  */
 trait HBaseDao extends Serializable {
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
@@ -63,8 +60,8 @@ trait HBaseDao extends Serializable {
   def truncateRusTable(implicit connection: Connection): Unit = truncateTable(rusTableName)
 
   def readDeleteData(regex: String)(implicit spark: SparkSession): Unit = {
-
-    val data: RDD[HFileRow] = readLinksWithKeyFilter(regex)
+    val localConfCopy = ConfigOptions.hbaseConfiguration
+    val data: RDD[HFileRow] = readLinksWithKeyFilter(localConfCopy, regex)
     val rows: Array[HFileRow] = data.take(5)
     rows.map(_.toString).foreach(row => print(
       "=" * 10 +
@@ -73,32 +70,33 @@ trait HBaseDao extends Serializable {
     ))
   }
 
-  def readLinksWithKeyFilter(regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    readTableWithKeyFilter(linksTableName, regex)
+  def readLinksWithKeyFilter(confs: Configuration, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    readTableWithKeyFilter(confs, linksTableName, regex)
   }
 
-  def readLinksWithKeyPrefixFilter(prefix: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    readTableWithPrefixKeyFilter(linksTableName, prefix)
+  def readLinksWithKeyPrefixFilter(confs: Configuration, prefix: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    readTableWithPrefixKeyFilter(confs, linksTableName, prefix)
   }
 
-  def readLouWithKeyFilter( regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    readTableWithKeyFilter(lousTableName, regex)
+  def readLouWithKeyFilter(confs: Configuration, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    readTableWithKeyFilter(confs, lousTableName, regex)
   }
 
-  def readEnterprisesWithKeyFilter( regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+  def readEnterprisesWithKeyFilter(confs: Configuration, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
 
-    readTableWithKeyFilter(entsTableName, regex)
+    readTableWithKeyFilter(confs, entsTableName, regex)
   }
 
-  def readTableWithPrefixKeyFilter(tableName: String, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-
-    withKeyPrefixScanner(regex, tableName) {
+  def readTableWithPrefixKeyFilter(confs: Configuration, tableName: String, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    val localConfCopy = confs
+    withKeyPrefixScanner(localConfCopy, regex, tableName) {
       readKvsFromHBase
     }
   }
 
-  def readTableWithKeyFilter(tableName: String, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
-    withScanner(regex, tableName) {
+  def readTableWithKeyFilter(confs: Configuration, tableName: String, regex: String)(implicit spark: SparkSession): RDD[HFileRow] = {
+    val localConfCopy = confs
+    withScanner(localConfCopy, regex, tableName) {
       readKvsFromHBase
     }
   }
@@ -165,21 +163,21 @@ trait HBaseDao extends Serializable {
     //HFileOutputFormat2.configureIncrementalLoad(job, table, connection.getRegionLocator(table.getName))
   }
 
-  def withKeyPrefixScanner(prefix: String, tableName: String)(getResult: Configuration => RDD[HFileRow]): RDD[HFileRow] = {
-    ConfigOptions.hbaseConfiguration.set(TableInputFormat.INPUT_TABLE, tableName)
-    setPrefixScanner(prefix)
-    val res = getResult(ConfigOptions.hbaseConfiguration)
-    unsetPrefixScanner()
-    ConfigOptions.hbaseConfiguration.unset(TableInputFormat.INPUT_TABLE)
+  def withKeyPrefixScanner(config: Configuration, prefix: String, tableName: String)(getResult: Configuration => RDD[HFileRow]): RDD[HFileRow] = {
+    config.set(TableInputFormat.INPUT_TABLE, tableName)
+    setPrefixScanner(config, prefix)
+    val res = getResult(config)
+    unsetPrefixScanner(config)
+    config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
-  def withScanner(regex: String, tableName: String)(getResult: Configuration => RDD[HFileRow]): RDD[HFileRow] = {
-    ConfigOptions.hbaseConfiguration.set(TableInputFormat.INPUT_TABLE, tableName)
-    setScanner(regex)
-    val res = getResult(ConfigOptions.hbaseConfiguration)
-    unsetScanner()
-    ConfigOptions.hbaseConfiguration.unset(TableInputFormat.INPUT_TABLE)
+  def withScanner(config: Configuration, regex: String, tableName: String)(getResult: Configuration => RDD[HFileRow]): RDD[HFileRow] = {
+    config.set(TableInputFormat.INPUT_TABLE, tableName)
+    setScanner(config, regex)
+    val res = getResult(config)
+    unsetScanner(config)
+    config.unset(TableInputFormat.INPUT_TABLE)
     res
   }
 
@@ -202,27 +200,26 @@ trait HBaseDao extends Serializable {
 
     val prevTimePeriod = (ConfigOptions.TimePeriod.toInt - 1).toString
 
-    val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(s"~$prevTimePeriod")
-    val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(s"~$prevTimePeriod")
-    val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(s".*~$prevTimePeriod~*.")
+    val ents: RDD[HFileRow] = HBaseDao.readEnterprisesWithKeyFilter(ConfigOptions.hbaseConfiguration, s"~$prevTimePeriod")
+    val links: RDD[HFileRow] = HBaseDao.readLinksWithKeyFilter(ConfigOptions.hbaseConfiguration, s"~$prevTimePeriod")
+    val lous: RDD[HFileRow] = HBaseDao.readLouWithKeyFilter(ConfigOptions.hbaseConfiguration, s".*~$prevTimePeriod~*.")
 
     ents.flatMap(_.toHFileCellRow(ConfigOptions.HBaseEnterpriseColumnFamily)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToEnterpriseHFile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2])
+      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToEnterpriseHFile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
 
     links.flatMap(_.toHFileCellRow(ConfigOptions.HBaseLinksColumnFamily)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToLinksHfile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2])
+      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToLinksHfile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
 
     lous.flatMap(_.toHFileCellRow(ConfigOptions.HBaseLocalUnitsColumnFamily)).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToLocalUnitsHFile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2])
-
+      .saveAsNewAPIHadoopFile(buildPath(ConfigOptions.PathToLocalUnitsHFile), classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
   }
 
-  private def unsetScanner(): Unit = ConfigOptions.hbaseConfiguration.unset(TableInputFormat.SCAN)
+  private def unsetScanner(config: Configuration): Unit = config.unset(TableInputFormat.SCAN)
 
-  private def setScanner(regex: String): Unit = {
+  private def setScanner(config: Configuration, regex: String): Unit = {
 
     val comparator = new RegexStringComparator(regex)
     val filter = new RowFilter(CompareOp.EQUAL, comparator)
@@ -236,12 +233,12 @@ trait HBaseDao extends Serializable {
     scan.setFilter(filter)
     val scanStr = convertScanToString(scan)
 
-    ConfigOptions.hbaseConfiguration.set(TableInputFormat.SCAN, scanStr)
+    config.set(TableInputFormat.SCAN, scanStr)
   }
 
-  private def unsetPrefixScanner(): Unit = ConfigOptions.hbaseConfiguration.unset(TableInputFormat.SCAN)
+  private def unsetPrefixScanner(config: Configuration): Unit = config.unset(TableInputFormat.SCAN)
 
-  private def setPrefixScanner(prefix: String): Unit = {
+  private def setPrefixScanner(config: Configuration, prefix: String): Unit = {
 
     val prefixFilter = new PrefixFilter(prefix.getBytes)
     val scan: Scan = new Scan()
@@ -249,20 +246,20 @@ trait HBaseDao extends Serializable {
 
     def convertScanToString: String = {
       val proto: ClientProtos.Scan = ProtobufUtil.toScan(scan)
-      Base64.encodeBytes(proto.toByteArray())
+      Base64.encodeBytes(proto.toByteArray)
     }
-    ConfigOptions.hbaseConfiguration.set(TableInputFormat.SCAN, convertScanToString)
+    config.set(TableInputFormat.SCAN, convertScanToString)
   }
 
-  def linksTableName = s"${ConfigOptions.HBaseLinksTableNamespace}:${ConfigOptions.HBaseLinksTableName}_${ConfigOptions.TimePeriod}"
+  def linksTableName = s"HBaseLinksTableNamespace:${ConfigOptions.HBaseLinksTableName}_${ConfigOptions.TimePeriod}"
 
-  def leusTableName = s"${ConfigOptions.HBaseLegalUnitsNamespace}:${ConfigOptions.HBaseLegalUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def leusTableName = s"HBaseLegalUnitsNamespace:${ConfigOptions.HBaseLegalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def lousTableName = s"${ConfigOptions.HBaseLocalUnitsNamespace}:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def lousTableName = s"HBaseLocalUnitsTableName:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def rusTableName = s"${ConfigOptions.HBaseReportingUnitsNamespace}:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def rusTableName = s"HBaseReportingUnitsTableName:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def entsTableName = s"${ConfigOptions.HBaseEnterpriseTableNamespace}:${ConfigOptions.HBaseEnterpriseTableName}_${ConfigOptions.TimePeriod}"
+  def entsTableName = s"HBaseEnterpriseTableNamespace:${ConfigOptions.HBaseEnterpriseTableName}_${ConfigOptions.TimePeriod}"
 
 }
 

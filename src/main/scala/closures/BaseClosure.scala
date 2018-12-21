@@ -1,7 +1,6 @@
 package closures
 
 import dao.hbase.{HBaseDao, HFileUtils}
-import global.{AppParams, Configs}
 import model.hfile
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
@@ -12,6 +11,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import spark.extensions.sql._
+import util.options.ConfigOptions
 
 trait BaseClosure extends HFileUtils with Serializable {
 
@@ -25,7 +25,7 @@ trait BaseClosure extends HFileUtils with Serializable {
     * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
     **/
   def getIncomingBiData()(implicit spark: SparkSession): DataFrame = {
-    val parquetDF = spark.read.parquet(AppParams.PATH_TO_PARQUET)
+    val parquetDF = spark.read.parquet(ConfigOptions.PathToParquet)
     val rows = parquetDF.castAllToString().rdd.map { row => {
 
       Row(
@@ -39,7 +39,7 @@ trait BaseClosure extends HFileUtils with Serializable {
         row.getAs[String]("Address3"),
         row.getAs[String]("Address4"),
         row.getAs[String]("Address5"),
-        row.getStringValueOrDefault("PostCode", global.Configs.DEFAULT_POSTCODE),
+        row.getStringValueOrDefault("PostCode", ConfigOptions.DefaultPostCode),
         row.getAs[String]("TradingStatus"),
         row.getAs[String]("Turnover"),
         row.getAs[String]("UPRN"),
@@ -184,18 +184,18 @@ trait BaseClosure extends HFileUtils with Serializable {
       )), louRowSchema)
   }
 
-  def getExistingRusDF()(implicit spark: SparkSession): DataFrame = {
-    val ruHFileRowRdd: RDD[Row] = hbaseDao.readTable(HBaseDao.rusTableName).map(_.toRuRow)
+  def getExistingRusDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
+    val ruHFileRowRdd: RDD[Row] = hbaseDao.readTable(confs, HBaseDao.rusTableName).map(_.toRuRow)
     spark.createDataFrame(ruHFileRowRdd, ruRowSchema)
   }
 
-  def getExistingLousDF()(implicit spark: SparkSession): DataFrame = {
-    val louHFileRowRdd: RDD[Row] = hbaseDao.readTable(HBaseDao.lousTableName).map(_.toLouRow)
+  def getExistingLousDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
+    val louHFileRowRdd: RDD[Row] = hbaseDao.readTable(confs, HBaseDao.lousTableName).map(_.toLouRow)
     spark.createDataFrame(louHFileRowRdd, louRowSchema)
   }
 
-  def getExistingEntsDF()(implicit spark: SparkSession): DataFrame = {
-    val entHFileRowRdd: RDD[Row] = hbaseDao.readTable(HBaseDao.entsTableName).map(_.toEntRow)
+  def getExistingEntsDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
+    val entHFileRowRdd: RDD[Row] = hbaseDao.readTable(confs, HBaseDao.entsTableName).map(_.toEntRow)
     spark.createDataFrame(entHFileRowRdd, entRowSchema)
   }
 
@@ -228,14 +228,14 @@ trait BaseClosure extends HFileUtils with Serializable {
 
     val allLinks: RDD[((String, String), hfile.HFileCell)] = lousLinks.union(rusLinks).union(restOfLinks).filter(_._2.value != null).map(entry => ((entry._1, entry._2.qualifier), entry._2)).repartitionAndSortWithinPartitions(partitioner)
     allLinks.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AppParams.PATH_TO_LINKS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+      .saveAsNewAPIHadoopFile(ConfigOptions.PathToLinksHfile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
   }
 
   def saveEnts(entsDF: DataFrame)(implicit spark: SparkSession): Unit = {
     val hfileCells: RDD[(String, hfile.HFileCell)] = getEntHFileCells(entsDF)
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AppParams.PATH_TO_ENTERPRISE_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+      .saveAsNewAPIHadoopFile(ConfigOptions.PathToEnterpriseHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
   }
 
   def saveLous(lousDF: DataFrame)(implicit spark: SparkSession): Unit = {
@@ -243,7 +243,7 @@ trait BaseClosure extends HFileUtils with Serializable {
     val hfileCells = lousDF.map(row => rowToLocalUnit(row)).flatMap(identity).rdd
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AppParams.PATH_TO_LOCALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+      .saveAsNewAPIHadoopFile(ConfigOptions.PathToLocalUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
   }
 
   def saveLeus(leusDF: DataFrame)(implicit spark: SparkSession): Unit = {
@@ -251,7 +251,7 @@ trait BaseClosure extends HFileUtils with Serializable {
     val hfileCells = leusDF.map(row => rowToLegalUnit(row)).flatMap(identity).rdd
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AppParams.PATH_TO_LEGALUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+      .saveAsNewAPIHadoopFile(ConfigOptions.PathToLegalUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
   }
 
   def saveRus(rusDF: DataFrame)(implicit spark: SparkSession): Unit = {
@@ -259,7 +259,7 @@ trait BaseClosure extends HFileUtils with Serializable {
     val hfileCells = rusDF.map(row => rowToReportingUnit(row)).flatMap(identity).rdd
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AppParams.PATH_TO_REPORTINGUNITS_HFILE, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], Configs.conf)
+      .saveAsNewAPIHadoopFile(ConfigOptions.PathToReportingUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], ConfigOptions.hbaseConfiguration)
   }
 
   def getEntHFileCells(entsDF: DataFrame)(implicit spark: SparkSession): RDD[(String, hfile.HFileCell)] = {
@@ -281,7 +281,7 @@ trait BaseClosure extends HFileUtils with Serializable {
     val step6DF = step5DF.join(regionsByPostcodeShortDF, Seq("postcodeout"), "left_outer")
     val step7DF = step6DF.drop("postcodeout")
     val step8DF = step7DF.union(partial)
-    val step9DF = step8DF.na.fill(Configs.DEFAULT_REGION, Seq("region"))
+    val step9DF = step8DF.na.fill(ConfigOptions.DefaultRegion, Seq("region"))
     val step10DF = step9DF.coalesce(partitions)
     step10DF
   }

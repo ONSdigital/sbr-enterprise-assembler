@@ -3,20 +3,20 @@ package closures
 import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
 import dao.hbase.HBaseConnectionManager
 import dao.parquet.ParquetDao
-import global.{AppParameters, AppParams}
-import global.Configs.conf
 import model.domain._
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import org.scalatest._
 import spark.extensions.rdd.HBaseDataReader._
+import util.options.{Config, ConfigOptions, OptionNames}
 import utils.Paths
 import utils.data.existing.ExistingData
 import utils.data.expected.ExpectedDataForAddNewPeriodScenario
 
 import scala.reflect.io.File
 
-class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils {
+class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths with WordSpecLike with Matchers
+  with BeforeAndAfterAll with ExistingData with ExpectedDataForAddNewPeriodScenario with HFileTestUtils {
 
   lazy val testDir = "newperiod"
 
@@ -43,37 +43,23 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     )
   }
 
-  val appConfs: AppParameters = AppParameters(
-    Array[String](
-      "LINKS", "ons", "l", linkHfilePath,
-      "LEU", "ons", "d", leuHfilePath,
-      "ENT", "ons", "d", entHfilePath,
-      "LOU", "ons", "d", louHfilePath,
-      "REU", "ons", "d", ruHfilePath,
-      parquetPath,
-      "201804",
-      "HIVE DB NAME",
-      "HIVE TABLE NAME",
-      "HIVE SHORT TABLE NAME",
-      payeFilePath,
-      vatFilePath,
-      "local",
-      "add-calculated-period"
-    ))
-
   override def beforeAll(): Unit = {
-    implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-    conf.set("hbase.zookeeper.quorum", "localhost")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
-    AppParams.setConfiguration(appConfs)
+    implicit val spark: SparkSession = SparkSession.builder()
+      .master("local[*]")
+      .appName("enterprise assembler")
+      .getOrCreate()
 
     afterAll()
 
-    withHbaseConnection { implicit connection: Connection =>
-      createRecords
-      ParquetDao.jsonToParquet(jsonFilePath)(spark)
-      //val existingDF = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect
-      MockAssembleUnitsClosure.createUnitsHfiles(spark, connection)
+    Config.set(OptionNames.HBaseZookeeperQuorum, "localhost")
+    Config.set(OptionNames.HBaseZookeeperClientPort, "2181")
+
+    withHbaseConnection {
+      implicit connection: Connection =>
+        createRecords
+        ParquetDao.jsonToParquet(jsonFilePath)(spark)
+        //val existingDF = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect
+        MockAssembleUnitsClosure.createUnitsHfiles(spark, connection)
     }
     spark.stop
   }
@@ -161,24 +147,22 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     "create hfiles populated with expected links data" in {
 
       implicit val spark: SparkSession = SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
-      val confs = appConfs
-
       //val existing = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect.toList.sortBy(_.key)
       val existingLous = readEntitiesFromHFile[HFileRow](existingLousRecordHFiles).collect.toList.sortBy(_.key)
       val actualHFileRows: Seq[HFileRow] = readEntitiesFromHFile[HFileRow](linkHfilePath).collect.toList.sortBy(sortByKeyAndEntityName)
       val actualLinksRecords: Seq[LinkRecord] = LinkRecord.getLinks(actualHFileRows).sortBy(_.ern)
       val expectedLinks = expectedNewPeriodLinks.sortBy(_.ern)
       actualLinksRecords shouldBe expectedLinks
-      spark.close()
+      spark.stop()
     }
   }
 
   def createRecords()(implicit spark: SparkSession, connection: Connection): Unit = {
-    saveLinksToHFile(existingLinksForAddNewPeriodScenarion, AppParams.HBASE_LINKS_COLUMN_FAMILY, existingLinksRecordHFiles)
-    saveToHFile(existingLousForNewPeriodScenario, AppParams.HBASE_LOCALUNITS_COLUMN_FAMILY, existingLousRecordHFiles)
-    saveToHFile(existingRusForNewPeriodScenario, AppParams.HBASE_REPORTINGUNITS_COLUMN_FAMILY, existingRusRecordHFiles)
-    saveToHFile(existingLeusForNewPeriodScenario, AppParams.HBASE_ENTERPRISE_COLUMN_FAMILY, existingLeusRecordHFiles)
-    saveToHFile(existingEntsForNewPeriodScenario, AppParams.HBASE_ENTERPRISE_COLUMN_FAMILY, existingEntRecordHFiles)
+    saveLinksToHFile(existingLinksForAddNewPeriodScenarion, ConfigOptions.HBaseLinksColumnFamily, existingLinksRecordHFiles)
+    saveToHFile(existingLousForNewPeriodScenario, ConfigOptions.HBaseLocalUnitsColumnFamily, existingLousRecordHFiles)
+    saveToHFile(existingRusForNewPeriodScenario, ConfigOptions.HBaseReportingUnitsColumnFamily, existingRusRecordHFiles)
+    saveToHFile(existingLeusForNewPeriodScenario, ConfigOptions.HBaseLegalUnitsColumnFamily, existingLeusRecordHFiles)
+    saveToHFile(existingEntsForNewPeriodScenario, ConfigOptions.HBaseEnterpriseColumnFamily, existingEntRecordHFiles)
   }
 
 }

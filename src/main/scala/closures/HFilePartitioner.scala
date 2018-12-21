@@ -46,4 +46,5 @@ private class SingleHFilePartitioner(splits: Array[Array[Byte]]) extends HFilePa
   }
 
   override def numPartitions: Int = splits.length
+
 }

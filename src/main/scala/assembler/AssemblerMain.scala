@@ -1,9 +1,8 @@
 package assembler
 
 
-import global.Configs.conf
 import service._
-import util.{CommandLineParser, ConfigOptions}
+import util.options.{CommandLineParser, ConfigOptions}
 
 import scala.reflect.io.File
 
@@ -14,7 +13,6 @@ object AssemblerMain extends AddNewPeriodDataService {
     CommandLineParser(args)
 
     try {
-
       loadNewPeriodWithCalculationsData()
     } finally {
 

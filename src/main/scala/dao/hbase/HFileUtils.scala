@@ -1,10 +1,10 @@
 package dao.hbase
 
-import global.{AppParams, Configs}
 import model.hfile.HFileCell
 import org.apache.spark.sql.Row
 import spark.extensions.sql.SqlRowExtensions
 import util.SequenceGenerator
+import util.options.ConfigOptions
 
 trait HFileUtils extends Serializable {
 
@@ -243,13 +243,13 @@ trait HFileUtils extends Serializable {
     createLinksRecord(generateLinkKey(paye, payeValue), s"$parentPrefix$legalUnit", ubrn.toString)
   ))).getOrElse(Seq[(String, HFileCell)]())
 
-  private def createLinksRecord(key: String, column: String, value: String): (String, HFileCell) = createRecord(key, AppParams.HBASE_LINKS_COLUMN_FAMILY, column, value)
+  private def createLinksRecord(key: String, column: String, value: String): (String, HFileCell) = createRecord(key, ConfigOptions.HBaseLinksColumnFamily, column, value)
 
-  def createEnterpriseCell(ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateEntKey(ern), AppParams.HBASE_ENTERPRISE_COLUMN_FAMILY, column, value)
+  def createEnterpriseCell(ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateEntKey(ern), ConfigOptions.HBaseEnterpriseColumnFamily, column, value)
 
-  def createLocalUnitCell(lurn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLocalUnitKey(lurn, ern), AppParams.HBASE_LOCALUNITS_COLUMN_FAMILY, column, value)
+  def createLocalUnitCell(lurn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLocalUnitKey(lurn, ern), ConfigOptions.HBaseLocalUnitsColumnFamily, column, value)
 
-  def createLegalUnitCell(ubrn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLegalUnitKey(ubrn, ern), AppParams.HBASE_LEGALUNITS_COLUMN_FAMILY, column, value)
+  def createLegalUnitCell(ubrn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLegalUnitKey(ubrn, ern), ConfigOptions.HBaseLegalUnitsColumnFamily, column, value)
 
   private def createRecord(key: String, columnFamily: String, column: String, value: String) = key -> HFileCell(key, columnFamily, column, value)
 
@@ -274,7 +274,7 @@ trait HFileUtils extends Serializable {
   def getWorkingPropsByLegalStatus(legalStatus: String): String = legalStatus match {
     case "2" => "1"
     case "3" => "2"
-    case _ => Configs.DEFAULT_WORKING_PROPS
+    case _ => ConfigOptions.DefaultWorkingProps
   }
 
   def generatePrn(row: Row): String = {
@@ -284,7 +284,7 @@ trait HFileUtils extends Serializable {
     "0." + prnTest.toString
   }
 
-  object Sequence extends SequenceGenerator(Configs.config.getString("hbase.zookeper.url"))
+  object Sequence extends SequenceGenerator(ConfigOptions.ZookeeperUrl)
 
   def generateLurn(row: Row): String = Sequence.nextSequence
 

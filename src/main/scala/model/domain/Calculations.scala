@@ -15,13 +15,13 @@ import spark.extensions.sql._
   */
 //ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
 case class Calculations(
-                         ern:String, empl:Option[Long],jobs:Option[Int], contained:Option[Long],
-                         apportioned:Option[Long], standard:Option[Long],
-                         group:Option[Long],ent:Option[Long]
+                         ern: String, empl: Option[Long], jobs: Option[Int], contained: Option[Long],
+                         apportioned: Option[Long], standard: Option[Long],
+                         group: Option[Long], ent: Option[Long]
                        )
 
 object Calculations {
-  def apply(row:Row): Calculations = {
+  def apply(row: Row): Calculations = {
     val appd = row.getAs[Long]("app_turnover")
     new Calculations(
       row.getAs[String]("ern"),
@@ -33,8 +33,6 @@ object Calculations {
       row.getOption[Long]("grp_turnover"),
       row.getOption[Long]("ent_turnover")
     )
-
   }
-
 
 }

@@ -1,14 +1,17 @@
 package sequence
 
-import global.Configs
 import org.scalatest._
 import util.SequenceGenerator
+import util.options.{Config, ConfigOptions, OptionNames}
 
 class TestSequenceGenerator extends FunSuite with Matchers with BeforeAndAfterAll {
 
-//  override def beforeAll: Unit = {
-//    new TestingServer(2181, true)
-//  }
+  override def beforeAll: Unit = {
+    Config.set(OptionNames.ZooKeeperUrl, "localhost:2181")
+    Config.set(OptionNames.HBaseZookeeperQuorum, "localhost")
+    Config.set(OptionNames.HBaseZookeeperClientPort, "2181")
+
+  }
 
   test("Generate next Sequence Number") {
     val lastSequence: Long = Sequence.currentSequence.toLong + 1
@@ -19,4 +22,4 @@ class TestSequenceGenerator extends FunSuite with Matchers with BeforeAndAfterAl
 
 }
 
-object Sequence extends SequenceGenerator(Configs.config.getString("hbase.zookeper.url"))
+object Sequence extends SequenceGenerator(ConfigOptions.ZookeeperUrl)

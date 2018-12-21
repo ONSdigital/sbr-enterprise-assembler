@@ -96,7 +96,6 @@ trait DataConsistencyCheck extends HBaseConnectionManager {
         }
     }.flatten
 
-
     val inConsistentLeus = rus.filterNot(ru => {
       val children = childLouLurns(ru).toSet
       val parents = parentLurns(ru).toSet

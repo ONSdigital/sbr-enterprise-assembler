@@ -1,4 +1,4 @@
-package util
+package util.options
 
 import org.apache.commons.cli.{CommandLine, DefaultParser, HelpFormatter, Option, OptionGroup, Options, ParseException}
 
@@ -44,25 +44,13 @@ object CommandLineParser {
   options.addOption(debug)
   options.addOption(environment)
 
-  AppOptions(options, shortOpt = "zoohost", required = false, hasArg = true,
-    "HOST:PORT[,HOST:PORT...]", "zookeeper-host", "host:port[,host:port] for the zookeeper instance(s)",
-    OptionNames.ZookeeperHost)
+  AppOptions(options, shortOpt = "quorum", required = true, hasArg = true,
+    "HOST[,HOST...]", "zookeeper-quorum", "host[,host...] for the HBase zookeeper instance(s)",
+    OptionNames.HBaseZookeeperQuorum)
 
-  AppOptions(options, shortOpt = "zooformat", required = false, hasArg = true,
-    "FORMAT", "zookeeper-result-format", "Format of the unique number, default: 11%07d",
-    OptionNames.ZookeeperFormat)
-
-  AppOptions(options, shortOpt = "zoopath", required = false, hasArg = true,
-    "PATH", "zookeeper-path", "Zookeeper path for unique id, default: /ids/enterprise/id",
-    OptionNames.ZookeeperPath)
-
-  AppOptions(options, shortOpt = "zooSessTimeOut", required = false, hasArg = true,
-    "TIMEOUT", "zookeeper-session-timeout", "Zookeeper session timeout in seconds, default: 5",
-    OptionNames.ZookeeperSessionTimeout)
-
-  AppOptions(options, shortOpt = "zooConnTimeOut", required = false, hasArg = true,
-    "TIMEOUT", "zookeeper-session-timeout", "Zookeeper connection timeout in seconds, default: 5",
-    OptionNames.ZookeeperConnectionTimeout)
+  AppOptions(options, shortOpt = "port", required = true, hasArg = true,
+    "PORT", "zookeeper-port", "port for the HBase zookeeper instance(s)",
+    OptionNames.HBaseZookeeperClientPort)
 
   AppOptions(options, shortOpt = "etn", required = false, hasArg = true,
     "TABLE NAME", "enterprise-table-name", "HBase Enterprise table name",
@@ -78,7 +66,7 @@ object CommandLineParser {
 
   AppOptions(options, shortOpt = "efp", required = false, hasArg = true,
     argName = "FILE PATH", longOpt = "enterprise-file-path", desc = "Enterprise file path",
-    OptionNames.PathToEnterpriseHFile)
+    OptionNames.HBaseEnterpriseFilePath)
 
   AppOptions(options, shortOpt = "ltn", required = false, hasArg = true,
     argName = "TABLE NAME", longOpt = "links-table-name", desc = "HBase Links table name",
@@ -94,7 +82,7 @@ object CommandLineParser {
 
   AppOptions(options, "lfp", required = false, hasArg = true,
     "FILE PATH", "links-file-path", "Links file path",
-    OptionNames.PathToLinksHfile)
+    OptionNames.HBaseLinksFilePath)
 
   AppOptions(options, "letn", required = false, hasArg = true,
     "TABLE NAME", "legal-table-name", "HBase Legal table name",
@@ -110,7 +98,7 @@ object CommandLineParser {
 
   AppOptions(options, "lefp", required = false, hasArg = true,
     "FILE PATH", "legal-file-path", "Legal file path",
-    OptionNames.PathToLegalUnitsHFile)
+    OptionNames.HBaseLegalUnitsFilePath)
 
   AppOptions(options, "lotn", required = false, hasArg = true,
     "TABLE NAME", "local-table-name", "HBase Local table name",
@@ -126,7 +114,7 @@ object CommandLineParser {
 
   AppOptions(options, "lofp", required = false, hasArg = true,
     "FILE PATH", "local-file-path", "Local file path",
-    OptionNames.PathToLocalUnitsHFile)
+    OptionNames.HBaseLocalUnitsFilePath)
 
   AppOptions(options, "retn", required = false, hasArg = true,
     "TABLE NAME", "reporting-table-name", "HBase Reporting table name",
@@ -142,7 +130,7 @@ object CommandLineParser {
 
   AppOptions(options, "refp", required = false, hasArg = true,
     "FILE PATH", "reporting-file-path", "Reporting file path",
-    OptionNames.PathToReportingUnitsHFile)
+    OptionNames.HBaseReportingUnitsFilePath)
 
   AppOptions(options, "tp", required = false, hasArg = true,
     "TIME PERIOD", "time-period", "Time Period",

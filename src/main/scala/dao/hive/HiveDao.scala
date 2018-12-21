@@ -1,15 +1,15 @@
 package dao.hive
 
-import global.AppParams
 import org.apache.spark.sql._
+import _root_.util.options.ConfigOptions
 
 trait HiveDao {
 
   def getRegions()(implicit spark: SparkSession): DataFrame =
-    spark.sql(s"select postcode,gor as region from ${AppParams.HIVE_DB_NAME}.${AppParams.HIVE_TABLE_NAME}")
+    spark.sql(s"select postcode,gor as region from ${ConfigOptions.HiveDBName}.${ConfigOptions.HiveTableName}")
 
   def getRegionsShort()(implicit spark: SparkSession): DataFrame =
-    spark.sql(s"select postcodeout,gor as region from ${AppParams.HIVE_DB_NAME}.${AppParams.HIVE_SHORT_TABLE_NAME}")
+    spark.sql(s"select postcodeout,gor as region from ${ConfigOptions.HiveDBName}.${ConfigOptions.HiveShortTableName}")
 
 }
 

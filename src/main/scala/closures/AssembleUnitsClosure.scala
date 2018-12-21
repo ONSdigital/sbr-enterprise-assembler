@@ -1,11 +1,11 @@
 package closures
 
-import util.ConfigOptions
+import util.options._
 import dao.hive.HiveDao
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{util, _}
+import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col
 import spark.calculations.SmlAdminDataCalculator
@@ -40,11 +40,11 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
 
     val allEntsDF = getAllEntsCalculated(allLinksLeusDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
 
-    val allRusDF = getAllRus(allEntsDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
+    val allRusDF = getAllRus(allEntsDF, regionsByPostcodeDF, regionsByPostcodeShortDF, ConfigOptions.hbaseConfiguration).cache()
 
-    val allLousDF = getAllLous(allRusDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
+    val allLousDF = getAllLous(allRusDF, regionsByPostcodeDF, regionsByPostcodeShortDF, ConfigOptions.hbaseConfiguration).cache()
 
-    val allLeusDF = getAllLeus().cache()
+    val allLeusDF = getAllLeus(ConfigOptions.hbaseConfiguration).cache()
 
     saveEnts(allEntsDF)
     saveRus(allRusDF)
@@ -64,7 +64,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
 
     val incomingBiDataDF: DataFrame = getIncomingBiData()
 
-    val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(Configs.conf)
+    val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(ConfigOptions.hbaseConfiguration)
 
     val joinedLUs = incomingBiDataDF.join(
       existingLinksLeusDF.select("ubrn", "ern"),
@@ -79,7 +79,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
     val calculatedDF = calculate(allLinksLusDF).castAllToString()
     calculatedDF.cache()
 
-    val existingEntDF = getExistingEntsDF(Configs.conf)
+    val existingEntDF = getExistingEntsDF(ConfigOptions.hbaseConfiguration)
 
     val existingEntCalculatedDF: DataFrame = {
       val calculatedExistingEnt = existingEntDF.join(calculatedDF, Seq("ern"), "left_outer")
@@ -148,10 +148,10 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
     lousWithRegionRecalcuated
   }
 
-  def getAllRus(allEntsDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
+  def getAllRus(allEntsDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame, confs: Configuration)
                (implicit spark: SparkSession): Dataset[Row] = {
 
-    val existingRUs: DataFrame = getExistingRusDF()
+    val existingRUs: DataFrame = getExistingRusDF(confs)
 
     //val existingRusWithRecalculatedEmployment =
     val columns = ruRowSchema.fieldNames
