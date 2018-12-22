@@ -251,15 +251,15 @@ trait HBaseDao extends Serializable {
     config.set(TableInputFormat.SCAN, convertScanToString)
   }
 
-  def linksTableName = s"HBaseLinksTableNamespace:${ConfigOptions.HBaseLinksTableName}_${ConfigOptions.TimePeriod}"
+  def linksTableName = s"${ConfigOptions.HBaseLinksTableNamespace}:${ConfigOptions.HBaseLinksTableName}_${ConfigOptions.TimePeriod}"
 
-  def leusTableName = s"HBaseLegalUnitsNamespace:${ConfigOptions.HBaseLegalUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def leusTableName = s"${ConfigOptions.HBaseLegalUnitsNamespace}:${ConfigOptions.HBaseLegalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def lousTableName = s"HBaseLocalUnitsTableName:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def lousTableName = s"${ConfigOptions.HBaseLocalUnitsTableName}:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def rusTableName = s"HBaseReportingUnitsTableName:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def rusTableName = s"${ConfigOptions.HBaseReportingUnitsTableName}:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def entsTableName = s"HBaseEnterpriseTableNamespace:${ConfigOptions.HBaseEnterpriseTableName}_${ConfigOptions.TimePeriod}"
+  def entsTableName = s"${ConfigOptions.HBaseEnterpriseTableNamespace}:${ConfigOptions.HBaseEnterpriseTableName}_${ConfigOptions.TimePeriod}"
 
 }
 
