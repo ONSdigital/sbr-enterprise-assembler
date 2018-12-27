@@ -37,10 +37,6 @@ object Config extends Serializable {
     */
   def add(key: String, value: String): Unit = {
 
-    if (key == OptionNames.HBaseZookeeperQuorum || key == OptionNames.HBaseZookeeperClientPort ||
-      key == OptionNames.HFilesPerRegion) {
-      ConfigOptions.hbaseConfiguration.set(key, value)
-    }
     System.setProperty(key, value)
     config = ConfigFactory.load()
     ConfigFactory.invalidateCaches()

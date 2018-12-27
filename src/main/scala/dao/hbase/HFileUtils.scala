@@ -284,7 +284,7 @@ trait HFileUtils extends Serializable {
     "0." + prnTest.toString
   }
 
-  object Sequence extends SequenceGenerator(ConfigOptions.ZookeeperUrl)
+  object Sequence extends SequenceGenerator(ConfigOptions.SequenceURL)
 
   def generateLurn(row: Row): String = Sequence.nextSequence
 

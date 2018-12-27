@@ -11,7 +11,7 @@ import util.options.ConfigOptions
 trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionManager {
 
   def createNewPeriodParquet(): Unit = withSpark {
-    implicit ss: SparkSession => ParquetDao.jsonToParquet(ConfigOptions.PathToJSON)(ss)
+    implicit ss: SparkSession => ParquetDao.jsonToParquet(ConfigOptions.BIFilePath)(ss)
   }
 
   def loadNewPeriodWithCalculationsData(): Unit = withSpark {

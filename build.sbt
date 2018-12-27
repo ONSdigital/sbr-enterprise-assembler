@@ -1,3 +1,4 @@
+
 name := "sbr-enterprise-assembler"
 
 version := "1.0"
@@ -17,7 +18,22 @@ resolvers += "ClouderaRepo" at "https://repository.cloudera.com/artifactory/clou
 resolvers += "Local Maven Repository" at "file:///Users/georgerushton/.m2/repository"
 resolvers += Resolver.bintrayRepo("ons", "ONS-Registers")
 
-//conflictManager := ConflictManager.strict
+// To show build information in the application help
+enablePlugins(BuildInfoPlugin)
+
+name := "sbr-enterprise-assembler"
+version := "1.1"
+
+buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion,
+  "spark" -> Versions.spark,
+  "hbase" -> Versions.hbase,
+  BuildInfoKey.action("buildTime") {
+    System.currentTimeMillis
+  })
+
+buildInfoKeys += buildInfoBuildNumber
+
+buildInfoPackage := "util"
 
 libraryDependencies ++= Seq(
 

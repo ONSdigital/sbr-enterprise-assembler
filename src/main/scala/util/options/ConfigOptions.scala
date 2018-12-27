@@ -65,13 +65,13 @@ object ConfigOptions extends Serializable {
   val HBaseZookeeperQuorum = Config(OptionNames.HBaseZookeeperQuorum)
   val HBaseZookeeperPort = Config(OptionNames.HBaseZookeeperClientPort)
 
-  val ZookeeperFormat = Config(OptionNames.ZookeeperFormat)
-  val ZookeeperPath = Config(OptionNames.ZookeeperPath)
-  val ZookeeperSessionTimeout = Config(OptionNames.ZookeeperConnectionTimeout)
-  val ZookeeperConnectionTimeout = Config(OptionNames.ZookeeperConnectionTimeout)
-  val ZookeeperUrl = Config(OptionNames.ZooKeeperUrl)
+  val SequenceFormat = Config(OptionNames.SequenceFormat)
+  val SequencePath = Config(OptionNames.SequencePath)
+  val SequenceSessionTimeout = Config(OptionNames.SequenceConnectionTimeout)
+  val SequenceConnectionTimeout = Config(OptionNames.SequenceConnectionTimeout)
+  val SequenceURL = Config(OptionNames.SequenceURL)
 
-  val PathToJSON = Config(OptionNames.PathToJSON)
+  val BIFilePath = Config(OptionNames.BIFilePath)
 
   val DefaultPRN: String =  Config(OptionNames.DefaultPRN)
   val DefaultWorkingProps = Config(OptionNames.DefaultWorkingProps)
@@ -84,14 +84,5 @@ object ConfigOptions extends Serializable {
   val local: Boolean = ApplicationEnvironment == OptionNames.local
 
   val HFilesPerRegion: String = OptionNames.HFilesPerRegion
-
-  //  val PREVIOUS_TIME_PERIOD: String = (TimePeriod.toInt - 1).toString //temp
-  //  val PATH_TO_LEU_TO_ENT_CSV: String = "src/main/resources/data/LeU_to_ENT_subset.csv"
-
-  //  val DEFAULT_GEO_PATH: String = "src/main/resources/data/geo/test-dataset.csv"
-  //  val DEFAULT_GEO_PATH_SHORT: String = "src/main/resources/data/geo/test_short-dataset.csv"
-  //
-  //  val PATH_TO_GEO: String = DEFAULT_GEO_PATH
-  //  val PATH_TO_GEO_SHORT: String = DEFAULT_GEO_PATH_SHORT
 
 }

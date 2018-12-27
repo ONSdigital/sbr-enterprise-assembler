@@ -3,9 +3,10 @@ package util
 import java.lang
 import java.net.ConnectException
 
+import org.apache.curator.RetryPolicy
 import org.apache.curator.framework.recipes.atomic.{AtomicValue, DistributedAtomicLong}
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
-import org.apache.curator.retry.RetryOneTime
+import org.apache.curator.retry.{ExponentialBackoffRetry, RetryOneTime}
 
 /**
   * Generates a unique sequence number for Hbase/Hive
@@ -24,8 +25,9 @@ class SequenceGenerator(
                          connectionTimeoutSec: Int = 5
                        ) extends Serializable {
 
+  private val retryPolicy: RetryPolicy = new ExponentialBackoffRetry(1000, 3)
   private val client: CuratorFramework = CuratorFrameworkFactory.newClient(hostName, sessionTimeoutSec * 1000,
-    connectionTimeoutSec * 1000, new RetryOneTime(1))
+    connectionTimeoutSec * 1000, retryPolicy)
   private val dal: DistributedAtomicLong = new DistributedAtomicLong(client, path, new RetryOneTime(1))
 
   client.start()

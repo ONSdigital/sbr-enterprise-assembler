@@ -7,10 +7,7 @@ import util.options.{Config, ConfigOptions, OptionNames}
 class TestSequenceGenerator extends FunSuite with Matchers with BeforeAndAfterAll {
 
   override def beforeAll: Unit = {
-    Config.set(OptionNames.ZooKeeperUrl, "localhost:2181")
-    Config.set(OptionNames.HBaseZookeeperQuorum, "localhost")
-    Config.set(OptionNames.HBaseZookeeperClientPort, "2181")
-
+    Config.set(OptionNames.SequenceURL, "localhost:2181")
   }
 
   test("Generate next Sequence Number") {
@@ -22,4 +19,4 @@ class TestSequenceGenerator extends FunSuite with Matchers with BeforeAndAfterAl
 
 }
 
-object Sequence extends SequenceGenerator(ConfigOptions.ZookeeperUrl)
+object Sequence extends SequenceGenerator(ConfigOptions.SequenceURL)

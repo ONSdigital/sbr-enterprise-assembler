@@ -47,13 +47,11 @@ trait OptionNames extends Serializable {
   val PayeFilePath: String = "app.payeFilePath"
   val VatFilePath: String = "app.vatFilePath"
 
-  val ZooKeeperUrl = "hbase.zookeeper.url"
-  val ZookeeperHost = "app.zookeeper.host"
-
-  val ZookeeperFormat = "app.zookeeper.resultFormat"
-  val ZookeeperPath = "app.zookeeper.path"
-  val ZookeeperSessionTimeout = "app.zookeeper.sessionTimeoutSec"
-  val ZookeeperConnectionTimeout = "app.zookeeper.connectionTimeoutSec"
+  val SequenceURL = "app.sequence.url"
+  val SequenceFormat = "app.sequence.resultFormat"
+  val SequencePath = "app.sequence.path"
+  val SequenceSessionTimeout = "app.sequence.sessionTimeoutSec"
+  val SequenceConnectionTimeout = "app.sequence.connectionTimeoutSec"
 
   val HBaseZookeeperQuorum = "hbase.zookeeper.quorum"
   val HBaseZookeeperClientPort = "hbase.zookeeper.property.clientPort"
@@ -63,7 +61,7 @@ trait OptionNames extends Serializable {
   val inCluster = "cluster"
   val local = "local"
 
-  val PathToJSON = "app.pathToJSON"
+  val BIFilePath = "app.BIFilePath"
   val DefaultPRN = "app.defaultPRN"
   val DefaultWorkingProps = "app.defaultWorkingProps"
 
