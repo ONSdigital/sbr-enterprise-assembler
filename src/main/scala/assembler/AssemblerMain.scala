@@ -1,6 +1,8 @@
 package assembler
 
 
+import java.nio.file.Path
+
 import service._
 import util.options.{CommandLineParser, ConfigOptions}
 
@@ -13,6 +15,12 @@ object AssemblerMain extends AddNewPeriodDataService {
     CommandLineParser(args)
 
     try {
+
+      if (ConfigOptions.CreateParquet == "true") {
+        File(ConfigOptions.PathToParquet).deleteRecursively()
+        createNewPeriodParquet()
+      }
+
       loadNewPeriodWithCalculationsData()
     } finally {
 

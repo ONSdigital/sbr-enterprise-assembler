@@ -34,6 +34,7 @@ trait OptionNames extends Serializable {
   val HBaseEnterpriseFilePath: String = "app.enterprise.filePath"
 
   val PathToParquet: String = "app.parquetFilePath"
+  val CreateParquet: String = "app.createParquetFile"
 
   val PathToGeo: String = "app.geo.pathToGeo"
   val PathToGeoShort: String = "app.geo.pathToGeoShort"

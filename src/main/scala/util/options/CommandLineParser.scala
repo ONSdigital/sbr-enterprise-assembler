@@ -127,7 +127,7 @@ object CommandLineParser {
     "FILE PATH", "paye-file-path", "PAYE file path",
     OptionNames.PayeFilePath)
 
-  AppOptions(options, "vat", required = false, hasArg = true,
+  AppOptions(options, "vat", required = true, hasArg = true,
     "FILE PATH", "vat-file-path", "VAT file path",
     OptionNames.VatFilePath)
 
@@ -158,6 +158,10 @@ object CommandLineParser {
   AppOptions(options, "parquet", required = true, hasArg = true,
     "FILE PATH", "parquet-file-path", "the parquet output file path",
     OptionNames.PathToParquet)
+
+  AppOptions(options, "create", required = false, hasArg = false,
+    "create the Parquet file", "create-parquet", "create the parquet from the JSON file",
+    OptionNames.CreateParquet)
 
   def apply(args: Array[String]): Unit = {
 
@@ -190,10 +194,6 @@ object CommandLineParser {
 
       val line: CommandLine = parser.parse(options, args)
 
-
-     // if (line.hasOption(debug.getOpt)) System.setProperty("app.debug", "true")
-
-      // Other Options
       updateEnvironment(line)
 
     } catch {
@@ -213,7 +213,10 @@ object CommandLineParser {
 
     for (name <- line.getOptions) {
       val v: AppOptions = AppOptions.opt(name.getOpt)
-      System.setProperty(v.optionName, name.getValue)
+      if (name.getValue == null)
+        System.setProperty(v.optionName, "true")
+      else
+        System.setProperty(v.optionName, name.getValue)
     }
   }
 
