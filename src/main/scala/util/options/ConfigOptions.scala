@@ -45,7 +45,7 @@ object ConfigOptions extends Serializable {
   val PathToLegalUnitsHFile: String = Config(OptionNames.HBaseLegalUnitsFilePath)
   val PathToReportingUnitsHFile: String = Config(OptionNames.HBaseReportingUnitsFilePath)
 
-  //val PathToParquet: String = Config(OptionNames.PathToParquet)
+  val PathToParquet: String = Config(OptionNames.PathToParquet)
 
   val DefaultRegion = ""
   val DefaultPostCode = "XZ9 9XX"
