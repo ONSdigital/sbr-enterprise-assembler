@@ -3,7 +3,7 @@ package util.options
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import org.apache.commons.cli.{CommandLine, DefaultParser, Option, Options, ParseException}
+import org.apache.commons.cli.{BasicParser, CommandLine, Option, Options, ParseException}
 import util.BuildInfo
 
 /**
@@ -17,35 +17,15 @@ object CommandLineParser {
 
   implicit val options: Options = new Options
 
-  val help: Option = Option.builder("h").required(false)
-    .hasArg(false)
-    .longOpt("help")
-    .desc("print this message.")
-    .build
+  val help: Option = new Option("h", "help", false, "print this message")
+  help.setRequired(false)
 
-  val version: Option = Option.builder("v")
-    .required(false)
-    .hasArg(false)
-    .longOpt("version")
-    .desc("show version information and exit")
-    .build
+  val version: Option = new Option("v", "version", false, "show version information and exit")
+  version.setRequired(false)
 
-  val debug: Option = Option.builder("d")
-    .required(false)
-    .hasArg(false)
-    .longOpt("debug")
-    .desc("switch debugging on")
-    .build
-
-  val environment: Option = Option.builder("e")
-    .required(false)
-    .hasArg(true)
-    .longOpt("environment")
-    .desc("local | cluster")
-    .build
-
-  options.addOption(debug)
-  options.addOption(environment)
+  AppOptions(options, shortOpt = "e", required = true, hasArg = true,
+    "local | cluster", "environment", "local or cluster environment",
+    OptionNames.Environment)
 
   AppOptions(options, shortOpt = "quorum", required = true, hasArg = true,
     "HOST[,HOST...]", "zookeeper-quorum", "host[,host...] for the HBase zookeeper instance(s)",
@@ -200,19 +180,14 @@ object CommandLineParser {
       System.exit(0)
     }
 
-    val parser = new DefaultParser
+    val parser = new BasicParser
 
     try {
 
       val line: CommandLine = parser.parse(options, args)
 
-      val env = line.getOptionValue(environment.getOpt)
-      if (env != "cluster" && env != "local") {
-        println("One of cluster or local expected for environment option")
-        System.exit(1)
-      } else System.setProperty(OptionNames.Environment, line.getOptionValue(environment.getOpt))
 
-      if (line.hasOption(debug.getOpt)) System.setProperty("app.debug", "true")
+     // if (line.hasOption(debug.getOpt)) System.setProperty("app.debug", "true")
 
       // Other Options
       updateEnvironment(line)
@@ -243,7 +218,7 @@ object CommandLineParser {
     val options = new Options
     try {
       options.addOption(version)
-      val parser = new DefaultParser
+      val parser = new BasicParser
       val cmd = parser.parse(options, args)
       if (cmd.hasOption(version.getOpt)) hasVersion = true
     } catch {
@@ -257,7 +232,7 @@ object CommandLineParser {
     val options = new Options
     try {
       options.addOption(help)
-      val parser = new DefaultParser
+      val parser = new BasicParser
       val cmd = parser.parse(options, args)
       if (cmd.hasOption(help.getOpt)) hasHelp = true
     } catch {
@@ -270,14 +245,8 @@ object CommandLineParser {
 class AppOptions(shortOpt: String, required: Boolean, hasArg: Boolean, argName: String,
                  longOpt: String, desc: String, val optionName: String)(implicit val options: Options) {
 
-  val option: Option = Option.builder(shortOpt)
-    .required(required)
-    .hasArg(hasArg)
-    .argName(argName)
-    .longOpt(longOpt)
-    .desc(desc)
-    .build
-
+  val option: Option = new Option(shortOpt, longOpt, hasArg, desc)
+  option.setRequired(required)
   options.addOption(option)
 }
 

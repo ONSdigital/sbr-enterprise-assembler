@@ -41,7 +41,7 @@ libraryDependencies ++= Seq(
   "org.apache.curator" % "curator-framework" % "2.4.1",
   "org.apache.curator" % "curator-recipes" % "2.4.1",
   "org.apache.curator" % "curator-test" % "4.0.1" % Test,
-  "commons-cli" % "commons-cli" % "1.4",
+  "commons-cli" % "commons-cli" % "1.2",
 
   "uk.gov.ons" % "registers-sml" % "1.12",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
@@ -60,6 +60,8 @@ libraryDependencies ++= Seq(
 )
 
 dependencyOverrides += "com.google.guava" % "guava" % "12.0.1"
+
+test in assembly := {}
 
 assemblyMergeStrategy in assembly := {
   case PathList("org", "apache", xs @ _*)    => MergeStrategy.first
