@@ -131,11 +131,11 @@ object CommandLineParser {
     "FILE PATH", "vat-file-path", "VAT file path",
     OptionNames.VatFilePath)
 
-  AppOptions(options, "geo", required = false, hasArg = true,
+  AppOptions(options, "geo", required = true, hasArg = true,
     "FILE PATH", "path-to-geo", "GEO file path",
     OptionNames.PathToGeo)
 
-  AppOptions(options, "geoShort", required = false, hasArg = true,
+  AppOptions(options, "geoShort", required = true, hasArg = true,
     "FILE PATH", "path-to-geo-short", "GEO short file path",
     OptionNames.PathToGeoShort)
 
@@ -151,9 +151,13 @@ object CommandLineParser {
     "TABLE NAME", "hive-short-table-name", "Hive short table name",
     OptionNames.HiveShortTableName)
 
-  AppOptions(options, "bi", required = false, hasArg = true,
-    "FILE PATH", "bi-file-path", "the BI parquet input file path",
+  AppOptions(options, "bi", required = true, hasArg = true,
+    "FILE PATH", "bi-file-path", "the BI JSON input file path",
     OptionNames.BIFilePath)
+
+  AppOptions(options, "parquet", required = true, hasArg = true,
+    "FILE PATH", "parquet-file-path", "the parquet output file path",
+    OptionNames.PathToParquet)
 
   def apply(args: Array[String]): Unit = {
 

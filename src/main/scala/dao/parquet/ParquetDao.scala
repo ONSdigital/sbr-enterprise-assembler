@@ -5,8 +5,10 @@ import util.options.ConfigOptions
 
 trait ParquetDao extends Serializable {
 
-  def jsonToParquet(jsonFilePath: String)(implicit spark: SparkSession): Unit =
+  def jsonToParquet(jsonFilePath: String)(implicit spark: SparkSession): Unit = {
     spark.read.json(jsonFilePath).write.parquet(ConfigOptions.PathToParquet)
+    println(s"Wrote outfile: $jsonFilePath")
+  }
 
 }
 

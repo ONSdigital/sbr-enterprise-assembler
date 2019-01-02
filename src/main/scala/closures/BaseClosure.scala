@@ -25,7 +25,7 @@ trait BaseClosure extends HFileUtils with Serializable {
     * TradingStatus, Turnover, EmploymentBands, PayeRefs, VatRefs, CompanyNo
     **/
   def getIncomingBiData()(implicit spark: SparkSession): DataFrame = {
-    val parquetDF = spark.read.parquet(ConfigOptions.BIFilePath)
+    val parquetDF = spark.read.parquet(ConfigOptions.PathToParquet)
     val rows = parquetDF.castAllToString().rdd.map { row => {
 
       Row(
