@@ -284,15 +284,14 @@ trait HFileUtils extends Serializable {
     "0." + prnTest.toString
   }
 
-  object Sequence extends SequenceGenerator(ConfigOptions.SequenceURL)
 
-  def generateLurn(row: Row): String = Sequence.nextSequence
+  def generateLurn(row: Row): String = SequenceGenerator.nextSequence
 
-  def generateErn(row: Row): String = Sequence.nextSequence
+  def generateErn(row: Row): String = SequenceGenerator.nextSequence
 
-  def generateRurn(row: Row): String = Sequence.nextSequence
+  def generateRurn(row: Row): String = SequenceGenerator.nextSequence
 
-  def generateLurnFromEnt(row: Row): String = Sequence.nextSequence
+  def generateLurnFromEnt(row: Row): String = SequenceGenerator.nextSequence
 
 }
 

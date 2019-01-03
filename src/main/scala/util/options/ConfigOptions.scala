@@ -68,7 +68,7 @@ object ConfigOptions extends Serializable {
 
   val SequenceFormat = Config(OptionNames.SequenceFormat)
   val SequencePath = Config(OptionNames.SequencePath)
-  val SequenceSessionTimeout = Config(OptionNames.SequenceConnectionTimeout)
+  val SequenceSessionTimeout = Config(OptionNames.SequenceSessionTimeout)
   val SequenceConnectionTimeout = Config(OptionNames.SequenceConnectionTimeout)
   val SequenceURL = Config(OptionNames.SequenceURL)
 

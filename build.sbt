@@ -33,6 +33,8 @@ buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion,
 
 buildInfoKeys += buildInfoBuildNumber
 
+unmanagedResourceDirectories in Compile += { baseDirectory.value / "src/main/resources" }
+
 buildInfoPackage := "util"
 
 libraryDependencies ++= Seq(

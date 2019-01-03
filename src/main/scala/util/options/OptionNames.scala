@@ -51,8 +51,8 @@ trait OptionNames extends Serializable {
   val SequenceURL = "app.sequence.url"
   val SequenceFormat = "app.sequence.resultFormat"
   val SequencePath = "app.sequence.path"
-  val SequenceSessionTimeout = "app.sequence.sessionTimeoutSec"
-  val SequenceConnectionTimeout = "app.sequence.connectionTimeoutSec"
+  val SequenceSessionTimeout = "app.sequence.sessionTimeout"
+  val SequenceConnectionTimeout = "app.sequence.connectionTimeout"
 
   val HBaseZookeeperQuorum = "hbase.zookeeper.quorum"
   val HBaseZookeeperClientPort = "hbase.zookeeper.property.clientPort"

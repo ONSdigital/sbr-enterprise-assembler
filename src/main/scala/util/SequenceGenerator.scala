@@ -7,6 +7,7 @@ import org.apache.curator.RetryPolicy
 import org.apache.curator.framework.recipes.atomic.{AtomicValue, DistributedAtomicLong}
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
 import org.apache.curator.retry.{ExponentialBackoffRetry, RetryOneTime}
+import util.options.ConfigOptions
 
 /**
   * Generates a unique sequence number for Hbase/Hive
@@ -17,17 +18,17 @@ import org.apache.curator.retry.{ExponentialBackoffRetry, RetryOneTime}
   * @param sessionTimeoutSec    session timeout in seconds
   * @param connectionTimeoutSec connection timeout in seconds
   */
-class SequenceGenerator(
-                         hostName: String,
-                         resultFormat: String = "11%07d",
-                         path: String = "/ids/enterprise/id",
-                         sessionTimeoutSec: Int = 5,
-                         connectionTimeoutSec: Int = 5
-                       ) extends Serializable {
+object SequenceGenerator {
+
+  val hostName: String = ConfigOptions.SequenceURL
+  val resultFormat: String = ConfigOptions.SequenceFormat
+  val path: String = ConfigOptions.SequencePath
+  val sessionTimeoutSec: Int = ConfigOptions.SequenceSessionTimeout.toInt
+  val connectionTimeoutSec: Int = ConfigOptions.SequenceConnectionTimeout.toInt
 
   private val retryPolicy: RetryPolicy = new ExponentialBackoffRetry(1000, 3)
   private val client: CuratorFramework = CuratorFrameworkFactory.newClient(hostName, sessionTimeoutSec * 1000,
-    connectionTimeoutSec * 1000, retryPolicy)
+    connectionTimeoutSec.toInt * 1000, retryPolicy)
   private val dal: DistributedAtomicLong = new DistributedAtomicLong(client, path, new RetryOneTime(1))
 
   client.start()
