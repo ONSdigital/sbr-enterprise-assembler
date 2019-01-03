@@ -22,6 +22,7 @@ object AssemblerMain extends AddNewPeriodDataService {
       }
 
       loadNewPeriodWithCalculationsData()
+
     } finally {
 
       if (ConfigOptions.local) {
@@ -33,8 +34,8 @@ object AssemblerMain extends AddNewPeriodDataService {
         println("HFiles deleted")
 
       }
-      System.exit(0)
     }
+
   }
 
 }

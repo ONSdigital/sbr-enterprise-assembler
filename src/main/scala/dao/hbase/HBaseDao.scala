@@ -255,9 +255,9 @@ trait HBaseDao extends Serializable {
 
   def leusTableName = s"${ConfigOptions.HBaseLegalUnitsNamespace}:${ConfigOptions.HBaseLegalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def lousTableName = s"${ConfigOptions.HBaseLocalUnitsTableName}:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def lousTableName = s"${ConfigOptions.HBaseLocalUnitsNamespace}:${ConfigOptions.HBaseLocalUnitsTableName}_${ConfigOptions.TimePeriod}"
 
-  def rusTableName = s"${ConfigOptions.HBaseReportingUnitsTableName}:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
+  def rusTableName = s"${ConfigOptions.HBaseReportingUnitsNamespace}:${ConfigOptions.HBaseReportingUnitsTableName}_${ConfigOptions.TimePeriod}"
 
   def entsTableName = s"${ConfigOptions.HBaseEnterpriseTableNamespace}:${ConfigOptions.HBaseEnterpriseTableName}_${ConfigOptions.TimePeriod}"
 
