@@ -2,17 +2,23 @@
 
 Created new and update existing entities.
 
+
+#Notes
+
+Arguments are not required as all options can be overriden by passing a configuration file to the spark job using this syntax:
+
+```--files application.conf --conf spark.driver.extraJavaOptions=-Dconfig.file=application.conf```
+
+The spark job can therefore be run as:
+
+```$xslt
+spark-submit --master local[*] --class assembler.AssemblerMain --files application.conf --conf spark.driver.extraJavaOptions=-Dconfig.file=application.conf [JAR_FILE]
+```
+
 ## Application Arguments
 
-The following details input parameters with the required options (*This list should probably be extended*)  being:
+Options passed on the command line will override those in configuration files.
 
-```
-
-quorum - The list of HBase Zookeeper hosts
-port   - The port number for the above
-seq    - The HOST:PORT for the Zookeeper instance(s) used for unique sequence number generation 
-
-```
 
 General usage is as follows:
 

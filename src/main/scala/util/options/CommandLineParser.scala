@@ -23,19 +23,19 @@ object CommandLineParser {
   val version: Option = new Option("v", "version", false, "show version information and exit")
   version.setRequired(false)
 
-  AppOptions(options, shortOpt = "e", required = true, hasArg = true,
+  AppOptions(options, shortOpt = "e", required = false, hasArg = true,
     "local | cluster", "environment", "local or cluster environment",
     OptionNames.Environment)
 
-  AppOptions(options, shortOpt = "quorum", required = true, hasArg = true,
+  AppOptions(options, shortOpt = "quorum", required = false, hasArg = true,
     "HOST[,HOST...]", "zookeeper-quorum", "host[,host...] for the HBase zookeeper instance(s)",
     OptionNames.HBaseZookeeperQuorum)
 
-  AppOptions(options, shortOpt = "port", required = true, hasArg = true,
+  AppOptions(options, shortOpt = "port", required = false, hasArg = true,
     "PORT", "zookeeper-port", "port for the HBase zookeeper instance(s)",
     OptionNames.HBaseZookeeperClientPort)
 
-  AppOptions(options, shortOpt = "seq", required = true, hasArg = true,
+  AppOptions(options, shortOpt = "seq", required = false, hasArg = true,
     "HOST:PORT[,HOST:PORT...]", "seq-url", "a list of HOST:PORT[,HOST:PORT...] for the Zookeeper sequence number generator hosts(s)",
     OptionNames.SequenceURL)
 
@@ -127,15 +127,15 @@ object CommandLineParser {
     "FILE PATH", "paye-file-path", "PAYE file path",
     OptionNames.PayeFilePath)
 
-  AppOptions(options, "vat", required = true, hasArg = true,
+  AppOptions(options, "vat", required = false, hasArg = true,
     "FILE PATH", "vat-file-path", "VAT file path",
     OptionNames.VatFilePath)
 
-  AppOptions(options, "geo", required = true, hasArg = true,
+  AppOptions(options, "geo", required = false, hasArg = true,
     "FILE PATH", "path-to-geo", "GEO file path",
     OptionNames.PathToGeo)
 
-  AppOptions(options, "geoShort", required = true, hasArg = true,
+  AppOptions(options, "geoShort", required = false, hasArg = true,
     "FILE PATH", "path-to-geo-short", "GEO short file path",
     OptionNames.PathToGeoShort)
 
@@ -151,11 +151,11 @@ object CommandLineParser {
     "TABLE NAME", "hive-short-table-name", "Hive short table name",
     OptionNames.HiveShortTableName)
 
-  AppOptions(options, "bi", required = true, hasArg = true,
+  AppOptions(options, "bi", required = false, hasArg = true,
     "FILE PATH", "bi-file-path", "the BI JSON input file path",
     OptionNames.BIFilePath)
 
-  AppOptions(options, "parquet", required = true, hasArg = true,
+  AppOptions(options, "parquet", required = false, hasArg = true,
     "FILE PATH", "parquet-file-path", "the parquet output file path",
     OptionNames.PathToParquet)
 
