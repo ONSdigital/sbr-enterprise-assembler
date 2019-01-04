@@ -6,7 +6,7 @@ trait OptionNames extends Serializable {
   val ApplicationEnvironment = "app.environment"
   val Debug = "app.debug"
 
-  val HadoopSecurityAuthentication: String =  "hadoop.security.authentication"
+  val HadoopSecurityAuthentication: String = "hadoop.security.authentication"
 
   val HBaseLinksTableNamespace: String = "app.links.namespace"
   val HBaseLinksTableName: String = "app.links.tableName"
@@ -57,6 +57,9 @@ trait OptionNames extends Serializable {
   val HBaseZookeeperQuorum = "hbase.zookeeper.quorum"
   val HBaseZookeeperClientPort = "hbase.zookeeper.property.clientPort"
   val HFilesPerRegion = "hbase.mapreduce.bulkload.max.hfiles.perRegion.perFamily"
+  val HBaseRPCTimeout = "hbase.rpc.timeout"
+  val HBaseClientScannerTimeout = "hbase.client.scanner.timeout.period"
+  val HBaseCellsScanned = "hbase.cells.scanned.per.heartbeat.check"
 
   val Environment = "app.environment"
   val inCluster = "cluster"

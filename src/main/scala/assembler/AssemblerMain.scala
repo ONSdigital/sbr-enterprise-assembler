@@ -30,6 +30,7 @@ object AssemblerMain extends AddNewPeriodDataService {
         File(ConfigOptions.PathToLinksHfile).deleteRecursively()
         File(ConfigOptions.PathToLegalUnitsHFile).deleteRecursively()
         File(ConfigOptions.PathToLocalUnitsHFile).deleteRecursively()
+        File(ConfigOptions.PathToReportingUnitsHFile).deleteRecursively()
 
         println("HFiles deleted")
 

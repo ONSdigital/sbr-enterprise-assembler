@@ -13,7 +13,7 @@ object Config extends Serializable {
     try {
       config.getString(path)
     } catch {
-      case ioe: ConfigException.Missing => NOT_FOUND
+      case ioe: ConfigException.Missing => path + ":" + NOT_FOUND
       case e: Exception => CONFIG_ERROR
     }
   }

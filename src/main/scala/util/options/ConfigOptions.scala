@@ -7,11 +7,6 @@ object ConfigOptions extends Serializable {
 
   val hbaseConfiguration: Configuration = HBaseConfiguration.create
 
-  hbaseConfiguration.setInt(OptionNames.HFilesPerRegion, 500)
-  hbaseConfiguration.setInt("hbase.rpc.timeout", 360000)
-  hbaseConfiguration.setInt("hbase.client.scanner.timeout.period", 360000)
-  hbaseConfiguration.setInt("hbase.cells.scanned.per.heartbeat.check", 60000)
-
   if (Config(OptionNames.HadoopSecurityAuthentication) == "NOT_FOUND")
     hbaseConfiguration.set(OptionNames.HadoopSecurityAuthentication, "kerberos")
   else
@@ -83,7 +78,5 @@ object ConfigOptions extends Serializable {
 
   val inCluster: Boolean = ApplicationEnvironment == OptionNames.inCluster
   val local: Boolean = ApplicationEnvironment == OptionNames.local
-
-  val HFilesPerRegion: String = OptionNames.HFilesPerRegion
 
 }
