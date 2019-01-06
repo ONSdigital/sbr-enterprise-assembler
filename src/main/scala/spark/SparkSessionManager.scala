@@ -11,7 +11,7 @@ trait  SparkSessionManager {
       if (ConfigOptions.inCluster)
         SparkSession.builder().appName("enterprise assembler").enableHiveSupport().getOrCreate()
       else
-        SparkSession.builder().master("local[8]").appName("enterprise assembler").getOrCreate()
+        SparkSession.builder().master("local[*]").appName("enterprise assembler").getOrCreate()
     }
 
     doWithinSparkSession(spark)
