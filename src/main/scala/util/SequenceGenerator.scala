@@ -20,7 +20,8 @@ import util.options.ConfigOptions
   */
 object SequenceGenerator {
 
-  val hostName: String = ConfigOptions.SequenceURL
+  //val hostName: String = ConfigOptions.SequenceURL
+  val hostName: String = ConfigOptions.HBaseZookeeperQuorum.split(",").toList.map( x => x + ":" + ConfigOptions.HBaseZookeeperPort).mkString(",")
   val resultFormat: String = ConfigOptions.SequenceFormat
   val path: String = ConfigOptions.SequencePath
   val sessionTimeoutSec: Int = ConfigOptions.SequenceSessionTimeout.toInt
