@@ -7,16 +7,16 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import util.options.ConfigOptions
 
-object MockCreateNewPeriodHBaseDao extends HBaseDao {
+object MockCreateNewPeriodHBaseDao  {
 
-  override def readTableWithKeyFilter(confs: Configuration, tableName: String, regex: String)
+   def readTableWithKeyFilter(confs: Configuration, tableName: String, regex: String)
                                      (implicit spark: SparkSession): RDD[HFileRow] = {
 
     val res = tableName.split(":").last match {
 
-      case ConfigOptions.HBaseEnterpriseTableName => readEnterprisesWithKeyFilter(confs, regex)
-      case ConfigOptions.HBaseLinksTableName => readLinksWithKeyFilter(confs, regex)
-      case ConfigOptions.HBaseLocalUnitsTableName => readLouWithKeyFilter(confs, regex)
+      case ConfigOptions.HBaseEnterpriseTableName => HBaseDao.readEnterprisesWithKeyFilter(confs, regex)
+      case ConfigOptions.HBaseLinksTableName => HBaseDao.readLinksWithKeyFilter(confs, regex)
+      case ConfigOptions.HBaseLocalUnitsTableName => HBaseDao.readLouWithKeyFilter(confs, regex)
       case _ => throw new IllegalArgumentException("invalid table name")
 
     }

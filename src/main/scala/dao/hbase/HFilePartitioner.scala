@@ -1,11 +1,11 @@
-package closures
+package dao.hbase
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.Partitioner
 
-private object HFilePartitioner {
+object HFilePartitioner {
   def apply(conf: Configuration, splits: Array[Array[Byte]], numFilesPerRegionPerFamily: Int): HFilePartitioner = {
     if (numFilesPerRegionPerFamily == 1)
       new SingleHFilePartitioner(splits)
@@ -23,7 +23,7 @@ protected abstract class HFilePartitioner extends Partitioner {
   }
 }
 
-private class MultiHFilePartitioner(splits: Array[Array[Byte]], fraction: Int) extends HFilePartitioner {
+class MultiHFilePartitioner(splits: Array[Array[Byte]], fraction: Int) extends HFilePartitioner {
   override def getPartition(key: Any): Int = {
     val k = extractKey(key)
     val h = (k.hashCode() & Int.MaxValue) % fraction
@@ -36,7 +36,7 @@ private class MultiHFilePartitioner(splits: Array[Array[Byte]], fraction: Int) e
   override def numPartitions: Int = splits.length * fraction
 }
 
-private class SingleHFilePartitioner(splits: Array[Array[Byte]]) extends HFilePartitioner {
+class SingleHFilePartitioner(splits: Array[Array[Byte]]) extends HFilePartitioner {
   override def getPartition(key: Any): Int = {
     val k = extractKey(key)
     for (i <- 1 until splits.length)

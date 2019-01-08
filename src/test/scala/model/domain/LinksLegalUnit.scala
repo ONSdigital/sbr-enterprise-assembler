@@ -1,20 +1,5 @@
 package model.domain
 
-/**
-  *
-  */
-case class PayeData(payeRef: String, q1: Option[String], q2: Option[String], q3: Option[String], q4: Option[String])
-
-object PayeData {
-  def apply(payeRef: String) = new PayeData(payeRef, None, None, None, None)
-}
-
-case class VatData(vatRef: String, turnover: Option[String], recordType: Option[String])
-
-object VatData {
-  def apply(vatRef: String) = new VatData(vatRef, None, None)
-}
-
 case class LegalUnitLink(ubrn: String, ch: Option[String], payeRefs: Seq[String], varRefs: Seq[String])
 
 case class ReportingUnitLink(rurn: String, lurns: Seq[String], ern: String)

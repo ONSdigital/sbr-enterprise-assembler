@@ -1,6 +1,6 @@
 package service
 
-import closures.AssembleUnitsClosure$
+import closures.AssembleUnits
 import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
 import org.apache.hadoop.hbase.client.Connection
@@ -19,7 +19,7 @@ trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionMa
       withHbaseConnection {
         implicit con: Connection =>
 
-          AssembleUnitsClosure$.createUnitsHfiles
+          AssembleUnits.createUnitsHfiles
 
           HBaseDao.truncateTables
           HBaseDao.loadLinksHFile

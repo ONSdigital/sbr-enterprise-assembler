@@ -18,7 +18,7 @@ import org.apache.spark.sql.SparkSession
 import org.slf4j.{Logger, LoggerFactory}
 import util.options.ConfigOptions
 
-trait HBaseDao extends Serializable {
+object HBaseDao extends Serializable {
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
 
@@ -263,4 +263,4 @@ trait HBaseDao extends Serializable {
 
 }
 
-object HBaseDao extends HBaseDao
+//object HBaseDao extends HBaseDao

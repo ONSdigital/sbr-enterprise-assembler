@@ -11,16 +11,12 @@ import org.apache.spark.sql.functions.col
 import spark.calculations.SmlAdminDataCalculator
 import spark.extensions.sql._
 
-trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with Serializable {
+trait AssembleUnits extends BaseUnits with Serializable {
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
 
-  /**
-    * Does not work currently because it's using previous period when looking up existing entities
-    * and saving fresh data with new period key
-    **/
-  override def createUnitsHfiles(implicit spark: SparkSession, con: Connection): Unit = {
+  def createUnitsHfiles(implicit spark: SparkSession, con: Connection): Unit = {
 
     val regionsByPostcodeDF: DataFrame = if (ConfigOptions.local) {
       spark.read.option("header", "true").csv(ConfigOptions.PathToGeo).select("pcds", "rgn").toDF("postcode", "region").cache()
@@ -76,7 +72,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
   def getAllEntsCalculated(allLinksLusDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                           (implicit spark: SparkSession): Dataset[Row] = {
 
-    val calculatedDF = calculate(allLinksLusDF).castAllToString()
+    val calculatedDF = SmlAdminDataCalculator.calculate(allLinksLusDF).castAllToString()
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(ConfigOptions.hbaseConfiguration)
@@ -153,7 +149,6 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
 
     val existingRUs: DataFrame = getExistingRusDF(confs)
 
-    //val existingRusWithRecalculatedEmployment =
     val columns = ruRowSchema.fieldNames
     val ruWithRegion: DataFrame = calculateRegion(existingRUs, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
     val entsWithoutRus: DataFrame = allEntsDF.join(ruWithRegion.select("ern"), Seq("ern"), "left_anti")
@@ -167,7 +162,7 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
                 (implicit spark: SparkSession): Dataset[Row] = {
 
     val columns = louRowSchema.fieldNames
-    val existingLous: DataFrame = getExistingLousDF( confs)
+    val existingLous: DataFrame = getExistingLousDF(confs)
     val existingLousWithRegion: DataFrame = calculateRegion(existingLous, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
 
     val rusWithoutLous: DataFrame = allRus.join(existingLousWithRegion.select("rurn"), Seq("rurn"), "left_anti")
@@ -183,4 +178,4 @@ trait AssembleUnitsClosure extends SmlAdminDataCalculator with BaseClosure with 
   }
 }
 
-object AssembleUnitsClosure$ extends AssembleUnitsClosure
+object AssembleUnits extends AssembleUnits

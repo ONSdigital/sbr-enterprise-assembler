@@ -1,6 +1,6 @@
 package closures
 
-import closures.mocks.{MockClosures, MockCreateNewPeriodHBaseDao}
+import closures.mocks.MockAssembleUnits
 import dao.hbase.HBaseConnectionManager
 import dao.parquet.ParquetDao
 import model.domain._
@@ -22,27 +22,6 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
 
   val cores: Int = Runtime.getRuntime.availableProcessors()
 
-  object MockAssembleUnitsClosure extends AssembleUnitsClosure with MockClosures {
-
-    override val hbaseDao: MockCreateNewPeriodHBaseDao.type = MockCreateNewPeriodHBaseDao
-
-    override val ernMapping: Map[String, String] = Map(
-      "NEW ENTERPRISE LU" -> newEntErn
-    )
-
-    override val lurnMapping: Map[String, String] = Map(
-      "NEW ENTERPRISE LU" -> newLouLurn
-    )
-
-    override val rurnMapping: Map[String, String] = Map(
-      "NEW ENTERPRISE LU" -> newRuRurn
-    )
-
-    override val prnMapping: Map[String, String] = Map(
-      "NEW ENTERPRISE LU" -> newRuPrn
-    )
-  }
-
   override def beforeAll(): Unit = {
     implicit val spark: SparkSession = SparkSession.builder()
       .master("local[*]")
@@ -59,7 +38,7 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
         createRecords
         ParquetDao.jsonToParquet(jsonFilePath)(spark)
         //val existingDF = readEntitiesFromHFile[HFileRow](existingLinksRecordHFiles).collect
-        MockAssembleUnitsClosure.createUnitsHfiles(spark, connection)
+        MockAssembleUnits.createUnitsHfiles(spark, connection)
     }
     spark.stop
   }
@@ -73,24 +52,6 @@ class AddNewPeriodWithCalculationsSpec extends HBaseConnectionManager with Paths
     File(ruHfilePath).deleteRecursively()
     File(existingRecordsDir).deleteRecursively()
   }
-
-  /*  "create test-data csv" should {" just do it" in{
-        implicit val spark: SparkSession = SparkSession.builder().master("local[4]").appName("enterprise assembler").getOrCreate()
-        val geoPath = "/Users/vladshiligin/dev/ons/sbr-enterprise-assembler/src/test/resources/data/geo/test-dataset.csv"
-        val pcPath = "src/test/resources/data/geo/postcodes.csv"
-        val geoDF = spark.read.option("header", "true").csv(geoPath).select("pcds","rgn").toDF("postcode", "region")
-        val pcDF = spark.read.option("header", "false").csv(pcPath).toDF("postcode")
-        val rows = pcDF.join(geoDF, Seq("postcode"),"left_outer").collect()
-        val recs = rows.map(row => { row.getAs[String]("postcode") + ","+row.getAs[String]("region") })
-        val wholeSet = "postcode,region"+:recs
-        val dataStr = wholeSet.mkString("\n")
-        val file = new java.io.File("src/test/resources/data/geo/test-dataset.csv")
-        val bw = new BufferedWriter(new FileWriter(file))
-        bw.write(dataStr)
-        bw.close()
-        true shouldBe true
-
-  }}*/
 
   "assembler" should {
     "create hfiles populated with expected enterprise data" in {

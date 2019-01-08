@@ -1,6 +1,5 @@
 package closures
 
-import closures.mocks.{MockCreateNewPeriodHBaseDao, MockDataReader}
 import dao.hbase.HBaseConnectionManager
 import dao.parquet.ParquetDao
 import model.domain._
@@ -22,9 +21,7 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
 
   val cores: Int = Runtime.getRuntime.availableProcessors()
 
-  object MockClosure extends AssembleUnitsClosure with MockDataReader {
-    override val hbaseDao: MockCreateNewPeriodHBaseDao.type = MockCreateNewPeriodHBaseDao
-  }
+  object MockUnits extends AssembleUnits
 
   override def beforeAll(): Unit = {
     implicit val spark: SparkSession = SparkSession.builder()
@@ -41,7 +38,7 @@ class NewPeriodClosureConsistencyCheck extends HBaseConnectionManager with Paths
       implicit connection: Connection =>
         createRecords
         ParquetDao.jsonToParquet(jsonFilePath)(spark)
-        MockClosure.createUnitsHfiles(spark, connection)
+        MockUnits.createUnitsHfiles(spark, connection)
     }
     spark.stop
   }

@@ -1,6 +1,6 @@
 package closures.mocks
 
-import closures.BaseClosure
+import closures.AssembleUnits
 import closures.mocks.MockCreateNewPeriodHBaseDao.adjustPathToExistingRecords
 import model.domain.HFileRow
 import org.apache.hadoop.conf.Configuration
@@ -9,8 +9,9 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import spark.extensions.rdd.HBaseDataReader.readEntitiesFromHFile
 import spark.extensions.sql._
 import util.options.ConfigOptions
+import utils.data.TestIds
 
-trait MockDataReader extends BaseClosure {
+object MockAssembleUnits extends AssembleUnits with TestIds {
 
   override def getExistingLinksLeusDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
     val path = adjustPathToExistingRecords(ConfigOptions.PathToLinksHfile)
@@ -44,4 +45,40 @@ trait MockDataReader extends BaseClosure {
     spark.createDataFrame(ents, entRowSchema)
   }
 
+  override def generateErn(row: Row): String =
+    ernMapping(row.getString("name").get)
+
+  override def generateLurn(row: Row): String = {
+    val key = row.getString("name").get
+    lurnMapping(key)
+  }
+
+  override def generateRurn(row: Row): String = {
+    val key = row.getString("name").get
+    rurnMapping(key)
+  }
+
+  override def generatePrn(row: Row): String = {
+    val key = row.getString("name").get
+    prnMapping(key)
+  }
+
+  override def generateLurnFromEnt(row: Row): String =
+    lurnMapping(generateLurn(row))
+
+  val ernMapping: Map[String, String] = Map(
+    "NEW ENTERPRISE LU" -> newEntErn
+  )
+
+  val lurnMapping: Map[String, String] = Map(
+    "NEW ENTERPRISE LU" -> newLouLurn
+  )
+
+  val rurnMapping: Map[String, String] = Map(
+    "NEW ENTERPRISE LU" -> newRuRurn
+  )
+
+  val prnMapping: Map[String, String] = Map(
+    "NEW ENTERPRISE LU" -> newRuPrn
+  )
 }

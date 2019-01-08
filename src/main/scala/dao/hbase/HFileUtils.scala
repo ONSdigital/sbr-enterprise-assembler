@@ -1,6 +1,6 @@
 package dao.hbase
 
-import model.hfile.HFileCell
+import model.domain.HFileCell
 import org.apache.spark.sql.Row
 import spark.extensions.sql.SqlRowExtensions
 import util.SequenceGenerator
@@ -37,7 +37,6 @@ trait HFileUtils extends Serializable {
   def rowToLouCalculations(row: Row): Option[(String, HFileCell)] = {
     val lurn = row.getStringOption("lurn").get
     val ern = row.getStringOption("ern").get
-    val entKey = generateLocalUnitKey(lurn, ern)
 
     row.getStringOption("paye_empees").map(employees => createEnterpriseCell(ern, "employees", employees))
   }
@@ -164,7 +163,6 @@ trait HFileUtils extends Serializable {
 
     Seq(
       createLegalUnitCell(lurn, ern, "ubrn", lurn),
-      //createLocalUnitCell(lurn,ern, "ern", ern, appParams),
       createLocalUnitCell(lurn, ern, "prn", prn),
       createLocalUnitCell(lurn, ern, "name", row.getString("name").getOrElse("")),
       createLocalUnitCell(lurn, ern, "address1", row.getValueOrEmptyStr("address1")),
@@ -283,7 +281,6 @@ trait HFileUtils extends Serializable {
     val prnTest = (numStore % 1000000000) + 1
     "0." + prnTest.toString
   }
-
 
   def generateLurn(row: Row): String = SequenceGenerator.nextSequence
 

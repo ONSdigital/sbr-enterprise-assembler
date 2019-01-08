@@ -1,7 +1,5 @@
 package model.domain
 
-import model.hfile
-import model.hfile.HFileCell
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.util.Bytes
@@ -20,19 +18,16 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
 
   def getValueOrStr(key: String, byKey: Boolean = true, default: String = ""): String = getCellValue(key, byKey).getOrElse(default)
 
-  def getCellValue(key: String, byKey: Boolean): Option[String] = if (byKey) cells.collect { case KVCell(`key`, value) => Option(value) }.headOption.flatten //.getOrElse(null)
-  else cells.collect { case KVCell(value, `key`) => Option(value) }.headOption.flatten //.getOrElse(null)
+  def getCellValue(key: String, byKey: Boolean): Option[String] = if (byKey) cells.collectFirst { case KVCell(`key`, value) => Option(value) }.flatten //.getOrElse(null)
+  else cells.collectFirst { case KVCell(value, `key`) => Option(value) }.flatten //.getOrElse(null)
 
   def getCellArrayValue(key: String): Iterable[String] = {
     val result = cells.collect { case KVCell(value, `key`) => value }
-    if (result.isEmpty) null
-    else result
+    if (result.isEmpty) null else result
   }
 
   override def equals(obj: scala.Any): Boolean = obj match {
-    case HFileRow(otherKey, otherCells) if (
-      (otherKey == this.key) && (this.cells.toSet == otherCells.toSet)
-      ) => true
+    case HFileRow(otherKey, otherCells) if (otherKey == this.key) && (this.cells.toSet == otherCells.toSet) => true
     case _ => false
   }
 
@@ -40,7 +35,9 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
   def toHFileCells(columnFamily: String, kvType: Int = KeyValue.Type.Put.ordinal()): Iterable[HFileCell] = cells.map(cell => HFileCell(key, columnFamily, cell.column, cell.value, kvType))
 
   def toEntRow: GenericRowWithSchema = {
+
     import spark.extensions.sql._
+
     try {
       new GenericRowWithSchema(Array(getValueOrStr("ern"),
         getValueOrStr("prn", default = ConfigOptions.DefaultPRN),
@@ -66,6 +63,7 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
   }
 
   def toLeuRow: GenericRowWithSchema = {
+
     import spark.extensions.sql._
 
     try {
@@ -103,6 +101,7 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
   }
 
   def toRuRow: GenericRowWithSchema = {
+
     import spark.extensions.sql._
 
     new GenericRowWithSchema(Array(
@@ -129,6 +128,7 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
   }
 
   def toLeuLinksRow: GenericRowWithSchema = {
+
     import spark.extensions.sql._
 
     new GenericRowWithSchema(Array(
@@ -149,6 +149,7 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
   }
 
   def toUbrnErnRow: GenericRowWithSchema = {
+
     import spark.extensions.sql._
 
     new GenericRowWithSchema(Array(
@@ -191,7 +192,7 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
     }
   }
 
-  def toHFileCellRow(colFamily: String): Iterable[(String, hfile.HFileCell)] = {
+  def toHFileCellRow(colFamily: String): Iterable[(String, HFileCell)] = {
     cells.map(cell => (key, HFileCell(key, colFamily, cell.column, cell.value)))
   }
 
@@ -218,6 +219,7 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
 
   def toDeleteHFile(colFamily: String): Iterable[(ImmutableBytesWritable, KeyValue)] = {
     val excludedColumns = Seq("p_ENT")
+
     if (key.contains("~LEU~")) {
       cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>
         Seq((new ImmutableBytesWritable(key.getBytes()), new KeyValue(key.getBytes, colFamily.getBytes, kv.column.getBytes, HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn)))
@@ -228,8 +230,9 @@ case class HFileRow(key: String, cells: Iterable[KVCell[String, String]]) {
     }
   }
 
-  def toDeleteHFileRows(colFamily: String): Iterable[(String, hfile.HFileCell)] = {
+  def toDeleteHFileRows(colFamily: String): Iterable[(String, HFileCell)] = {
     val excludedColumns = Seq("p_ENT")
+
     if (key.contains("~LEU~")) {
       cells.filterNot(cell => excludedColumns.contains(cell.column)).flatMap(kv =>
         Seq((key, new HFileCell(key, colFamily, kv.column, "", HConstants.LATEST_TIMESTAMP, KeyValue.Type.DeleteColumn.ordinal())))
