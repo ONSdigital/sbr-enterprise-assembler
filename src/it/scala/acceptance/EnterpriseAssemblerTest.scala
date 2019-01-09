@@ -2,9 +2,7 @@ package acceptance
 
 import java.util
 
-import global.Configs
-import global.Configs.conf
-import model.domain.Enterprise
+import model.Enterprise
 import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Result, Table}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat

@@ -1,12 +1,12 @@
 package dao.parquet
 
 import org.apache.spark.sql.SparkSession
-import util.options.ConfigOptions
+import util.configuration.AssemblerConfiguration
 
 trait ParquetDao extends Serializable {
 
   def jsonToParquet(jsonFilePath: String)(implicit spark: SparkSession): Unit = {
-    spark.read.json(jsonFilePath).write.parquet(ConfigOptions.PathToParquet)
+    spark.read.json(jsonFilePath).write.parquet(AssemblerConfiguration.PathToParquet)
     println(s"Wrote outfile: $jsonFilePath")
   }
 

@@ -1,10 +1,10 @@
 package dao.hbase
 
-import model.domain.HFileCell
 import org.apache.spark.sql.Row
-import spark.extensions.sql.SqlRowExtensions
 import util.SequenceGenerator
-import util.options.ConfigOptions
+import util.configuration.AssemblerConfiguration
+import dao.DaoUtils._
+import model.HFileCell
 
 trait HFileUtils extends Serializable {
 
@@ -241,19 +241,17 @@ trait HFileUtils extends Serializable {
     createLinksRecord(generateLinkKey(paye, payeValue), s"$parentPrefix$legalUnit", ubrn.toString)
   ))).getOrElse(Seq[(String, HFileCell)]())
 
-  private def createLinksRecord(key: String, column: String, value: String): (String, HFileCell) = createRecord(key, ConfigOptions.HBaseLinksColumnFamily, column, value)
+  private def createLinksRecord(key: String, column: String, value: String): (String, HFileCell) = createRecord(key, AssemblerConfiguration.HBaseLinksColumnFamily, column, value)
 
-  def createEnterpriseCell(ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateEntKey(ern), ConfigOptions.HBaseEnterpriseColumnFamily, column, value)
+  def createEnterpriseCell(ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateEntKey(ern), AssemblerConfiguration.HBaseEnterpriseColumnFamily, column, value)
 
-  def createLocalUnitCell(lurn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLocalUnitKey(lurn, ern), ConfigOptions.HBaseLocalUnitsColumnFamily, column, value)
+  def createLocalUnitCell(lurn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLocalUnitKey(lurn, ern), AssemblerConfiguration.HBaseLocalUnitsColumnFamily, column, value)
 
-  def createLegalUnitCell(ubrn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLegalUnitKey(ubrn, ern), ConfigOptions.HBaseLegalUnitsColumnFamily, column, value)
+  def createLegalUnitCell(ubrn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLegalUnitKey(ubrn, ern), AssemblerConfiguration.HBaseLegalUnitsColumnFamily, column, value)
 
   private def createRecord(key: String, columnFamily: String, column: String, value: String) = key -> HFileCell(key, columnFamily, column, value)
 
   private def generateLocalUnitKey(lurn: String, ern: String) = s"${ern.reverse}~$lurn"
-
-  private def generateReportingUnitKey(lurn: String, ern: String) = s"${ern.reverse}~$lurn"
 
   private def generateLegalUnitKey(ubrn: String, ern: String) = s"${ern.reverse}~$ubrn"
 
@@ -272,7 +270,7 @@ trait HFileUtils extends Serializable {
   def getWorkingPropsByLegalStatus(legalStatus: String): String = legalStatus match {
     case "2" => "1"
     case "3" => "2"
-    case _ => ConfigOptions.DefaultWorkingProps
+    case _ => AssemblerConfiguration.DefaultWorkingProps
   }
 
   def generatePrn(row: Row): String = {

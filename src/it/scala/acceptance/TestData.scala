@@ -1,6 +1,6 @@
 package acceptance
 
-import model.domain.Enterprise
+import model.Enterprise
 
 /**
   *

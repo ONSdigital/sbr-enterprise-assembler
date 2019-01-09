@@ -1,6 +1,6 @@
 package utils.data.expected
 
-import model.domain._
+import model._
 import utils.data.TestIds
 
 trait ExpectedDataForAddNewPeriodScenario extends TestIds {

@@ -68,7 +68,7 @@ usage: sbr-enterprise-assembler [-bi <FILE PATH>] [-d] [-e <arg>] [-ecf <COLUMN 
  -rens,--reporting-table-namespace <NAMESPACE>          reporting table namespace
  -retn,--reporting-table-name <TABLE NAME>              HBase reporting table name
  -seq,--seq-url <HOST:PORT[,HOST:PORT...]>              a list of HOST:PORT[,HOST:PORT...] for the
-                                                        Zookeeper sequence number generator hosts(s)
+                                                        Zookeeper service.sequence number generator hosts(s)
  -tp,--time-period <TIME PERIOD>                        time period
  -vat,--vat-file-path <FILE PATH>                       VAT file path
 ```

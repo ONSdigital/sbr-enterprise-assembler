@@ -1,9 +1,9 @@
 package utils.data.consistency
 
 import dao.hbase.HBaseConnectionManager
-import model.domain._
+import model._
 
-trait DataConsistencyCheck extends HBaseConnectionManager {
+trait DataConsistencyCheck {
 
   def checkIntegrity(ents: Seq[Enterprise], lous: Seq[LocalUnit], leus: Seq[LegalUnit], rus: Seq[ReportingUnit], links: Seq[HFileRow]): Boolean = {
     val lousOK = checkLous(lous, links)

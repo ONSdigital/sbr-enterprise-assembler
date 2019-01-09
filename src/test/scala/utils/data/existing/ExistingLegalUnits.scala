@@ -1,6 +1,6 @@
 package utils.data.existing
 
-import model.domain.{HFileRow, KVCell}
+import model.{HFileRow, KVCell}
 import utils.data.TestIds
 
 /**

@@ -1,6 +1,6 @@
 package utils.data.expected
 
-import model.domain.Calculations
+import model.Calculations
 
 /**
   *

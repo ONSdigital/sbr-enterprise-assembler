@@ -1,22 +1,21 @@
 package service
 
-import closures.AssembleUnits
 import dao.hbase.{HBaseConnectionManager, HBaseDao}
 import dao.parquet.ParquetDao
+import dao.spark.SparkSessionManager
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
-import spark.SparkSessionManager
-import util.options.ConfigOptions
+import util.configuration.AssemblerConfiguration
 
-trait AddNewPeriodDataService extends HBaseConnectionManager with SparkSessionManager {
+object AddNewPeriodDataService {
 
-  def createNewPeriodParquet(): Unit = withSpark {
-    implicit ss: SparkSession => ParquetDao.jsonToParquet(ConfigOptions.BIFilePath)(ss)
+  def createNewPeriodParquet(): Unit = SparkSessionManager.withSpark {
+    implicit ss: SparkSession => ParquetDao.jsonToParquet(AssemblerConfiguration.BIFilePath)(ss)
   }
 
-  def loadNewPeriodWithCalculationsData(): Unit = withSpark {
+  def loadNewPeriodWithCalculationsData(): Unit = SparkSessionManager.withSpark {
     implicit ss: SparkSession =>
-      withHbaseConnection {
+      HBaseConnectionManager.withHbaseConnection {
         implicit con: Connection =>
 
           AssembleUnits.createUnitsHfiles
