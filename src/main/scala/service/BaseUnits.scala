@@ -1,5 +1,6 @@
 package service
 
+import dao.DaoUtils._
 import dao.hbase.{HBaseDao, HFilePartitioner, HFileUtils}
 import model.{HFileCell, Schemas}
 import org.apache.hadoop.conf.Configuration
@@ -12,6 +13,7 @@ import org.apache.spark.sql.functions.{col, substring, trim}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import util.configuration.AssemblerConfiguration
 import dao.DaoUtils._
+import service.calculations.CalculateRegion
 import util.configuration.AssemblerHBaseConfiguration._
 
 trait BaseUnits extends HFileUtils with Serializable {
@@ -244,65 +246,10 @@ trait BaseUnits extends HFileUtils with Serializable {
       .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToReportingUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
   }
 
-  def getEntHFileCells(entsDF: DataFrame)(implicit spark: SparkSession): RDD[(String, HFileCell)] = {
+  private def getEntHFileCells(entsDF: DataFrame)(implicit spark: SparkSession): RDD[(String, HFileCell)] = {
     import spark.implicits._
     val res: RDD[(String, HFileCell)] = entsDF.map(row => rowToEnt(row)).flatMap(identity).rdd
     res
-  }
-
-  def calculateRegion(dfWithPostcode: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
-                     (implicit spark: SparkSession): Dataset[Row] = {
-    //dfWithPostcode.withColumn("region",lit(""))
-    val partitions = dfWithPostcode.rdd.getNumPartitions
-    val step1DF = dfWithPostcode.drop("region")
-    val step2DF = step1DF.join(regionsByPostcodeDF, Seq("postcode"), "left_outer")
-    val step3DF = step2DF.select("*").where("region IS NULL")
-    val partial = step2DF.select("*").where("region IS NOT NULL")
-    val step4DF = step3DF.drop("region")
-    val step5DF = step4DF.select(col("*"), trim(substring(col("postcode"), 0, col("postcode").toString().length - 4)).as("postcodeout"))
-    val step6DF = step5DF.join(regionsByPostcodeShortDF, Seq("postcodeout"), "left_outer")
-    val step7DF = step6DF.drop("postcodeout")
-    val step8DF = step7DF.union(partial)
-    val step9DF = step8DF.na.fill(AssemblerConfiguration.DefaultRegion, Seq("region"))
-    val step10DF = step9DF.coalesce(partitions)
-    step10DF
-  }
-
-  def calculateWorkingProps(dfWithLegalStatus: DataFrame)(implicit spark: SparkSession): DataFrame = {
-    import dfWithLegalStatus.sqlContext.implicits.StringToColumn
-    import org.apache.spark.sql.functions.udf
-
-    def calculation = udf((legalStatus: String) => getWorkingPropsByLegalStatus(legalStatus))
-
-    dfWithLegalStatus.withColumn("working_props", calculation($"legal_status"))
-  }
-
-  /**
-    * requires working_props and paye_empees recalculated
-    **/
-  def calculateEmployment(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
-
-    df.createOrReplaceTempView("CALCULATEEMPLOYMENT")
-
-    val sql =
-      """ SELECT *,
-                 CAST(
-                      (CAST((CASE WHEN paye_empees is NULL THEN 0 ELSE paye_empees END) AS long) + CAST(working_props AS long))
-                     AS string) AS employment
-          FROM CALCULATEEMPLOYMENT
-    """.stripMargin
-
-    spark.sql(sql)
-  }
-
-  /**
-    * expects df with fields 'legal_status', 'postcode', 'paye_empees', 'working_props'
-    **/
-  def calculateDynamicValues(df: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
-                            (implicit spark: SparkSession): Dataset[Row] = {
-    val withWorkingProps = calculateWorkingProps(df)
-    val withEmployment = calculateEmployment(withWorkingProps)
-    calculateRegion(withEmployment, regionsByPostcodeDF, regionsByPostcodeShortDF)
   }
 
 }

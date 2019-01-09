@@ -90,10 +90,16 @@ object HBaseDao extends Serializable {
       .map(row => HFileRow(row._2))
   }
 
-  def linksTableName = s"${AssemblerConfiguration.linksTableName}"
-  def leusTableName = s"${AssemblerConfiguration.legalUnitsTableName}"
-  def lousTableName = s"${AssemblerConfiguration.localUnitsTableName}"
-  def rusTableName = s"${AssemblerConfiguration.reportingTableName}"
-  def entsTableName = s"${AssemblerConfiguration.enterpriseTableName}"
+  def linksTableName = s"${AssemblerConfiguration.HBaseLinksTableNamespace}:${AssemblerConfiguration.HBaseLinksTableName}_${AssemblerConfiguration.TimePeriod}"
+
+  def leusTableName = s"${AssemblerConfiguration.HBaseLegalUnitsNamespace}:${AssemblerConfiguration.HBaseLegalUnitsTableName}_${AssemblerConfiguration.TimePeriod}"
+
+  def lousTableName = s"${AssemblerConfiguration.HBaseLocalUnitsNamespace}:${AssemblerConfiguration.HBaseLocalUnitsTableName}_${AssemblerConfiguration.TimePeriod}"
+
+  def rusTableName = s"${AssemblerConfiguration.HBaseReportingUnitsNamespace}:${AssemblerConfiguration.HBaseReportingUnitsTableName}_${AssemblerConfiguration.TimePeriod}"
+
+  def entsTableName = s"${AssemblerConfiguration.HBaseEnterpriseTableNamespace}:${AssemblerConfiguration.HBaseEnterpriseTableName}_${AssemblerConfiguration.TimePeriod}"
+
+
 
 }

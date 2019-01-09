@@ -13,7 +13,7 @@ import org.apache.spark.sql.Row
   * |-- grp_turnover: long (nullable = true)
   * |-- ent_turnover: long (nullable = true)
   */
-//ern|paye_empees|paye_jobs|cntd_turnover|app_turnover|std_turnover|grp_turnover|ent_turnover
+
 case class Calculations(
                          ern: String, empl: Option[Long], jobs: Option[Int], contained: Option[Long],
                          apportioned: Option[Long], standard: Option[Long],
@@ -22,7 +22,6 @@ case class Calculations(
 
 object Calculations {
   def apply(row: Row): Calculations = {
-    val appd = row.getAs[Long]("app_turnover")
     new Calculations(
       row.getAs[String]("ern"),
       row.getOption[Long]("paye_empees"),

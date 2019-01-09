@@ -7,7 +7,7 @@ import model._
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import util.configuration.{Config, AssemblerConfiguration, AssemblerOptions}
+import util.configuration.AssemblerConfiguration
 import utils.Paths
 import utils.data.HFileTestUtils
 import utils.data.consistency.DataConsistencyCheck
@@ -15,7 +15,7 @@ import utils.data.existing.ExistingData
 
 import scala.reflect.io.File
 
-class TestNewPeriodClosureConsistencyCheck extends Paths with WordSpecLike with Matchers
+class TestNewPeriodConsistencyCheck extends Paths with WordSpecLike with Matchers
   with BeforeAndAfterAll with ExistingData with DataConsistencyCheck with HFileTestUtils {
 
   lazy val testDir = "newperiod"

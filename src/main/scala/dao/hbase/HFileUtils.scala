@@ -18,37 +18,7 @@ trait HFileUtils extends Serializable {
 
   val childPrefix = "c_"
   val parentPrefix = "p_"
-
-  def rowToEntCalculations(row: Row): Seq[(String, HFileCell)] = {
-    val ern = row.getStringOption("ern").get
-    val entKey = generateEntKey(ern)
-
-    Seq(
-      row.getStringOption("paye_empees").map(employees => createEnterpriseCell(ern, "paye_empees", employees)),
-      row.getStringOption("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs)),
-      row.getStringOption("app_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion)),
-      row.getStringOption("ent_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total)),
-      row.getStringOption("cntd_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString)),
-      row.getStringOption("std_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard)),
-      row.getStringOption("grp_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group))
-    ).collect { case Some(v) => v }
-  }
-
-  def rowToLouCalculations(row: Row): Option[(String, HFileCell)] = {
-    val lurn = row.getStringOption("lurn").get
-    val ern = row.getStringOption("ern").get
-
-    row.getStringOption("paye_empees").map(employees => createEnterpriseCell(ern, "employees", employees))
-  }
-
-  def entToLinks(row: Row): Seq[(String, HFileCell)] = {
-    val ern = row.getStringOption("ern").get
-    val entKey = generateEntKey(ern)
-    Seq(
-      createLinksRecord(entKey, "ern", enterprise)
-    )
-  }
-
+  
   def leuToLinks(row: Row): Seq[(String, HFileCell)] = {
     val ubrn = row.getStringOption("ubrn").get
     val ern = row.getStringOption("ern").get
@@ -89,7 +59,7 @@ trait HFileUtils extends Serializable {
     )
   }
 
-  def rowToLegalUnitLinks(entKey: String, ubrn: String, ern: String): Seq[(String, HFileCell)] = {
+  private def rowToLegalUnitLinks(entKey: String, ubrn: String, ern: String): Seq[(String, HFileCell)] = {
     val leuKey = generateLegalUnitLinksKey(ubrn)
 
     Seq(
@@ -241,15 +211,20 @@ trait HFileUtils extends Serializable {
     createLinksRecord(generateLinkKey(paye, payeValue), s"$parentPrefix$legalUnit", ubrn.toString)
   ))).getOrElse(Seq[(String, HFileCell)]())
 
-  private def createLinksRecord(key: String, column: String, value: String): (String, HFileCell) = createRecord(key, AssemblerConfiguration.HBaseLinksColumnFamily, column, value)
+  private def createLinksRecord(key: String, column: String, value: String): (String, HFileCell) =
+    createRecord(key, AssemblerConfiguration.HBaseLinksColumnFamily, column, value)
 
-  def createEnterpriseCell(ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateEntKey(ern), AssemblerConfiguration.HBaseEnterpriseColumnFamily, column, value)
+  private def createEnterpriseCell(ern: String, column: String, value: String): (String, HFileCell) =
+    createRecord(generateEntKey(ern), AssemblerConfiguration.HBaseEnterpriseColumnFamily, column, value)
 
-  def createLocalUnitCell(lurn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLocalUnitKey(lurn, ern), AssemblerConfiguration.HBaseLocalUnitsColumnFamily, column, value)
+  private def createLocalUnitCell(lurn: String, ern: String, column: String, value: String): (String, HFileCell) =
+    createRecord(generateLocalUnitKey(lurn, ern), AssemblerConfiguration.HBaseLocalUnitsColumnFamily, column, value)
 
-  def createLegalUnitCell(ubrn: String, ern: String, column: String, value: String): (String, HFileCell) = createRecord(generateLegalUnitKey(ubrn, ern), AssemblerConfiguration.HBaseLegalUnitsColumnFamily, column, value)
+  private def createLegalUnitCell(ubrn: String, ern: String, column: String, value: String): (String, HFileCell) =
+    createRecord(generateLegalUnitKey(ubrn, ern), AssemblerConfiguration.HBaseLegalUnitsColumnFamily, column, value)
 
-  private def createRecord(key: String, columnFamily: String, column: String, value: String) = key -> HFileCell(key, columnFamily, column, value)
+  private def createRecord(key: String, columnFamily: String, column: String, value: String) =
+    key -> HFileCell(key, columnFamily, column, value)
 
   private def generateLocalUnitKey(lurn: String, ern: String) = s"${ern.reverse}~$lurn"
 
@@ -263,15 +238,7 @@ trait HFileUtils extends Serializable {
 
   private def generateLegalUnitLinksKey(ubrn: String) = generateLinkKey(ubrn, legalUnit)
 
-  private def generateEntLinkKey(ern: String) = generateLinkKey(ern, enterprise)
-
   private def generateLinkKey(id: String, prefix: String): String = s"$prefix~$id"
-
-  def getWorkingPropsByLegalStatus(legalStatus: String): String = legalStatus match {
-    case "2" => "1"
-    case "3" => "2"
-    case _ => AssemblerConfiguration.DefaultWorkingProps
-  }
 
   def generatePrn(row: Row): String = {
     val rnd = new scala.util.Random

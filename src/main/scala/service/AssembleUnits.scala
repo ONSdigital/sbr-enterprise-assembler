@@ -1,15 +1,16 @@
 package service
 
 import dao.DaoUtils._
+import dao.hbase.HFileUtils
 import dao.hive.HiveDao
 import model.Schemas
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col
-import service.calculations.SmlAdminDataCalculator
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import service.calculations.{CalculateAdminData, CalculateDynamicValues, CalculateEmployment, CalculateRegion}
 import util.configuration.AssemblerConfiguration
 import util.configuration.AssemblerHBaseConfiguration._
 
@@ -74,15 +75,15 @@ trait AssembleUnits extends BaseUnits with Serializable {
   def getAllEntsCalculated(allLinksLusDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                           (implicit spark: SparkSession): Dataset[Row] = {
 
-    val calculatedDF = SmlAdminDataCalculator.calculate(allLinksLusDF).castAllToString
+    val calculatedDF = CalculateAdminData(allLinksLusDF).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(hbaseConfiguration)
 
     val existingEntCalculatedDF: DataFrame = {
       val calculatedExistingEnt = existingEntDF.join(calculatedDF, Seq("ern"), "left_outer")
-      val existingEntsWithRegionRecalculatedDF = calculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF)
-      val existingEntsWithEmploymentRecalculatedDF = calculateEmployment(existingEntsWithRegionRecalculatedDF)
+      val existingEntsWithRegionRecalculatedDF = CalculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF)
+      val existingEntsWithEmploymentRecalculatedDF = CalculateEmployment(existingEntsWithRegionRecalculatedDF)
       val withReorderedColumns = {
         val columns = Schemas.completeEntSchema.fieldNames
         existingEntsWithEmploymentRecalculatedDF.select(columns.head, columns.tail: _*)
@@ -92,7 +93,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")), Seq("ern"), "left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"), "left_outer")
 
-    val newLeusWithWorkingPropsAndRegionDF = calculateDynamicValues(newLEUsCalculatedDF, regionsByPostcodeDF, regionsByPostcodeShortDF)
+    val newLeusWithWorkingPropsAndRegionDF = CalculateDynamicValues(newLEUsCalculatedDF, regionsByPostcodeDF, regionsByPostcodeShortDF)
 
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF).rdd, Schemas.completeEntSchema)
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF)
@@ -141,7 +142,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
 
     val existingLous: DataFrame = getExistingLousDF(confs)
     val lousWithEmploymentReCalculated = existingLous.drop("employment").join(ruDF.select(col("rurn"), col("employment")), Seq("rurn"), "inner")
-    val lousWithRegionRecalcuated = calculateRegion(lousWithEmploymentReCalculated, regionsByPostcodeDF, regionsByPostcodeShortDF)
+    val lousWithRegionRecalcuated = CalculateRegion(lousWithEmploymentReCalculated, regionsByPostcodeDF, regionsByPostcodeShortDF)
 
     lousWithRegionRecalcuated
   }
@@ -152,7 +153,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val existingRUs: DataFrame = getExistingRusDF(confs)
 
     val columns = Schemas.ruRowSchema.fieldNames
-    val ruWithRegion: DataFrame = calculateRegion(existingRUs, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
+    val ruWithRegion: DataFrame = CalculateRegion(existingRUs, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
     val entsWithoutRus: DataFrame = allEntsDF.join(ruWithRegion.select("ern"), Seq("ern"), "left_anti")
     val newAndMissingRusDF: DataFrame = createNewRus(entsWithoutRus).select(columns.head, columns.tail: _*)
     val res = ruWithRegion.union(newAndMissingRusDF)
@@ -165,7 +166,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
 
     val columns = Schemas.louRowSchema.fieldNames
     val existingLous: DataFrame = getExistingLousDF(confs)
-    val existingLousWithRegion: DataFrame = calculateRegion(existingLous, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
+    val existingLousWithRegion: DataFrame = CalculateRegion(existingLous, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
 
     val rusWithoutLous: DataFrame = allRus.join(existingLousWithRegion.select("rurn"), Seq("rurn"), "left_anti")
     val newAndMissingLousDF: DataFrame = createNewLous(rusWithoutLous)
@@ -178,6 +179,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
     existingLEUs.union(newLeusDF)
   }
+
 }
 
 object AssembleUnits extends AssembleUnits

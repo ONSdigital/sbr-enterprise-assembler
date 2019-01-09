@@ -25,7 +25,7 @@ trait HFileTestUtils {
     val records: RDD[HFileRow] = spark.sparkContext.parallelize(rows).map(row => row.copy(cells = row.cells.toList.sortBy(_.column)))
     val cells: RDD[(String, HFileCell)] = records.flatMap(_.toHFileCellRow(colFamily))
 
-    val tableName = TableName.valueOf(s"${AssemblerConfiguration.linksTableName}")
+    val tableName = TableName.valueOf(s"${AssemblerConfiguration.HBaseLinksTableNamespace}:${AssemblerConfiguration.HBaseLinksTableName}_${AssemblerConfiguration.TimePeriod}")
     val regionLocator = connection.getRegionLocator(tableName)
     val partitioner = HFilePartitioner(connection.getConfiguration, regionLocator.getStartKeys, 1)
 

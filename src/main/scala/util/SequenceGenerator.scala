@@ -7,16 +7,9 @@ import org.apache.curator.RetryPolicy
 import org.apache.curator.framework.recipes.atomic.{AtomicValue, DistributedAtomicLong}
 import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
 import org.apache.curator.retry.{ExponentialBackoffRetry, RetryOneTime}
-import util.configuration.Config
 import util.configuration.AssemblerConfiguration._
 /**
-  * Generates a unique sequence number for Hbase/Hive
-  *
-  * @param hostName             the zookeeper host and port
-  * @param resultFormat         the format of the results. The default is 11%07d, which corresponds to the SBR requirement
-  * @param path                 the Zookeeper path to store the counter value
-  * @param sessionTimeoutSec    session timeout in seconds
-  * @param connectionTimeoutSec connection timeout in seconds
+  * Generates a unique sequence number for HBase/Hive
   */
 object SequenceGenerator {
 

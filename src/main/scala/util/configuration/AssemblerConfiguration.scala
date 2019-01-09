@@ -4,12 +4,6 @@ object AssemblerConfiguration {
 
   val TimePeriod: String = Config(AssemblerOptions.TimePeriod)
 
-  val enterpriseTableName: String = Config("app.enterpriseTableName")
-  val linksTableName: String = Config("app.linksTableName")
-  val legalUnitsTableName: String = Config("app.legalUnitsTableName")
-  val reportingTableName: String = Config("app.reportingTableName")
-  val localUnitsTableName: String = Config("app.localUnitsTableName")
-
   val HBaseLinksTableNamespace: String = Config(AssemblerOptions.HBaseLinksTableNamespace)
   val HBaseLinksTableName: String = Config(AssemblerOptions.HBaseLinksTableName)
   val HBaseLinksColumnFamily: String = Config(AssemblerOptions.HBaseLinksColumnFamily)
