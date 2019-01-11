@@ -20,12 +20,12 @@ object AddNewPeriodDataService {
 
           AssembleUnits.createUnitsHfiles
 
-          HBaseDao.truncateTables
-          HBaseDao.loadLinksHFile
-          HBaseDao.loadEnterprisesHFile
-          HBaseDao.loadLousHFile
-          HBaseDao.loadLeusHFile
-          HBaseDao.loadRusHFile
+//          HBaseDao.truncateTables
+//          HBaseDao.loadLinksHFile
+//          HBaseDao.loadEnterprisesHFile
+//          HBaseDao.loadLousHFile
+//          HBaseDao.loadLeusHFile
+//          HBaseDao.loadRusHFile
       }
   }
 }

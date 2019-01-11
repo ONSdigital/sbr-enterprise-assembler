@@ -10,10 +10,11 @@ object CalculateDynamicValues {
     **/
   def apply(df: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                (implicit spark: SparkSession): Dataset[Row] = {
-    val withWorkingProps = calculateWorkingProps(df)
-    val withEmployment = CalculateEmployment(withWorkingProps)
+    val partitions = spark.sparkContext.defaultParallelism
+    val withWorkingProps = calculateWorkingProps(df).coalesce(partitions)
+    val withEmployment = CalculateEmployment(withWorkingProps).coalesce(partitions)
     CalculateRegion(withEmployment, regionsByPostcodeDF, regionsByPostcodeShortDF)
-  }
+}
 
   private def calculateWorkingProps(dfWithLegalStatus: DataFrame)(implicit spark: SparkSession): DataFrame = {
     import dfWithLegalStatus.sqlContext.implicits.StringToColumn

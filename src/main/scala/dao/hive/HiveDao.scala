@@ -3,7 +3,7 @@ package dao.hive
 import org.apache.spark.sql._
 import _root_.util.configuration.AssemblerConfiguration
 
-trait HiveDao {
+object HiveDao {
 
   def getRegions()(implicit spark: SparkSession): DataFrame =
     spark.sql(s"select postcode,gor as region from ${AssemblerConfiguration.HiveDBName}.${AssemblerConfiguration.HiveTableName}")
@@ -13,4 +13,3 @@ trait HiveDao {
 
 }
 
-object HiveDao extends HiveDao
