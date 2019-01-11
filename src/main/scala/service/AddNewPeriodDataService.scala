@@ -17,15 +17,8 @@ object AddNewPeriodDataService {
     implicit ss: SparkSession =>
       HBaseConnectionManager.withHbaseConnection {
         implicit con: Connection =>
-
-          AssembleUnits.createUnitsHfiles
-
-//          HBaseDao.truncateTables
-//          HBaseDao.loadLinksHFile
-//          HBaseDao.loadEnterprisesHFile
-//          HBaseDao.loadLousHFile
-//          HBaseDao.loadLeusHFile
-//          HBaseDao.loadRusHFile
+          AssembleUnits.createHfiles
+          AssembleUnits.loadHFiles
       }
   }
 }

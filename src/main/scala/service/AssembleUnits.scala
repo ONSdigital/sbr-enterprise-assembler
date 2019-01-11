@@ -5,9 +5,11 @@ import java.util.Calendar
 import dao.DaoUtils._
 import dao.hbase.HBaseDao
 import dao.hive.HiveDao
+import dao.parquet.ParquetDao.getClass
 import model.Schemas
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
+import org.apache.log4j.Logger
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.col
@@ -21,7 +23,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
 
-  def createUnitsHfiles(implicit spark: SparkSession, con: Connection): Unit = {
+  def createHfiles(implicit spark: SparkSession, con: Connection): Unit = {
 
     val regionsByPostcodeDF: DataFrame = if (AssemblerConfiguration.isLocal) {
       spark.read.option("header", "true").csv(AssemblerConfiguration.PathToGeo).select("pcds", "rgn").toDF("postcode", "region").cache()
@@ -38,85 +40,38 @@ trait AssembleUnits extends BaseUnits with Serializable {
     regionsByPostcodeDF.collect()
 
     val allLinksLeusDF = getAllLinksLUsDF().cache()
-    println(s"Partitions size: allLinksLeusDF: ${allLinksLeusDF.rdd.partitions.length}")
 
     val allEntsDF = getAllEntsCalculated(allLinksLeusDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
-    println(s"Partitions size: allEntsDF: ${allEntsDF.rdd.partitions.length}")
 
     val allRusDF = getAllRus(allEntsDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
-    println(s"Partitions size: allRusDF: ${allRusDF.rdd.partitions.length}")
 
     val allLousDF = getAllLous(allRusDF, regionsByPostcodeDF, regionsByPostcodeShortDF, hbaseConfiguration).cache()
-    println(s"Partitions size: allLousDF: ${allLousDF.rdd.partitions.length}")
 
     val allLeusDF = getAllLeus(hbaseConfiguration).cache()
-    println(s"Partitions size: allLeusDF: ${allLeusDF.rdd.partitions.length}")
 
-    HBaseDao.truncateTables
+    saveEnts(allEntsDF)
+    saveRus(allRusDF)
+    saveLous(allLousDF)
+    saveLeus(allLeusDF)
+    saveLinks(allLousDF, allRusDF, allLinksLeusDF)
 
-    val t1 = new Thread {
-      override def run(): Unit = {
-        saveEnts(allEntsDF)
-        HBaseDao.loadEnterprisesHFile
-      }
-    }
-
-    val t2 = new Thread {
-      override def run(): Unit = {
-        saveRus(allRusDF)
-        HBaseDao.loadRusHFile
-      }
-    }
-
-    val t3 = new Thread {
-      override def run(): Unit = {
-        saveLous(allLousDF)
-        HBaseDao.loadLousHFile
-      }
-    }
-
-    val t4 = new Thread {
-      override def run(): Unit = {
-        saveLeus(allLeusDF)
-        HBaseDao.loadLeusHFile
-      }
-    }
-
-    val t5 = new Thread {
-      override def run(): Unit = {
-        saveLinks(allLousDF, allRusDF, allLinksLeusDF)
-        HBaseDao.loadLinksHFile
-      }
-    }
-
-    println(s"${Calendar.getInstance.getTime} --> Start threads")
-    t1.start()
-    t2.start()
-    t3.start()
-    t4.start()
-    t5.start()
-    println(s"${Calendar.getInstance.getTime} --> Wait for threads")
-    t1.join()
-    t2.join()
-    t3.join()
-    t4.join()
-    t5.join()
-    println(s"${Calendar.getInstance.getTime} --> Threads done")
-    //saveEnts(allEntsDF)
-    //saveRus(allRusDF)
-    //saveLous(allLousDF)
-    //saveLeus(allLeusDF)
-    //saveLinks(allLousDF, allRusDF, allLinksLeusDF)
-
-    println(s"${Calendar.getInstance.getTime} --> unpersist start")
     allLeusDF.unpersist()
     allLousDF.unpersist()
     allRusDF.unpersist()
     allEntsDF.unpersist()
     allLinksLeusDF.unpersist()
     regionsByPostcodeDF.unpersist()
+  }
 
-    println(s"${Calendar.getInstance.getTime} --> unpersist done")
+  def loadHFiles()(implicit spark: SparkSession, con: Connection) : Unit = {
+    println(s"${Calendar.getInstance.getTime} --> Start load")
+    HBaseDao.truncateTables
+    HBaseDao.loadLinksHFile
+    HBaseDao.loadEnterprisesHFile
+    HBaseDao.loadLousHFile
+    HBaseDao.loadLeusHFile
+    HBaseDao.loadRusHFile
+    println(s"${Calendar.getInstance.getTime} --> End load")
   }
 
   private def getAllLinksLUsDF()(implicit spark: SparkSession): DataFrame = {
@@ -138,55 +93,36 @@ trait AssembleUnits extends BaseUnits with Serializable {
 
     val partitions = spark.sparkContext.defaultParallelism
 
-    println(s"${Calendar.getInstance.getTime} --> Starting: parallelism is: $partitions")
     val calculatedDF = CalculateAdminData(allLinksLusDF).castAllToString
     calculatedDF.cache()
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: calculatedDF: ${calculatedDF.rdd.partitions.length}")
 
     val existingEntDF = getExistingEntsDF(hbaseConfiguration)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: existingEntDF: ${existingEntDF.rdd.partitions.length}")
 
     val existingEntCalculatedDF: DataFrame = {
       val calculatedExistingEnt = existingEntDF.join(calculatedDF, Seq("ern"), "left_outer").coalesce(partitions)
-      println(s"${Calendar.getInstance.getTime} --> Partitions size: calculatedExistingEnt: ${calculatedExistingEnt.rdd.partitions.length}")
-
       val existingEntsWithRegionRecalculatedDF = CalculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF).coalesce(partitions)
-      println(s"${Calendar.getInstance.getTime} --> Partitions size: existingEntsWithRegionRecalculatedDF: ${existingEntsWithRegionRecalculatedDF.rdd.partitions.length}")
-
       val existingEntsWithEmploymentRecalculatedDF = CalculateEmployment(existingEntsWithRegionRecalculatedDF).coalesce(partitions)
-      println(s"${Calendar.getInstance.getTime} --> Partitions size: existingEntsWithEmploymentRecalculatedDF: ${existingEntsWithEmploymentRecalculatedDF.rdd.partitions.length}")
 
       val withReorderedColumns = {
         val columns = Schemas.completeEntSchema.fieldNames
         existingEntsWithEmploymentRecalculatedDF.select(columns.head, columns.tail: _*)
       }
-      println(s"${Calendar.getInstance.getTime} --> Partitions size: withReorderedColumns: ${withReorderedColumns.rdd.partitions.length}")
 
       spark.createDataFrame(withReorderedColumns.rdd, Schemas.completeEntSchema)
     }.coalesce(partitions)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: existingEntCalculatedDF: ${existingEntCalculatedDF.rdd.partitions.length}")
 
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")), Seq("ern"), "left_anti").coalesce(partitions)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: newLEUsDF: ${newLEUsDF.rdd.partitions.length}")
-
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"), "left_outer").coalesce(partitions)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: newLEUsCalculatedDF: ${newLEUsCalculatedDF.rdd.partitions.length}")
-
     val newLeusWithWorkingPropsAndRegionDF = CalculateDynamicValues(newLEUsCalculatedDF, regionsByPostcodeDF, regionsByPostcodeShortDF)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: newLeusWithWorkingPropsAndRegionDF: ${newLeusWithWorkingPropsAndRegionDF.rdd.partitions.length}")
-
     val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF).rdd, Schemas.completeEntSchema).coalesce(partitions)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: newEntsCalculatedDF: ${newEntsCalculatedDF.rdd.partitions.length}")
 
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF)
     newLegalUnitsDF.cache() //TODO: check if this is actually needed
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: newLegalUnitsDF: ${newLegalUnitsDF.rdd.partitions.length}")
 
     val allEntsDF = existingEntCalculatedDF.union(newEntsCalculatedDF)
-    println(s"${Calendar.getInstance.getTime} --> Partitions size: allEntsDF: ${allEntsDF.rdd.partitions.length}")
     calculatedDF.unpersist()
-    allEntsDF.repartition(partitions)
+    allEntsDF.coalesce(partitions)
   }
 
   private def getNewLeusDF(newLEUsCalculatedDF: DataFrame)
@@ -216,7 +152,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
       row.getValueOrNull("uprn")
     ), Schemas.leuRowSchema))
 
-    val partitions = spark.sparkContext.defaultParallelism * 2
+    val partitions = spark.sparkContext.defaultParallelism
     spark.createDataFrame(newLegalUnitsDS, Schemas.leuRowSchema).coalesce(partitions)
 
   }
