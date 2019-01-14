@@ -7,7 +7,7 @@
 SET PARTITIONS=24
 SET CORES=12
 SET SPARK=\users\paul\spark\bin\spark-submit
-SET JAR=~\users\paul\ONS\sbr-enterprise-assembler\target\scala-2.11\sbr-enterprise-assembler-assembly-1.1.jar
+SET JAR=\users\paul\ONS\sbr-enterprise-assembler\target\scala-2.11\sbr-enterprise-assembler-assembly-1.1.jar
 
 %SPARK% --master local[%CORES%] ^
    --conf spark.sql.shuffle.partitions=%PARTITIONS% ^

@@ -22,5 +22,6 @@ object AssemblerHBaseConfiguration {
   hbaseConfiguration.setInt(AssemblerOptions.HBaseCellsScanned, AssemblerConfiguration.HBaseCellsScanned.toInt)
 
   hbaseConfiguration.set(AssemblerOptions.HFilesCreateSuccessFiles, AssemblerConfiguration.HFilesCreateSuccessFiles)
+  hbaseConfiguration.set("hbase.loadincremental.threads.max", "25")
 
 }

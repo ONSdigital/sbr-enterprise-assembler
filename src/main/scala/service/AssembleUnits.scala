@@ -56,12 +56,12 @@ trait AssembleUnits extends BaseUnits with Serializable {
     saveLeus(allLeusDF)
     saveLinks(allLousDF, allRusDF, allLinksLeusDF)
 
-    allLeusDF.unpersist()
-    allLousDF.unpersist()
-    allRusDF.unpersist()
-    allEntsDF.unpersist()
-    allLinksLeusDF.unpersist()
-    regionsByPostcodeDF.unpersist()
+    allLeusDF.unpersist(false)
+    allLousDF.unpersist(false)
+    allRusDF.unpersist(false)
+    allEntsDF.unpersist(false)
+    allLinksLeusDF.unpersist(false)
+    regionsByPostcodeDF.unpersist(false)
     log.info("HFiles created")
   }
 
@@ -120,7 +120,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
     newLegalUnitsDF.createOrReplaceTempView(newLeusViewName)
 
     val allEntsDF = existingEntCalculatedDF.union(newEntsCalculatedDF)
-    calculatedDF.unpersist()
+    calculatedDF.unpersist(false)
     allEntsDF
   }
 
