@@ -6,11 +6,11 @@ import util.configuration.AssemblerConfiguration
 
 object ParquetDao extends Serializable {
 
-  val logger: Logger = Logger.getLogger(getClass.getName)
+  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
 
   def jsonToParquet(jsonFilePath: String)(implicit spark: SparkSession): Unit = {
     spark.read.json(jsonFilePath).write.parquet(AssemblerConfiguration.PathToParquet)
-    logger.info(s"Wrote parquet file: ${AssemblerConfiguration.PathToParquet}")
+    log.info(s"Wrote parquet file: ${AssemblerConfiguration.PathToParquet}")
   }
 
 }

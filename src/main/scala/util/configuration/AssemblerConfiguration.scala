@@ -66,6 +66,8 @@ object AssemblerConfiguration {
 
   val HFilesPerRegion = Config(AssemblerOptions.HFilesPerRegion)
 
+  val HFilesCreateSuccessFiles = Config(AssemblerOptions.HFilesCreateSuccessFiles)
+
   val HBaseRPCTimeout = Config(AssemblerOptions.HBaseRPCTimeout)
   val HBaseClientScannerTimeout = Config(AssemblerOptions.HBaseClientScannerTimeout)
   val HBaseCellsScanned = Config(AssemblerOptions.HBaseCellsScanned)
@@ -78,5 +80,7 @@ object AssemblerConfiguration {
   def isLocal: Boolean = Config(AssemblerOptions.Environment) == Local
   def inCluster: Boolean = Config(AssemblerOptions.Environment) == Cluster
   def createParquetFile: Boolean = CreateParquet == "true"
+
+  def configureDefaultPartitions: Boolean = Config(AssemblerOptions.ConfigureDefaultPartitions) == "true"
 
 }

@@ -217,8 +217,7 @@ trait BaseUnits extends HFileUtils with Serializable {
   }
 
   def saveEnts(entsDF: DataFrame)(implicit spark: SparkSession): Unit = {
-    val rep = entsDF.coalesce(1)
-    val hfileCells: RDD[(String, HFileCell)] = getEntHFileCells(rep)
+    val hfileCells: RDD[(String, HFileCell)] = getEntHFileCells(entsDF)
     val a: RDD[(String, HFileCell)] = hfileCells.filter(_._2.value != null)
     val b: RDD[(String, HFileCell)] = a.sortBy(t => t._2.key.toString + t._2.qualifier.toString)
     val c: RDD[(ImmutableBytesWritable, KeyValue)] = b.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
@@ -229,8 +228,7 @@ trait BaseUnits extends HFileUtils with Serializable {
 
   def saveLous(lousDF: DataFrame)(implicit spark: SparkSession): Unit = {
     import spark.implicits._
-    val rep = lousDF.coalesce(1)
-    val hfileCells = rep.map(row => rowToLocalUnit(row)).flatMap(identity).rdd
+    val hfileCells = lousDF.map(row => rowToLocalUnit(row)).flatMap(identity).rdd
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToLocalUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
@@ -238,8 +236,7 @@ trait BaseUnits extends HFileUtils with Serializable {
 
   def saveLeus(leusDF: DataFrame)(implicit spark: SparkSession): Unit = {
     import spark.implicits._
-    val rep = leusDF.coalesce(1)
-    val hfileCells = rep.map(row => rowToLegalUnit(row)).flatMap(identity).rdd
+    val hfileCells = leusDF.map(row => rowToLegalUnit(row)).flatMap(identity).rdd
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToLegalUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
@@ -247,8 +244,7 @@ trait BaseUnits extends HFileUtils with Serializable {
 
   def saveRus(rusDF: DataFrame)(implicit spark: SparkSession): Unit = {
     import spark.implicits._
-    val rep = rusDF.coalesce(1)
-    val hfileCells = rep.map(row => rowToReportingUnit(row)).flatMap(identity).rdd
+    val hfileCells = rusDF.map(row => rowToReportingUnit(row)).flatMap(identity).rdd
     hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
       .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
       .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToReportingUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)

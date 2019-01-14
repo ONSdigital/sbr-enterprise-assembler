@@ -36,7 +36,7 @@ class TestNewPeriodConsistencyCheck extends Paths with WordSpecLike with Matcher
       implicit connection: Connection =>
         createRecords
         ParquetDao.jsonToParquet(jsonFilePath)(spark)
-        MockUnits.createUnitsHfiles(spark, connection)
+        MockUnits.createHfiles(spark, connection)
     }
     spark.stop
   }

@@ -1,15 +1,15 @@
 package service.mocks
 
-import service.mocks.MockCreateNewPeriodHBaseDao.adjustPathToExistingRecords
+import dao.DaoUtils._
+import dao.hbase.HBaseDataReader.readEntitiesFromHFile
 import model.{HFileRow, Schemas}
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import dao.hbase.HBaseDataReader.readEntitiesFromHFile
-import dao.DaoUtils._
-import service.AssembleUnits
+import service.mocks.MockCreateNewPeriodHBaseDao.adjustPathToExistingRecords
 import util.configuration.AssemblerConfiguration
 import utils.data.TestIds
+import service.AssembleUnits
 
 object MockAssembleUnits extends AssembleUnits with TestIds {
 

@@ -100,6 +100,4 @@ object HBaseDao extends Serializable {
 
   def entsTableName = s"${AssemblerConfiguration.HBaseEnterpriseTableNamespace}:${AssemblerConfiguration.HBaseEnterpriseTableName}_${AssemblerConfiguration.TimePeriod}"
 
-
-
 }

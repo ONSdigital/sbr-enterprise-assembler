@@ -35,7 +35,7 @@ class TestAddNewPeriodWithCalculations extends  Paths with WordSpecLike with Mat
       implicit connection: Connection =>
         createRecords
         ParquetDao.jsonToParquet(jsonFilePath)(spark)
-        MockAssembleUnits.createUnitsHfiles(spark, connection)
+        MockAssembleUnits.createHfiles(spark, connection)
     }
     spark.stop
   }

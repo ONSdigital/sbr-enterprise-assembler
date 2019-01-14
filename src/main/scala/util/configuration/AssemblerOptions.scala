@@ -60,10 +60,13 @@ protected object AssemblerOptions {
   val HBaseRPCTimeout = "hbase.rpc.timeout"
   val HBaseClientScannerTimeout = "hbase.client.scanner.timeout.period"
   val HBaseCellsScanned = "hbase.cells.scanned.per.heartbeat.check"
+  val HFilesCreateSuccessFiles = "mapreduce.fileoutputcommitter.marksuccessfuljobs"
 
   val Environment = "app.environment"
 
   val BIFilePath = "app.BIFilePath"
   val DefaultPRN = "app.defaultPRN"
   val DefaultWorkingProps = "app.defaultWorkingProps"
+
+  val ConfigureDefaultPartitions = "app.configureDefaultPartitions"
 }

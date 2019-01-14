@@ -1,11 +1,8 @@
 package service
 
-import java.util.Calendar
-
 import dao.DaoUtils._
 import dao.hbase.HBaseDao
 import dao.hive.HiveDao
-import dao.parquet.ParquetDao.getClass
 import model.Schemas
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
@@ -23,7 +20,11 @@ trait AssembleUnits extends BaseUnits with Serializable {
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
 
+  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
+
   def createHfiles(implicit spark: SparkSession, con: Connection): Unit = {
+
+    log.info("Creating HFiles")
 
     val regionsByPostcodeDF: DataFrame = if (AssemblerConfiguration.isLocal) {
       spark.read.option("header", "true").csv(AssemblerConfiguration.PathToGeo).select("pcds", "rgn").toDF("postcode", "region").cache()
@@ -61,37 +62,35 @@ trait AssembleUnits extends BaseUnits with Serializable {
     allEntsDF.unpersist()
     allLinksLeusDF.unpersist()
     regionsByPostcodeDF.unpersist()
+    log.info("HFiles created")
   }
 
   def loadHFiles()(implicit spark: SparkSession, con: Connection) : Unit = {
-    println(s"${Calendar.getInstance.getTime} --> Start load")
+    log.info("Start load to HBase")
     HBaseDao.truncateTables
     HBaseDao.loadLinksHFile
     HBaseDao.loadEnterprisesHFile
     HBaseDao.loadLousHFile
     HBaseDao.loadLeusHFile
     HBaseDao.loadRusHFile
-    println(s"${Calendar.getInstance.getTime} --> End load")
+    log.info("End load to HBase")
   }
 
   private def getAllLinksLUsDF()(implicit spark: SparkSession): DataFrame = {
 
-    val partitions = spark.sparkContext.defaultParallelism * 2
-    val incomingBiDataDF: DataFrame = getIncomingBiData().coalesce(partitions)
+    val incomingBiDataDF: DataFrame = getIncomingBiData()
 
-    val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(hbaseConfiguration).coalesce(partitions)
+    val existingLinksLeusDF: DataFrame = getExistingLinksLeusDF(hbaseConfiguration)
 
     val joinedLUs = incomingBiDataDF.join(
       existingLinksLeusDF.select("ubrn", "ern"),
-      Seq("ubrn"), "left_outer").coalesce(partitions)
+      Seq("ubrn"), "left_outer")
 
-    getAllLUs(joinedLUs).coalesce(partitions)
+    getAllLUs(joinedLUs)
   }
 
   private def getAllEntsCalculated(allLinksLusDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                                   (implicit spark: SparkSession): Dataset[Row] = {
-
-    val partitions = spark.sparkContext.defaultParallelism
 
     val calculatedDF = CalculateAdminData(allLinksLusDF).castAllToString
     calculatedDF.cache()
@@ -99,9 +98,9 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val existingEntDF = getExistingEntsDF(hbaseConfiguration)
 
     val existingEntCalculatedDF: DataFrame = {
-      val calculatedExistingEnt = existingEntDF.join(calculatedDF, Seq("ern"), "left_outer").coalesce(partitions)
-      val existingEntsWithRegionRecalculatedDF = CalculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF).coalesce(partitions)
-      val existingEntsWithEmploymentRecalculatedDF = CalculateEmployment(existingEntsWithRegionRecalculatedDF).coalesce(partitions)
+      val calculatedExistingEnt = existingEntDF.join(calculatedDF, Seq("ern"), "left_outer")
+      val existingEntsWithRegionRecalculatedDF = CalculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF)
+      val existingEntsWithEmploymentRecalculatedDF = CalculateEmployment(existingEntsWithRegionRecalculatedDF)
 
       val withReorderedColumns = {
         val columns = Schemas.completeEntSchema.fieldNames
@@ -109,12 +108,12 @@ trait AssembleUnits extends BaseUnits with Serializable {
       }
 
       spark.createDataFrame(withReorderedColumns.rdd, Schemas.completeEntSchema)
-    }.coalesce(partitions)
+    }
 
-    val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")), Seq("ern"), "left_anti").coalesce(partitions)
-    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"), "left_outer").coalesce(partitions)
+    val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")), Seq("ern"), "left_anti")
+    val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"), "left_outer")
     val newLeusWithWorkingPropsAndRegionDF = CalculateDynamicValues(newLEUsCalculatedDF, regionsByPostcodeDF, regionsByPostcodeShortDF)
-    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF).rdd, Schemas.completeEntSchema).coalesce(partitions)
+    val newEntsCalculatedDF = spark.createDataFrame(createNewEntsWithCalculations(newLeusWithWorkingPropsAndRegionDF).rdd, Schemas.completeEntSchema)
 
     val newLegalUnitsDF: DataFrame = getNewLeusDF(newLeusWithWorkingPropsAndRegionDF)
     newLegalUnitsDF.cache() //TODO: check if this is actually needed
@@ -122,7 +121,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
 
     val allEntsDF = existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist()
-    allEntsDF.coalesce(partitions)
+    allEntsDF
   }
 
   private def getNewLeusDF(newLEUsCalculatedDF: DataFrame)
@@ -152,8 +151,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
       row.getValueOrNull("uprn")
     ), Schemas.leuRowSchema))
 
-    val partitions = spark.sparkContext.defaultParallelism
-    spark.createDataFrame(newLegalUnitsDS, Schemas.leuRowSchema).coalesce(partitions)
+    spark.createDataFrame(newLegalUnitsDS, Schemas.leuRowSchema)
 
   }
 
@@ -161,13 +159,12 @@ trait AssembleUnits extends BaseUnits with Serializable {
                        (implicit spark: SparkSession, confs: Configuration): Dataset[Row] = {
 
     val existingRUs: DataFrame = getExistingRusDF(confs)
-    val partitions = spark.sparkContext.defaultParallelism
 
     val columns = Schemas.ruRowSchema.fieldNames
     val ruWithRegion: DataFrame = CalculateRegion(existingRUs, regionsByPostcodeDF, regionsByPostcodeShortDF).select(columns.head, columns.tail: _*)
     val entsWithoutRus: DataFrame = allEntsDF.join(ruWithRegion.select("ern"), Seq("ern"), "left_anti")
     val newAndMissingRusDF: DataFrame = createNewRus(entsWithoutRus).select(columns.head, columns.tail: _*)
-    val res = ruWithRegion.union(newAndMissingRusDF).coalesce(partitions)
+    val res = ruWithRegion.union(newAndMissingRusDF)
 
     res
   }
@@ -182,15 +179,13 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val rusWithoutLous: DataFrame = allRus.join(existingLousWithRegion.select("rurn"), Seq("rurn"), "left_anti")
     val newAndMissingLousDF: DataFrame = createNewLous(rusWithoutLous)
 
-    val partitions = spark.sparkContext.defaultParallelism
-    existingLousWithRegion.union(newAndMissingLousDF).coalesce(partitions)
+    existingLousWithRegion.union(newAndMissingLousDF)
   }
 
   private def getAllLeus(confs: Configuration)(implicit spark: SparkSession): Dataset[Row] = {
-    val partitions = spark.sparkContext.defaultParallelism
     val existingLEUs: DataFrame = getExistingLeusDF(confs)
     val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
-    existingLEUs.union(newLeusDF).coalesce(partitions)
+    existingLEUs.union(newLeusDF)
   }
 
 }

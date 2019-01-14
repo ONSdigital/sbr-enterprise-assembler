@@ -21,4 +21,6 @@ object AssemblerHBaseConfiguration {
   hbaseConfiguration.setInt(AssemblerOptions.HBaseClientScannerTimeout, AssemblerConfiguration.HBaseClientScannerTimeout.toInt)
   hbaseConfiguration.setInt(AssemblerOptions.HBaseCellsScanned, AssemblerConfiguration.HBaseCellsScanned.toInt)
 
+  hbaseConfiguration.set(AssemblerOptions.HFilesCreateSuccessFiles, AssemblerConfiguration.HFilesCreateSuccessFiles)
+
 }
