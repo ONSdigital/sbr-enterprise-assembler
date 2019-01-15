@@ -6,6 +6,7 @@ import dao.hive.HiveDao
 import model.Schemas
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.Connection
+import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles
 import org.apache.log4j.Logger
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
@@ -20,11 +21,11 @@ trait AssembleUnits extends BaseUnits with Serializable {
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
 
-  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
+  @transient override lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
 
   def createHfiles(implicit spark: SparkSession, con: Connection): Unit = {
 
-    log.info("Creating HFiles")
+    log.debug("Creating HFiles")
 
     val regionsByPostcodeDF: DataFrame = if (AssemblerConfiguration.isLocal) {
       spark.read.option("header", "true").csv(AssemblerConfiguration.PathToGeo).select("pcds", "rgn").toDF("postcode", "region").cache()
@@ -35,10 +36,8 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val regionsByPostcodeShortDF: DataFrame = if (AssemblerConfiguration.isLocal) {
       spark.read.option("header", "true").csv(AssemblerConfiguration.PathToGeoShort).select("pcds", "rgn").toDF("postcodeout", "region").cache()
     } else {
-      HiveDao.getRegionsShort
+      HiveDao.getRegionsShort.cache()
     }
-
-    regionsByPostcodeDF.collect()
 
     val allLinksLeusDF = getAllLinksLUsDF().cache()
 
@@ -62,21 +61,24 @@ trait AssembleUnits extends BaseUnits with Serializable {
     allEntsDF.unpersist(false)
     allLinksLeusDF.unpersist(false)
     regionsByPostcodeDF.unpersist(false)
-    log.info("HFiles created")
+    log.debug("HFiles created")
   }
 
   def loadHFiles()(implicit spark: SparkSession, con: Connection) : Unit = {
-    log.info("Start load to HBase")
+    log.debug("Start load to HBase")
     HBaseDao.truncateTables
+    implicit val bulkLoader: LoadIncrementalHFiles = new LoadIncrementalHFiles(con.getConfiguration)
     HBaseDao.loadLinksHFile
     HBaseDao.loadEnterprisesHFile
     HBaseDao.loadLousHFile
     HBaseDao.loadLeusHFile
     HBaseDao.loadRusHFile
-    log.info("End load to HBase")
+    log.debug("End load to HBase")
   }
 
   private def getAllLinksLUsDF()(implicit spark: SparkSession): DataFrame = {
+
+    log.debug("Start getAllLinksLUsDF")
 
     val incomingBiDataDF: DataFrame = getIncomingBiData()
 
@@ -86,17 +88,21 @@ trait AssembleUnits extends BaseUnits with Serializable {
       existingLinksLeusDF.select("ubrn", "ern"),
       Seq("ubrn"), "left_outer")
 
+    log.debug("End getAllLinksLUsDF")
     getAllLUs(joinedLUs)
   }
 
   private def getAllEntsCalculated(allLinksLusDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                                   (implicit spark: SparkSession): Dataset[Row] = {
 
+    log.debug("Start getAllEntsCalculated")
+
     val calculatedDF = CalculateAdminData(allLinksLusDF).castAllToString
     calculatedDF.cache()
 
     val existingEntDF = getExistingEntsDF(hbaseConfiguration)
 
+    log.debug("--> Start existingEntCalculatedDF")
     val existingEntCalculatedDF: DataFrame = {
       val calculatedExistingEnt = existingEntDF.join(calculatedDF, Seq("ern"), "left_outer")
       val existingEntsWithRegionRecalculatedDF = CalculateRegion(calculatedExistingEnt, regionsByPostcodeDF, regionsByPostcodeShortDF)
@@ -109,6 +115,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
 
       spark.createDataFrame(withReorderedColumns.rdd, Schemas.completeEntSchema)
     }
+    log.debug("--> End existingEntCalculatedDF")
 
     val newLEUsDF = allLinksLusDF.join(existingEntCalculatedDF.select(col("ern")), Seq("ern"), "left_anti")
     val newLEUsCalculatedDF = newLEUsDF.join(calculatedDF, Seq("ern"), "left_outer")
@@ -121,11 +128,15 @@ trait AssembleUnits extends BaseUnits with Serializable {
 
     val allEntsDF = existingEntCalculatedDF.union(newEntsCalculatedDF)
     calculatedDF.unpersist(false)
+    log.debug("End getAllEntsCalculated")
     allEntsDF
   }
 
   private def getNewLeusDF(newLEUsCalculatedDF: DataFrame)
                           (implicit spark: SparkSession): DataFrame = {
+
+    log.debug("Start getNewLeusDF")
+
     val newLegalUnitsDS: RDD[Row] = newLEUsCalculatedDF.rdd.map(row => new GenericRowWithSchema(Array(
 
       row.getAs[String]("ubrn"),
@@ -151,12 +162,16 @@ trait AssembleUnits extends BaseUnits with Serializable {
       row.getValueOrNull("uprn")
     ), Schemas.leuRowSchema))
 
+    log.debug("End getNewLeusDF")
+
     spark.createDataFrame(newLegalUnitsDS, Schemas.leuRowSchema)
 
   }
 
   private def getAllRus(allEntsDF: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                        (implicit spark: SparkSession, confs: Configuration): Dataset[Row] = {
+
+    log.debug("Start getAllRus")
 
     val existingRUs: DataFrame = getExistingRusDF(confs)
 
@@ -166,11 +181,14 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val newAndMissingRusDF: DataFrame = createNewRus(entsWithoutRus).select(columns.head, columns.tail: _*)
     val res = ruWithRegion.union(newAndMissingRusDF)
 
+    log.debug("End getAllRus")
     res
   }
 
   private def getAllLous(allRus: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame, confs: Configuration)
                         (implicit spark: SparkSession): Dataset[Row] = {
+
+    log.debug("Start getAllLous")
 
     val columns = Schemas.louRowSchema.fieldNames
     val existingLous: DataFrame = getExistingLousDF(confs)
@@ -179,12 +197,19 @@ trait AssembleUnits extends BaseUnits with Serializable {
     val rusWithoutLous: DataFrame = allRus.join(existingLousWithRegion.select("rurn"), Seq("rurn"), "left_anti")
     val newAndMissingLousDF: DataFrame = createNewLous(rusWithoutLous)
 
+    log.debug("End getAllLous")
+
     existingLousWithRegion.union(newAndMissingLousDF)
   }
 
   private def getAllLeus(confs: Configuration)(implicit spark: SparkSession): Dataset[Row] = {
+
+    log.debug("Start getAllLeus")
+
     val existingLEUs: DataFrame = getExistingLeusDF(confs)
     val newLeusDF = spark.sql(s"""SELECT * FROM $newLeusViewName""")
+    log.debug("End getAllLeus")
+
     existingLEUs.union(newLeusDF)
   }
 

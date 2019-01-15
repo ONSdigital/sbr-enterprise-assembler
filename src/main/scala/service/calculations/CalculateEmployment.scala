@@ -1,13 +1,17 @@
 package service.calculations
 
+import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object CalculateEmployment {
 
+  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
   /**
     * requires working_props and paye_empees recalculated
     **/
   def apply(df: DataFrame)(implicit spark: SparkSession): DataFrame = {
+
+    log.debug("--> Start CalculateEmployment")
 
     df.createOrReplaceTempView("CALCULATEEMPLOYMENT")
 
@@ -19,6 +23,8 @@ object CalculateEmployment {
           FROM CALCULATEEMPLOYMENT
     """.stripMargin
 
-    spark.sql(sql)
+    val res = spark.sql(sql)
+    log.debug("--> End CalculateEmployment")
+    res
   }
 }

@@ -35,32 +35,27 @@ object HBaseDao extends Serializable {
     admin.truncateTable(table.getName, true)
   }
 
-  def loadLinksHFile(implicit connection: Connection): Unit = wrapTransaction(linksTableName) { (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+  def loadLinksHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(linksTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(PathToLinksHfile), admin, table, regionLocator)
   }
 
-  def loadEnterprisesHFile(implicit connection: Connection): Unit = wrapTransaction(entsTableName) { (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+  def loadEnterprisesHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(entsTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(PathToEnterpriseHFile), admin, table, regionLocator)
   }
 
-  def loadLousHFile(implicit connection: Connection): Unit = wrapTransaction(lousTableName) { (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+  def loadLousHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(lousTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(PathToLocalUnitsHFile), admin, table, regionLocator)
   }
 
-  def loadLeusHFile(implicit connection: Connection): Unit = wrapTransaction(leusTableName) { (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+  def loadLeusHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(leusTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(PathToLegalUnitsHFile), admin, table, regionLocator)
   }
 
-  def loadRusHFile(implicit connection: Connection): Unit = wrapTransaction(rusTableName) { (table, admin) =>
-    val bulkLoader = new LoadIncrementalHFiles(connection.getConfiguration)
+  def loadRusHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(rusTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(PathToReportingUnitsHFile), admin, table, regionLocator)
   }

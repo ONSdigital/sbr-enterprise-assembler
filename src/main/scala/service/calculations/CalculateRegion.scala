@@ -1,15 +1,18 @@
 package service.calculations
 
+import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.{col, substring, trim}
 import util.configuration.AssemblerConfiguration
 
 object CalculateRegion {
 
+  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
+
   def apply(dfWithPostcode: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                      (implicit spark: SparkSession): Dataset[Row] = {
-    //dfWithPostcode.withColumn("region",lit(""))
-    val partitions = dfWithPostcode.rdd.getNumPartitions
+
+    log.debug("--> Start CalculateRegion")
     val step1DF = dfWithPostcode.drop("region")
     val step2DF = step1DF.join(regionsByPostcodeDF, Seq("postcode"), "left_outer")
     val step3DF = step2DF.select("*").where("region IS NULL")
@@ -20,8 +23,8 @@ object CalculateRegion {
     val step7DF = step6DF.drop("postcodeout")
     val step8DF = step7DF.union(partial)
     val step9DF = step8DF.na.fill(AssemblerConfiguration.DefaultRegion, Seq("region"))
-    val step10DF = step9DF.coalesce(partitions)
-    step10DF
+    log.debug("--> End CalculateRegion")
+    step9DF
   }
 
 }

@@ -1,19 +1,25 @@
 package service.calculations
 
+import org.apache.log4j.Logger
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import util.configuration.AssemblerConfiguration
 
 object CalculateDynamicValues {
+
+  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
 
   /**
     * expects df with fields 'legal_status', 'postcode', 'paye_empees', 'working_props'
     **/
   def apply(df: DataFrame, regionsByPostcodeDF: DataFrame, regionsByPostcodeShortDF: DataFrame)
                (implicit spark: SparkSession): Dataset[Row] = {
+    log.debug("--> Start CalculateDynamicValues")
     val partitions = spark.sparkContext.defaultParallelism
     val withWorkingProps = calculateWorkingProps(df).coalesce(partitions)
     val withEmployment = CalculateEmployment(withWorkingProps).coalesce(partitions)
-    CalculateRegion(withEmployment, regionsByPostcodeDF, regionsByPostcodeShortDF)
+    val res = CalculateRegion(withEmployment, regionsByPostcodeDF, regionsByPostcodeShortDF)
+    log.debug("--> End CalculateDynamicValues")
+    res
 }
 
   private def calculateWorkingProps(dfWithLegalStatus: DataFrame)(implicit spark: SparkSession): DataFrame = {

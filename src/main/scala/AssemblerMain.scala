@@ -39,7 +39,6 @@ object AssemblerMain {
         File(PathToLocalUnitsHFile).deleteRecursively()
         File(PathToReportingUnitsHFile).deleteRecursively()
 
-        log.info("HFiles deleted")
       }
     }
 

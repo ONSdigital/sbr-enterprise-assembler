@@ -26,7 +26,7 @@ object AddNewPeriodDataService {
             val p = ss.sparkContext.defaultParallelism * 2
 
             ss.conf.set("spark.sql.shuffle.partitions", p)
-            log.info(s"Programatically setting number of partitions to $p (#cores * 2)")
+            log.debug(s"Setting number of partitions to $p (#cores * 2)")
           }
 
           AssembleUnits.createHfiles
