@@ -52,14 +52,14 @@ pipeline {
             }
         }
 
-        stage ('Package and Push Artifact') {
+        stage('Package and Push Artifact') {
             agent any
-           /* when {
-                anyOf {
-                    branch DEPLOY_DEV
-                    branch DEPLOY_TEST
-                }
-            }*/
+            /* when {
+                 anyOf {
+                     branch DEPLOY_DEV
+                     branch DEPLOY_TEST
+                 }
+             }*/
             steps {
                 script {
                     env.NODE_STAGE = "Package and Push Artifact"
@@ -78,12 +78,12 @@ pipeline {
     }
 }
 
-def push (String newTag, String currentTag) {
+def push(String newTag, String currentTag) {
     echo "Pushing tag ${newTag} to Gitlab"
-    GitRelease( GIT_CREDS, newTag, currentTag, "${env.BUILD_ID}", "${env.BRANCH_NAME}", GIT_TYPE)
+    GitRelease(GIT_CREDS, newTag, currentTag, "${env.BUILD_ID}", "${env.BRANCH_NAME}", GIT_TYPE)
 }
 
-def deploy (String dataSource) {
+def deploy(String dataSource) {
     CF_SPACE = "${env.DEPLOY_NAME}".capitalize()
     CF_ORG = "${TEAM}".toUpperCase()
     echo "Deploying Api app to ${env.DEPLOY_NAME}"

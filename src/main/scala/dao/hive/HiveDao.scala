@@ -1,7 +1,7 @@
 package dao.hive
 
-import org.apache.spark.sql._
 import _root_.util.configuration.AssemblerConfiguration
+import org.apache.spark.sql._
 
 object HiveDao {
 

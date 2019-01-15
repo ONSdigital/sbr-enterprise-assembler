@@ -11,7 +11,7 @@ object AssemblerMain {
 
     /**
       * Use a custom logging level so we can display log messages independently, e.g. in log4j.properties :
-      *   log4j.EnterpriseAssembler=INFO, console
+      * log4j.EnterpriseAssembler=INFO, console
       */
 
     @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")

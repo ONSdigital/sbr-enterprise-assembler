@@ -1,4 +1,4 @@
-package service
+package dao
 
 import dao.DaoUtils._
 import dao.hbase.{HBaseDao, HFilePartitioner, HFileUtils}
@@ -12,11 +12,11 @@ import org.apache.log4j.Logger
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import util.configuration.AssemblerConfiguration
-import util.configuration.AssemblerHBaseConfiguration._
+import util.configuration.AssemblerHBaseConfiguration.hbaseConfiguration
 
-trait BaseUnits extends HFileUtils with Serializable {
+class AssembleDao extends HFileUtils {
 
-  @transient lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
+  @transient private lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
 
   /**
     * Fields:

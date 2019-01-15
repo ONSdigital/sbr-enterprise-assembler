@@ -1,7 +1,7 @@
 package dao
 
-import org.apache.spark.sql.{DataFrame, Row}
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Row}
 
 object DaoUtils {
 

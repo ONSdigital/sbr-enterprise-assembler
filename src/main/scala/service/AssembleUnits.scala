@@ -1,5 +1,6 @@
 package service
 
+import dao.AssembleDao
 import dao.DaoUtils._
 import dao.hbase.HBaseDao
 import dao.hive.HiveDao
@@ -16,12 +17,12 @@ import service.calculations.{CalculateAdminData, CalculateDynamicValues, Calcula
 import util.configuration.AssemblerConfiguration
 import util.configuration.AssemblerHBaseConfiguration._
 
-trait AssembleUnits extends BaseUnits with Serializable {
+class AssembleUnits extends AssembleDao with Serializable {
 
   val newRusViewName = "NEWRUS"
   val newLeusViewName = "NEWLEUS"
 
-  @transient override lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
+  @transient private lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
 
   def createHfiles(implicit spark: SparkSession, con: Connection): Unit = {
 
@@ -64,7 +65,7 @@ trait AssembleUnits extends BaseUnits with Serializable {
     log.debug("HFiles created")
   }
 
-  def loadHFiles()(implicit spark: SparkSession, con: Connection) : Unit = {
+  def loadHFiles()(implicit spark: SparkSession, con: Connection): Unit = {
     log.debug("Start load to HBase")
     HBaseDao.truncateTables
     implicit val bulkLoader: LoadIncrementalHFiles = new LoadIncrementalHFiles(con.getConfiguration)

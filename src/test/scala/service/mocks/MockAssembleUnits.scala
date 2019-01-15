@@ -4,15 +4,16 @@ import dao.DaoUtils._
 import dao.hbase.HBaseDataReader.readEntitiesFromHFile
 import model.{HFileRow, Schemas}
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.client.Connection
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import service.AssembleUnits
 import service.mocks.MockCreateNewPeriodHBaseDao.adjustPathToExistingRecords
 import util.configuration.AssemblerConfiguration
 import utils.data.TestIds
-import service.AssembleUnits
 
 object MockAssembleUnits extends AssembleUnits with TestIds {
-
+  
   override def getExistingLinksLeusDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
     val path = adjustPathToExistingRecords(AssemblerConfiguration.PathToLinksHfile)
     val hfileRows: RDD[HFileRow] = readEntitiesFromHFile[HFileRow](path).filter(_.key.startsWith("LEU~"))

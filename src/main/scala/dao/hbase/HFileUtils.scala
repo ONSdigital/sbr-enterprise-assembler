@@ -1,12 +1,12 @@
 package dao.hbase
 
+import dao.DaoUtils._
+import model.HFileCell
 import org.apache.spark.sql.Row
 import util.SequenceGenerator
 import util.configuration.AssemblerConfiguration
-import dao.DaoUtils._
-import model.HFileCell
 
-trait HFileUtils extends Serializable {
+class HFileUtils {
 
   val legalUnit = "LEU"
   val localUnit = "LOU"

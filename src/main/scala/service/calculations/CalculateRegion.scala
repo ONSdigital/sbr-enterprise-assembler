@@ -1,8 +1,8 @@
 package service.calculations
 
 import org.apache.log4j.Logger
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.sql.functions.{col, substring, trim}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import util.configuration.AssemblerConfiguration
 
 object CalculateRegion {
