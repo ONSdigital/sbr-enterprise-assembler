@@ -68,5 +68,4 @@ protected object AssemblerOptions {
   val DefaultPRN = "app.defaultPRN"
   val DefaultWorkingProps = "app.defaultWorkingProps"
 
-  val ConfigureDefaultPartitions = "app.configureDefaultPartitions"
 }

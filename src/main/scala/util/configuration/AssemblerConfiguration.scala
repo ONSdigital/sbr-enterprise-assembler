@@ -81,6 +81,4 @@ object AssemblerConfiguration {
   def inCluster: Boolean = Config(AssemblerOptions.Environment) == Cluster
   def createParquetFile: Boolean = CreateParquet == "true"
 
-  def configureDefaultPartitions: Boolean = Config(AssemblerOptions.ConfigureDefaultPartitions) == "true"
-
 }

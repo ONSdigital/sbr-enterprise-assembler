@@ -21,14 +21,6 @@ object AddNewPeriodDataService {
       HBaseConnectionManager.withHbaseConnection {
         implicit con: Connection =>
 
-          // set the number of partitions based on the number of cores
-          if (AssemblerConfiguration.configureDefaultPartitions) {
-            val p = ss.sparkContext.defaultParallelism * 2
-
-            ss.conf.set("spark.sql.shuffle.partitions", p)
-            log.debug(s"Setting number of partitions to $p (#cores * 2)")
-          }
-
           AssembleUnits.createHfiles
           AssembleUnits.loadHFiles
       }
