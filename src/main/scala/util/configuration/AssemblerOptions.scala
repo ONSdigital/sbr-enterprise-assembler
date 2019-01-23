@@ -28,21 +28,6 @@ protected object AssemblerOptions {
   val HBaseEmploymentColumnFamily: String = "app.employment.columnFamily"
   val HBaseEmploymentFilePath: String = "app.employment.filePath"
 
-  val HBaseLegalUnitsNamespace: String = "app.legal.namespace"
-  val HBaseLegalUnitsTableName: String = "app.legal.tableName"
-  val HBaseLegalUnitsColumnFamily: String = "app.legal.columnFamily"
-  val HBaseLegalUnitsFilePath: String = "app.legal.filePath"
-
-  val HBaseLocalUnitsNamespace: String = "app.local.namespace"
-  val HBaseLocalUnitsTableName: String = "app.local.tableName"
-  val HBaseLocalUnitsColumnFamily: String = "app.local.columnFamily"
-  val HBaseLocalUnitsFilePath: String = "app.local.filePath"
-
-  val HBaseReportingUnitsNamespace: String = "app.reporting.namespace"
-  val HBaseReportingUnitsTableName: String = "app.reporting.tableName"
-  val HBaseReportingUnitsColumnFamily: String = "app.reporting.columnFamily"
-  val HBaseReportingUnitsFilePath: String = "app.reporting.filePath"
-
   val HBaseEnterpriseTableNamespace: String = "app.enterprise.namespace"
   val HBaseEnterpriseTableName: String = "app.enterprise.tableName"
   val HBaseEnterpriseColumnFamily: String = "app.enterprise.columnFamily"

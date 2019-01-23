@@ -16,9 +16,6 @@ import util.configuration.AssemblerHBaseConfiguration.hbaseConfiguration
 
 class Calculate extends AssembleDao with Serializable {
 
-  val newRusViewName = "NEWRUS"
-  val newLeusViewName = "NEWLEUS"
-
   @transient private lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
 
   def createHfiles(implicit spark: SparkSession, con: Connection): Unit = {
@@ -43,11 +40,6 @@ class Calculate extends AssembleDao with Serializable {
     val allRegionDF = getRegionCalculated(allLinksLeusDF, allAdminDataDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
 
     val allEmploymentDF = getEmploymentCalculated(allLinksLeusDF, allAdminDataDF, regionsByPostcodeDF, regionsByPostcodeShortDF).cache()
-
-    //    val allLousDF = getAllLous(allRusDF, regionsByPostcodeDF, regionsByPostcodeShortDF, hbaseConfiguration).cache()
-    //
-    //    val allLeusDF = getAllLeus(hbaseConfiguration).cache()
-    //
 
     saveAdminData(allAdminDataDF)
     saveRegion(allRegionDF)

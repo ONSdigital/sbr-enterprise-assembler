@@ -136,24 +136,6 @@ class AssembleDao extends HFileUtils {
     df
   }
 
-  def getExistingRusDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
-    log.debug("Start getExistingRusDF")
-
-    val ruHFileRowRdd: RDD[Row] = HBaseDao.readTable(confs, HBaseDao.rusTableName).map(_.toRuRow)
-    val df = spark.createDataFrame(ruHFileRowRdd, Schemas.ruRowSchema)
-    log.debug("End getExistingRusDF")
-    df
-  }
-
-  def getExistingLousDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
-    log.debug("Start getExistingLousDF")
-
-    val louHFileRowRdd: RDD[Row] = HBaseDao.readTable(confs, HBaseDao.lousTableName).map(_.toLouRow)
-    val df = spark.createDataFrame(louHFileRowRdd, Schemas.louRowSchema)
-    log.debug("End getExistingLousDF")
-    df
-  }
-
   def getExistingEntsDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
     log.debug("Start getExistingEntsDF")
 println(HBaseDao.readTable(confs, HBaseDao.entsTableName))
@@ -175,15 +157,6 @@ println(HBaseDao.readTable(confs, HBaseDao.entsTableName))
     val leuHFileRowRdd: RDD[Row] = HBaseDao.readTable(confs, HBaseDao.linksTableName).map(_.toLeuLinksRow)
     val df = spark.createDataFrame(leuHFileRowRdd, Schemas.linksLeuRowSchema)
     log.debug("End getExistingLinksLeusDF")
-    df
-  }
-
-  def getExistingLeusDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
-    log.debug("Start getExistingLeusDF")
-
-    val leuHFileRowRdd: RDD[Row] = HBaseDao.readTable(confs, HBaseDao.leusTableName).map(_.toLeuRow)
-    val df = spark.createDataFrame(leuHFileRowRdd, Schemas.leuRowSchema)
-    log.debug("End getExistingLeusDF")
     df
   }
 
@@ -222,24 +195,4 @@ println(HBaseDao.readTable(confs, HBaseDao.entsTableName))
       .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToEmploymentHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
     log.debug("End saveLeus")
   }
-
-  def saveEnts(entsDF: DataFrame)(implicit spark: SparkSession): Unit = {
-    log.debug("Start saveEnts")
-
-    val hfileCells: RDD[(String, HFileCell)] = getEntHFileCells(entsDF)
-    val a: RDD[(String, HFileCell)] = hfileCells.filter(_._2.value != null)
-    val b: RDD[(String, HFileCell)] = a.sortBy(t => t._2.key.toString + t._2.qualifier.toString)
-    val c: RDD[(ImmutableBytesWritable, KeyValue)] = b.map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-
-    c.saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToEnterpriseHFile,
-      classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
-    log.debug("End saveEnts")
-  }
-
-  private def getEntHFileCells(entsDF: DataFrame)(implicit spark: SparkSession): RDD[(String, HFileCell)] = {
-    import spark.implicits._
-    val res: RDD[(String, HFileCell)] = entsDF.map(row => rowToEnt(row)).flatMap(identity).rdd
-    res
-  }
-
 }

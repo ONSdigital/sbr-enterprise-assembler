@@ -12,18 +12,6 @@ object AssemblerConfiguration {
   val HBaseAdminDataTableName: String = Config(AssemblerOptions.HBaseAdminDataTableName)
   val HBaseAdminDataColumnFamily: String = Config(AssemblerOptions.HBaseAdminDataColumnFamily)
 
-  val HBaseLegalUnitsNamespace: String = Config(AssemblerOptions.HBaseLegalUnitsNamespace)
-  val HBaseLegalUnitsTableName: String = Config(AssemblerOptions.HBaseLegalUnitsTableName)
-  val HBaseLegalUnitsColumnFamily: String = Config(AssemblerOptions.HBaseLegalUnitsColumnFamily)
-
-  val HBaseLocalUnitsNamespace: String = Config(AssemblerOptions.HBaseLocalUnitsNamespace)
-  val HBaseLocalUnitsTableName: String = Config(AssemblerOptions.HBaseLocalUnitsTableName)
-  val HBaseLocalUnitsColumnFamily: String = Config(AssemblerOptions.HBaseLocalUnitsColumnFamily)
-
-  val HBaseReportingUnitsNamespace: String = Config(AssemblerOptions.HBaseReportingUnitsNamespace)
-  val HBaseReportingUnitsTableName: String = Config(AssemblerOptions.HBaseReportingUnitsTableName)
-  val HBaseReportingUnitsColumnFamily: String = Config(AssemblerOptions.HBaseReportingUnitsColumnFamily)
-
   val HBaseEnterpriseTableNamespace: String = Config(AssemblerOptions.HBaseEnterpriseTableNamespace)
   val HBaseEnterpriseTableName: String = Config(AssemblerOptions.HBaseEnterpriseTableName)
   val HBaseEnterpriseColumnFamily: String = Config(AssemblerOptions.HBaseEnterpriseColumnFamily)
@@ -33,9 +21,6 @@ object AssemblerConfiguration {
   val PathToRegionHFile: String = Config(AssemblerOptions.HBaseRegionFilePath)
   val PathToEmploymentHFile: String = Config(AssemblerOptions.HBaseEmploymentFilePath)
   val PathToEnterpriseHFile: String = Config(AssemblerOptions.HBaseEnterpriseFilePath)
-  val PathToLocalUnitsHFile: String = Config(AssemblerOptions.HBaseLocalUnitsFilePath)
-  val PathToLegalUnitsHFile: String = Config(AssemblerOptions.HBaseLegalUnitsFilePath)
-  val PathToReportingUnitsHFile: String = Config(AssemblerOptions.HBaseReportingUnitsFilePath)
 
   val PathToParquet: String = Config(AssemblerOptions.PathToParquet)
   val CreateParquet: String = Config(AssemblerOptions.CreateParquet)

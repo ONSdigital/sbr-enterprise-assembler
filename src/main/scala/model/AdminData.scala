@@ -33,7 +33,7 @@ object AdminData {
     }
 
     val ern = entry._2.find(_._1 == "ern").get._2
-    
+
     new AdminData(
       ern,
       getValue("paye_empees"),

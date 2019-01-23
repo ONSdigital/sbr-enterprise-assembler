@@ -25,9 +25,6 @@ object HBaseDao extends Serializable {
   def truncateTables()(implicit connection: Connection): Unit = {
     truncateTable(linksTableName)
     truncateTable(entsTableName)
-    truncateTable(lousTableName)
-    truncateTable(leusTableName)
-    truncateTable(rusTableName)
   }
 
   def truncateTable(tableName: String)(implicit connection: Connection): Unit = wrapTransaction(tableName) { (table, admin) =>
@@ -38,26 +35,6 @@ object HBaseDao extends Serializable {
   def loadLinksHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(linksTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
     bulkLoader.doBulkLoad(new Path(PathToLinksHFile), admin, table, regionLocator)
-  }
-
-  def loadEnterprisesHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(entsTableName) { (table, admin) =>
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PathToEnterpriseHFile), admin, table, regionLocator)
-  }
-
-  def loadLousHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(lousTableName) { (table, admin) =>
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PathToLocalUnitsHFile), admin, table, regionLocator)
-  }
-
-  def loadLeusHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(leusTableName) { (table, admin) =>
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PathToLegalUnitsHFile), admin, table, regionLocator)
-  }
-
-  def loadRusHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(rusTableName) { (table, admin) =>
-    val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PathToReportingUnitsHFile), admin, table, regionLocator)
   }
 
   private def wrapTransaction(fullTableName: String)(action: (Table, Admin) => Unit)(implicit connection: Connection) {
@@ -86,12 +63,6 @@ object HBaseDao extends Serializable {
   }
 
   def linksTableName = s"${AssemblerConfiguration.HBaseLinksTableNamespace}:${AssemblerConfiguration.HBaseLinksTableName}_${AssemblerConfiguration.TimePeriod}"
-
-  def leusTableName = s"${AssemblerConfiguration.HBaseLegalUnitsNamespace}:${AssemblerConfiguration.HBaseLegalUnitsTableName}_${AssemblerConfiguration.TimePeriod}"
-
-  def lousTableName = s"${AssemblerConfiguration.HBaseLocalUnitsNamespace}:${AssemblerConfiguration.HBaseLocalUnitsTableName}_${AssemblerConfiguration.TimePeriod}"
-
-  def rusTableName = s"${AssemblerConfiguration.HBaseReportingUnitsNamespace}:${AssemblerConfiguration.HBaseReportingUnitsTableName}_${AssemblerConfiguration.TimePeriod}"
 
   def entsTableName = s"${AssemblerConfiguration.HBaseEnterpriseTableNamespace}:${AssemblerConfiguration.HBaseEnterpriseTableName}_${AssemblerConfiguration.TimePeriod}"
 
