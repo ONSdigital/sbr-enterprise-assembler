@@ -82,7 +82,7 @@ assemblyMergeStrategy in assembly := {
     oldStrategy(x)
 }
 
-mainClass in(Compile, run) := Some("assembler.AssemblerMain")
+mainClass in(Compile, run) := Some("CalculateMain")
 
 lazy val createRecordsParams = Array(
   "LINKS", "ons", "l", "src/main/resources/data/create/links/hfile",
