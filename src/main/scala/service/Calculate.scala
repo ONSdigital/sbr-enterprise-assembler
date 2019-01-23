@@ -10,6 +10,8 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import dao.DaoUtils._
 import dao.hive.HiveDao
+import dao.spark.SparkSessionManager
+import dao.hbase.HBaseConnectionManager
 import model.Schemas
 import util.configuration.AssemblerConfiguration
 import util.configuration.AssemblerHBaseConfiguration.hbaseConfiguration
@@ -20,6 +22,17 @@ class Calculate extends AssembleDao with Serializable {
   val newLeusViewName = "NEWLEUS"
 
   @transient private lazy val log: Logger = Logger.getLogger("EnterpriseAssembler")
+
+  def hfileAndLoad: Unit = SparkSessionManager.withSpark  {
+    implicit ss: SparkSession =>
+      HBaseConnectionManager.withHbaseConnection {
+        implicit con: Connection =>
+
+          createHfiles
+          //loadHFiles
+      }
+
+  }
 
   def createHfiles(implicit spark: SparkSession, con: Connection): Unit = {
     log.debug("Creating HFiles")

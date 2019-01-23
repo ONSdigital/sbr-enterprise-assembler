@@ -21,7 +21,7 @@ object CalculateMain {
     CommandLineParser(args)
 
 
-    Calculate.createHfiles
+    Calculate.hfileAndLoad
 
 
     log.info("Units Calculations completed")
