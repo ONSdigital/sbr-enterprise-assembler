@@ -37,7 +37,7 @@ object HBaseDao extends Serializable {
 
   def loadLinksHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(linksTableName) { (table, admin) =>
     val regionLocator = connection.getRegionLocator(table.getName)
-    bulkLoader.doBulkLoad(new Path(PathToLinksHfile), admin, table, regionLocator)
+    bulkLoader.doBulkLoad(new Path(PathToLinksHFile), admin, table, regionLocator)
   }
 
   def loadEnterprisesHFile(implicit connection: Connection, bulkLoader: LoadIncrementalHFiles): Unit = wrapTransaction(entsTableName) { (table, admin) =>

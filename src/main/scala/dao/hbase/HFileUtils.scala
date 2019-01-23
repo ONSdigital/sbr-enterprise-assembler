@@ -18,143 +18,43 @@ class HFileUtils {
 
   val childPrefix = "c_"
   val parentPrefix = "p_"
-  
-  def leuToLinks(row: Row): Seq[(String, HFileCell)] = {
-    val ubrn = row.getStringOption("ubrn").get
-    val ern = row.getStringOption("ern").get
-    val entKey = generateLinkKey(ern, enterprise)
-    val luKey = generateLinkKey(ubrn, legalUnit)
-    val leLinks = rowToLegalUnitLinks(entKey, ubrn, ern)
-    val chVatPaye = rowToCHLinks(row, luKey, ubrn) ++ rowToVatRefsLinks(row, luKey, ubrn) ++
-      rowToPayeRefLinks(row, luKey, ubrn)
-    val all = leLinks ++ chVatPaye
-    all
-  }
 
-  def louToLinks(row: Row): Seq[(String, HFileCell)] = {
-    val lurn = row.getStringOption("lurn").get
-    val ern = row.getStringOption("ern").get
-    val rurn = row.getStringOption("rurn").get
-    val louKey = generateLocalUnitLinksKey(lurn)
-    val entKey = generateLinkKey(ern, enterprise)
-    val ruKey = generateReportingUnitLinksKey(rurn)
+
+  def rowToAdminData(row: Row): Seq[(String, HFileCell)] = {
+    val ern = row.getStringOption("ern").get //must be there
 
     Seq(
-      createLinksRecord(louKey, s"$parentPrefix$enterprise", ern),
-      createLinksRecord(louKey, s"$parentPrefix$reportingUnit", rurn),
-      createLinksRecord(ruKey, s"$childPrefix$lurn", localUnit),
-      createLinksRecord(entKey, s"$childPrefix$lurn", localUnit)
-    )
-  }
-
-  def ruToLinks(row: Row): Seq[(String, HFileCell)] = {
-    val rurn = row.getStringOption("rurn").get
-    val ern = row.getStringOption("ern").get
-    val ruKey = generateReportingUnitLinksKey(rurn)
-    val entKey = generateLinkKey(ern, enterprise)
-
-    Seq(
-      createLinksRecord(ruKey, s"$parentPrefix$enterprise", ern),
-      createLinksRecord(entKey, s"$childPrefix$rurn", reportingUnit)
-    )
-  }
-
-  private def rowToLegalUnitLinks(entKey: String, ubrn: String, ern: String): Seq[(String, HFileCell)] = {
-    val leuKey = generateLegalUnitLinksKey(ubrn)
-
-    Seq(
-      createLinksRecord(leuKey, s"$parentPrefix$enterprise", ern),
-      createLinksRecord(entKey, s"$childPrefix$ubrn", legalUnit)
-    )
-  }
-
-  def rowToLocalUnit(row: Row): Seq[(String, HFileCell)] = {
-    val lurn = row.getAs[String]("lurn")
-    val ern = row.getAs[String]("ern")
-    val prn = row.getAs[String]("prn")
-    val rurn = row.getAs[String]("rurn")
-
-    Seq(
-      createLocalUnitCell(lurn, ern, "lurn", lurn),
-      createLocalUnitCell(lurn, ern, "ern", ern),
-      createLocalUnitCell(lurn, ern, "prn", prn),
-      createLocalUnitCell(lurn, ern, "rurn", rurn),
-      createLocalUnitCell(lurn, ern, "name", row.getValueOrEmptyStr("name")),
-      createLocalUnitCell(lurn, ern, "address1", row.getValueOrEmptyStr("address1")),
-      createLocalUnitCell(lurn, ern, "postcode", row.getValueOrEmptyStr("postcode")),
-      createLocalUnitCell(lurn, ern, "region", row.getValueOrEmptyStr("region")),
-      createLocalUnitCell(lurn, ern, "sic07", row.getValueOrEmptyStr("sic07")),
-      createLocalUnitCell(lurn, ern, "employees", row.getValueOrEmptyStr("employees")),
-      createLocalUnitCell(lurn, ern, "employment", row.getValueOrEmptyStr("employment"))
+      createEnterpriseCell(ern, "ern", ern)
     ) ++ Seq(
-      row.getString("ruref").map(bn => createLocalUnitCell(lurn, ern, "ruref", bn)),
-      row.getString("luref").map(bn => createLocalUnitCell(lurn, ern, "luref", bn)),
-      row.getString("entref").map(bn => createLocalUnitCell(lurn, ern, "entref", bn)),
-      row.getString("trading_style").map(bn => createLocalUnitCell(lurn, ern, "trading_style", bn)),
-      row.getString("address2").map(bn => createLocalUnitCell(lurn, ern, "address2", bn)),
-      row.getString("address3").map(bn => createLocalUnitCell(lurn, ern, "address3", bn)),
-      row.getString("address4").map(bn => createLocalUnitCell(lurn, ern, "address4", bn)),
-      row.getString("address5").map(bn => createLocalUnitCell(lurn, ern, "address5", bn))
+      row.getStringOption("paye_empees").map(employees => createEnterpriseCell(ern, "paye_empees", employees)),
+      row.getStringOption("paye_jobs").map(jobs => createEnterpriseCell(ern, "paye_jobs", jobs)),
+      row.getStringOption("app_turnover").map(apportion => createEnterpriseCell(ern, "app_turnover", apportion)),
+      row.getStringOption("ent_turnover").map(total => createEnterpriseCell(ern, "ent_turnover", total)),
+      row.getStringOption("cntd_turnover").map(contained => createEnterpriseCell(ern, "cntd_turnover", contained.toString)),
+      row.getStringOption("std_turnover").map(standard => createEnterpriseCell(ern, "std_turnover", standard)),
+      row.getStringOption("grp_turnover").map(group => createEnterpriseCell(ern, "grp_turnover", group))
+
     ).collect { case Some(v) => v }
   }
 
-  def rowToReportingUnit(row: Row): Seq[(String, HFileCell)] = {
-    val rurn = row.getStringOption("rurn").get
-    val ern = row.getStringOption("ern").get
+  def rowToRegion(row: Row): Seq[(String, HFileCell)] = {
+    val ern = row.getStringOption("ern").get //must be there
+    val region = row.getStringOption("region").getOrElse("0") //must be there
 
     Seq(
-      createLocalUnitCell(rurn, ern, "ern", ern),
-      createLocalUnitCell(rurn, ern, "rurn", rurn),
-      createLocalUnitCell(rurn, ern, "name", row.getValueOrEmptyStr("name")),
-      createLocalUnitCell(rurn, ern, "address1", row.getValueOrEmptyStr("address1")),
-      createLocalUnitCell(rurn, ern, "postcode", row.getValueOrEmptyStr("postcode")),
-      createLocalUnitCell(rurn, ern, "region", row.getValueOrEmptyStr("region")),
-      createLocalUnitCell(rurn, ern, "sic07", row.getValueOrEmptyStr("sic07")),
-      createLocalUnitCell(rurn, ern, "employees", row.getValueOrEmptyStr("employees")), //this one is still long as defined by df schema  of entAdminCalculation
-      createLocalUnitCell(rurn, ern, "employment", row.getValueOrEmptyStr("employment")),
-      createLocalUnitCell(rurn, ern, "turnover", row.getValueOrEmptyStr("turnover")),
-      createLocalUnitCell(rurn, ern, "legal_status", row.getValueOrEmptyStr("legal_status")),
-      createLocalUnitCell(rurn, ern, "prn", row.getValueOrEmptyStr("prn"))
-    ) ++ Seq(
-      row.getString("entref").map(bn => createLocalUnitCell(rurn, ern, "entref", bn)),
-      row.getString("ruref").map(bn => createLocalUnitCell(rurn, ern, "ruref", bn)),
-      row.getString("trading_style").map(bn => createLocalUnitCell(rurn, ern, "trading_style", bn)),
-      row.getString("address2").map(bn => createLocalUnitCell(rurn, ern, "address2", bn)),
-      row.getString("address3").map(bn => createLocalUnitCell(rurn, ern, "address3", bn)),
-      row.getString("address4").map(bn => createLocalUnitCell(rurn, ern, "address4", bn)),
-      row.getString("address5").map(bn => createLocalUnitCell(rurn, ern, "address5", bn))
-    ).collect { case Some(v) => v }
+      createEnterpriseCell(ern, "ern", ern),
+      createEnterpriseCell(ern, "region", region)
+    )
   }
 
-  def rowToLegalUnit(row: Row): Seq[(String, HFileCell)] = {
-    val lurn = row.getStringOption("ubrn").get
-    val ern = row.getStringOption("ern").get
-    val prn = row.getStringOption("prn").get
+  def rowToEmployment(row: Row): Seq[(String, HFileCell)] = {
+    val ern = row.getStringOption("ern").get //must be there
+    val employment = row.getStringOption("employment").getOrElse("0") //must be there
 
     Seq(
-      createLegalUnitCell(lurn, ern, "ubrn", lurn),
-      createLocalUnitCell(lurn, ern, "prn", prn),
-      createLocalUnitCell(lurn, ern, "name", row.getString("name").getOrElse("")),
-      createLocalUnitCell(lurn, ern, "address1", row.getValueOrEmptyStr("address1")),
-      createLocalUnitCell(lurn, ern, "postcode", row.getValueOrEmptyStr("postcode")),
-      createLocalUnitCell(lurn, ern, "sic07", row.getValueOrEmptyStr("sic07")),
-      createLocalUnitCell(lurn, ern, "legal_status", row.getValueOrEmptyStr("legal_status")),
-      createLocalUnitCell(lurn, ern, "birth_date", row.getValueOrEmptyStr("birth_date"))
-    ) ++ Seq(
-      row.getString("crn").map(bn => createLocalUnitCell(lurn, ern, "crn", bn)),
-      row.getString("paye_jobs").map(bn => createLocalUnitCell(lurn, ern, "paye_jobs", bn)),
-      row.getString("trading_style").map(bn => createLocalUnitCell(lurn, ern, "trading_style", bn)),
-      row.getString("entref").map(bn => createLocalUnitCell(lurn, ern, "entref", bn)),
-      row.getString("address2").map(bn => createLocalUnitCell(lurn, ern, "address2", bn)),
-      row.getString("address3").map(bn => createLocalUnitCell(lurn, ern, "address3", bn)),
-      row.getString("address4").map(bn => createLocalUnitCell(lurn, ern, "address4", bn)),
-      row.getString("address5").map(bn => createLocalUnitCell(lurn, ern, "address5", bn)),
-      row.getString("turnover").map(bn => createLocalUnitCell(lurn, ern, "turnover", bn)),
-      row.getString("trading_status").map(bn => createLocalUnitCell(lurn, ern, "trading_status", bn)),
-      row.getString("death_date").map(bn => createLocalUnitCell(lurn, ern, "death_date", bn)),
-      row.getString("death_code").map(bn => createLocalUnitCell(lurn, ern, "death_code", bn)),
-      row.getString("uprn").map(bn => createLocalUnitCell(lurn, ern, "uprn", bn))
-    ).collect { case Some(v) => v }
+      createEnterpriseCell(ern, "ern", ern),
+      createEnterpriseCell(ern, "employment", employment)
+    )
   }
 
   def rowToEnt(row: Row): Seq[(String, HFileCell)] = {
@@ -247,13 +147,8 @@ class HFileUtils {
     "0." + prnTest.toString
   }
 
-  def generateLurn(row: Row): String = SequenceGenerator.nextSequence
 
   def generateErn(row: Row): String = SequenceGenerator.nextSequence
-
-  def generateRurn(row: Row): String = SequenceGenerator.nextSequence
-
-  def generateLurnFromEnt(row: Row): String = SequenceGenerator.nextSequence
 
 }
 

@@ -7,6 +7,11 @@ trait Paths {
   val jsonFilePath = s"src/test/resources/data/$testDir/newPeriod.json"
   val linkHfilePath = s"src/test/resources/data/$testDir/links"
   val linkDeleteHfilePath = s"src/test/resources/data/$testDir/delete/links"
+  val adminDataHfilePath = s"src/test/resources/data/$testDir/admindata"
+  val regionHfilePath = s"src/test/resources/data/$testDir/region"
+  val employmentHfilePath = s"src/test/resources/data/$testDir/employment"
+
+  val adminDataHDeleteHfilePath = s"src/test/resources/data/$testDir/delete/links"
   val leuHfilePath = s"src/test/resources/data/$testDir/leu"
   val leuDeleteHfilePath = s"src/test/resources/data/$testDir/delete/leu"
   val entHfilePath = s"src/test/resources/data/$testDir/enterprise"

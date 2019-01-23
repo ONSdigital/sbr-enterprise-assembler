@@ -92,38 +92,6 @@ class AssembleDao extends HFileUtils {
     spark.createDataFrame(rows, Schemas.biWithErnSchema)
   }
 
-  def createNewRus(ents: DataFrame)(implicit spark: SparkSession): DataFrame = {
-
-    log.debug("Start createNewRus")
-
-    val df = spark.createDataFrame(
-      ents.rdd.map(row => Row(
-        generateRurn(row),
-        row.getAs[String]("ern"),
-        row.getAs[String]("name"),
-        row.getValueOrNull("entref"),
-        row.getValueOrNull("ruref"),
-        row.getValueOrNull("trading_style"),
-        row.getAs[String]("legal_status"),
-        row.getAs[String]("address1"),
-        row.getValueOrNull("address2"),
-        row.getValueOrNull("address3"),
-        row.getValueOrNull("address4"),
-        row.getValueOrNull("address5"),
-        row.getValueOrEmptyStr("postcode"),
-        row.getValueOrEmptyStr("sic07"),
-        row.getValueOrEmptyStr("paye_empees"),
-        row.getValueOrEmptyStr("turnover"),
-        generatePrn(row),
-        row.getValueOrEmptyStr("region"),
-        row.getValueOrEmptyStr("employment")
-      )), Schemas.ruRowSchema)
-
-    log.debug("End createNewRus")
-
-    df
-  }
-
   /**
     * Creates new Enterprises from new LEUs with calculations
     * schema: completeNewEntSchema
@@ -168,38 +136,6 @@ class AssembleDao extends HFileUtils {
     df
   }
 
-  def createNewLous(rus: DataFrame)(implicit spark: SparkSession): DataFrame = {
-
-    log.debug("Start createNewLous")
-
-    val df = spark.createDataFrame(
-      rus.rdd.map(row => Row(
-        generateLurn(row),
-        row.getValueOrNull("luref"), //will not be present
-        row.getAs[String]("ern"),
-        generatePrn(row),
-        row.getAs[String]("rurn"),
-        row.getValueOrNull("ruref"),
-        row.getAs[String]("name"),
-        row.getValueOrNull("entref"),
-        row.getValueOrNull("trading_style"),
-        row.getAs[String]("address1"),
-        row.getValueOrNull("address2"),
-        row.getValueOrNull("address3"),
-        row.getValueOrNull("address4"),
-        row.getValueOrNull("address5"),
-        row.getValueOrEmptyStr("postcode"),
-        row.getValueOrEmptyStr("region"),
-        row.getValueOrEmptyStr("sic07"),
-        row.getValueOrEmptyStr("employees"),
-        row.getValueOrEmptyStr("employment")
-      )), Schemas.louRowSchema)
-
-    log.debug("End createNewLous")
-
-    df
-  }
-
   def getExistingRusDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
     log.debug("Start getExistingRusDF")
 
@@ -220,9 +156,10 @@ class AssembleDao extends HFileUtils {
 
   def getExistingEntsDF(confs: Configuration)(implicit spark: SparkSession): DataFrame = {
     log.debug("Start getExistingEntsDF")
-
+println(HBaseDao.readTable(confs, HBaseDao.entsTableName))
     val entHFileRowRdd: RDD[Row] = HBaseDao.readTable(confs, HBaseDao.entsTableName).map(_.toEntRow)
     val df = spark.createDataFrame(entHFileRowRdd, Schemas.entRowSchema)
+    df.show()
     log.debug("End getExistingEntsDF")
     df
   }
@@ -250,28 +187,40 @@ class AssembleDao extends HFileUtils {
     df
   }
 
-  def saveLinks(louDF: DataFrame, ruDF: DataFrame, leuDF: DataFrame)
-               (implicit spark: SparkSession, connection: Connection): Unit = {
-    log.debug("Start saveLinks")
+  def saveAdminData(AdminDataDF: DataFrame)(implicit spark: SparkSession): Unit = {
+    log.debug("Start saveAdminData")
 
     import spark.implicits._
+    val hfileCells = AdminDataDF.map(row => rowToAdminData(row)).flatMap(identity).rdd
 
-    val tableName = TableName.valueOf(HBaseDao.linksTableName)
-    val regionLocator = connection.getRegionLocator(tableName)
-    val partitioner = HFilePartitioner(connection.getConfiguration, regionLocator.getStartKeys, 1)
+    hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToAdminDataHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
+    log.debug("End saveLeus")
+  }
 
-    val rusLinks: RDD[(String, HFileCell)] = ruDF.map(row => ruToLinks(row)).flatMap(identity).rdd
-    val lousLinks: RDD[(String, HFileCell)] = louDF.map(row => louToLinks(row)).flatMap(identity).rdd
-    val restOfLinks: RDD[(String, HFileCell)] = leuDF.map(row => leuToLinks(row)).flatMap(identity).rdd
+  def saveRegion(RegionDF: DataFrame)(implicit spark: SparkSession): Unit = {
+    log.debug("Start saveAdminData")
 
-    val allLinks: RDD[((String, String), HFileCell)] = lousLinks.union(rusLinks)
-      .union(restOfLinks)
-      .filter(_._2.value != null)
-      .map(entry => ((entry._1, entry._2.qualifier), entry._2))
-      .repartitionAndSortWithinPartitions(partitioner)
-    allLinks.map(rec => (new ImmutableBytesWritable(rec._1._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToLinksHfile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
-    log.debug("End saveLinks")
+    import spark.implicits._
+    val hfileCells = RegionDF.map(row => rowToRegion(row)).flatMap(identity).rdd
+
+    hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToRegionHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
+    log.debug("End saveLeus")
+  }
+
+  def saveEmployment(EmploymentDF: DataFrame)(implicit spark: SparkSession): Unit = {
+    log.debug("Start saveAdminData")
+
+    import spark.implicits._
+    val hfileCells = EmploymentDF.map(row => rowToEmployment(row)).flatMap(identity).rdd
+
+    hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
+      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
+      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToEmploymentHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
+    log.debug("End saveLeus")
   }
 
   def saveEnts(entsDF: DataFrame)(implicit spark: SparkSession): Unit = {
@@ -285,39 +234,6 @@ class AssembleDao extends HFileUtils {
     c.saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToEnterpriseHFile,
       classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
     log.debug("End saveEnts")
-  }
-
-  def saveLous(lousDF: DataFrame)(implicit spark: SparkSession): Unit = {
-    log.debug("Start saveLous")
-
-    import spark.implicits._
-    val hfileCells = lousDF.map(row => rowToLocalUnit(row)).flatMap(identity).rdd
-    hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToLocalUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
-    log.debug("End saveLous")
-  }
-
-  def saveLeus(leusDF: DataFrame)(implicit spark: SparkSession): Unit = {
-    log.debug("Start saveLeus")
-
-    import spark.implicits._
-    val hfileCells = leusDF.map(row => rowToLegalUnit(row)).flatMap(identity).rdd
-    hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToLegalUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
-    log.debug("End saveLeus")
-  }
-
-  def saveRus(rusDF: DataFrame)(implicit spark: SparkSession): Unit = {
-    log.debug("Start saveRus")
-
-    import spark.implicits._
-    val hfileCells = rusDF.map(row => rowToReportingUnit(row)).flatMap(identity).rdd
-    hfileCells.filter(_._2.value != null).sortBy(t => s"${t._2.key}${t._2.qualifier}")
-      .map(rec => (new ImmutableBytesWritable(rec._1.getBytes()), rec._2.toKeyValue))
-      .saveAsNewAPIHadoopFile(AssemblerConfiguration.PathToReportingUnitsHFile, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], hbaseConfiguration)
-    log.debug("End saveRus")
   }
 
   private def getEntHFileCells(entsDF: DataFrame)(implicit spark: SparkSession): RDD[(String, HFileCell)] = {

@@ -8,6 +8,10 @@ object AssemblerConfiguration {
   val HBaseLinksTableName: String = Config(AssemblerOptions.HBaseLinksTableName)
   val HBaseLinksColumnFamily: String = Config(AssemblerOptions.HBaseLinksColumnFamily)
 
+  val HBaseAdminDataTableNamespace: String = Config(AssemblerOptions.HBaseAdminDataTableNamespace)
+  val HBaseAdminDataTableName: String = Config(AssemblerOptions.HBaseAdminDataTableName)
+  val HBaseAdminDataColumnFamily: String = Config(AssemblerOptions.HBaseAdminDataColumnFamily)
+
   val HBaseLegalUnitsNamespace: String = Config(AssemblerOptions.HBaseLegalUnitsNamespace)
   val HBaseLegalUnitsTableName: String = Config(AssemblerOptions.HBaseLegalUnitsTableName)
   val HBaseLegalUnitsColumnFamily: String = Config(AssemblerOptions.HBaseLegalUnitsColumnFamily)
@@ -24,7 +28,10 @@ object AssemblerConfiguration {
   val HBaseEnterpriseTableName: String = Config(AssemblerOptions.HBaseEnterpriseTableName)
   val HBaseEnterpriseColumnFamily: String = Config(AssemblerOptions.HBaseEnterpriseColumnFamily)
 
-  val PathToLinksHfile: String = Config(AssemblerOptions.HBaseLinksFilePath)
+  val PathToLinksHFile: String = Config(AssemblerOptions.HBaseLinksFilePath)
+  val PathToAdminDataHFile: String = Config(AssemblerOptions.HBaseAdminDataFilePath)
+  val PathToRegionHFile: String = Config(AssemblerOptions.HBaseRegionFilePath)
+  val PathToEmploymentHFile: String = Config(AssemblerOptions.HBaseEmploymentFilePath)
   val PathToEnterpriseHFile: String = Config(AssemblerOptions.HBaseEnterpriseFilePath)
   val PathToLocalUnitsHFile: String = Config(AssemblerOptions.HBaseLocalUnitsFilePath)
   val PathToLegalUnitsHFile: String = Config(AssemblerOptions.HBaseLegalUnitsFilePath)

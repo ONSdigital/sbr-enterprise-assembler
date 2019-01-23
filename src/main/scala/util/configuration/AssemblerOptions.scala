@@ -13,6 +13,21 @@ protected object AssemblerOptions {
   val HBaseLinksColumnFamily: String = "app.links.columnFamily"
   val HBaseLinksFilePath: String = "app.links.filePath"
 
+  val HBaseAdminDataTableNamespace: String = "app.admindata.namespace"
+  val HBaseAdminDataTableName: String = "app.admindata.tableName"
+  val HBaseAdminDataColumnFamily: String = "app.admindata.columnFamily"
+  val HBaseAdminDataFilePath: String = "app.admindata.filePath"
+
+  val HBaseRegionTableNamespace: String = "app.region.namespace"
+  val HBaseRegionTableName: String = "app.region.tableName"
+  val HBaseRegionColumnFamily: String = "app.region.columnFamily"
+  val HBaseRegionFilePath: String = "app.region.filePath"
+
+  val HBaseEmploymentTableNamespace: String = "app.employment.namespace"
+  val HBaseEmploymentTableName: String = "app.employment.tableName"
+  val HBaseEmploymentColumnFamily: String = "app.employment.columnFamily"
+  val HBaseEmploymentFilePath: String = "app.employment.filePath"
+
   val HBaseLegalUnitsNamespace: String = "app.legal.namespace"
   val HBaseLegalUnitsTableName: String = "app.legal.tableName"
   val HBaseLegalUnitsColumnFamily: String = "app.legal.columnFamily"
