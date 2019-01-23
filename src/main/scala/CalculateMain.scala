@@ -1,9 +1,7 @@
 import org.apache.log4j.{Level, LogManager, Logger}
 import service.calculations.Calculate
-import util.configuration.AssemblerConfiguration._
 import util.configuration.CommandLineParser
 
-import scala.reflect.io.File
 
 object CalculateMain {
   def main(args: Array[String]) {
